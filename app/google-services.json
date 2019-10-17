@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "294185543929",
+    "firebase_url": "https://snsfcm-8600f.firebaseio.com",
+    "project_id": "snsfcm-8600f",
+    "storage_bucket": "snsfcm-8600f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:294185543929:android:aef42071e5ef7012",
+        "android_client_info": {
+          "package_name": "com.example.sns"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "294185543929-8q2ld2evf9tjbesqfsiiuj15v2apfl7j.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCrehcFmSbc27nMNJrxXb3-HlEPDQm3ttA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "294185543929-8q2ld2evf9tjbesqfsiiuj15v2apfl7j.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

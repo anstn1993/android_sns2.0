@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/textview_profile"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="프로필 보기"
+        android:layout_margin="20dp"
+        android:textColor="#000000"
+        android:textSize="20sp"
+        android:gravity="center"/>
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#A9B7C6" />
+
+    <TextView
+        android:id="@+id/textview_editpost"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="게시물 수정"
+        android:textColor="#000000"
+        android:textSize="20sp"
+        android:gravity="center"
+        android:layout_margin="20dp"/>
+
+
+    <View
+        android:id="@+id/divider2"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#A9B7C6" />
+
+    <TextView
+        android:id="@+id/textview_deletepost"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="게시물 삭제"
+        android:textColor="#FE0002"
+        android:textSize="20sp"
+        android:gravity="center"
+        android:layout_margin="20dp"/>
+
+
+
+</LinearLayout>

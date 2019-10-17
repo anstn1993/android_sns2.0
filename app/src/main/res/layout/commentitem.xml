@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="10dp"
+    android:layout_marginBottom="10dp">
+
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/circleimageview_profile"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="8dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/profile"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
+    <TextView
+        android:id="@+id/textview_comment"
+        android:layout_width="290dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginLeft="10dp"
+        android:text="댓글"
+        android:textColor="#000000"
+        android:textSize="14sp"
+        app:layout_constraintLeft_toRightOf="@+id/circleimageview_profile"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textview_readmore"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="...더 보기"
+        android:textSize="10sp"
+        app:layout_constraintTop_toBottomOf="@+id/textview_comment"
+        app:layout_constraintLeft_toRightOf="@+id/circleimageview_profile"
+        android:layout_marginLeft="15dp"/>
+
+    <TextView
+        android:id="@+id/textview_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="n시간 전"
+        app:layout_constraintTop_toBottomOf="@+id/textview_readmore"
+        app:layout_constraintLeft_toRightOf="@+id/circleimageview_profile"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="5dp"
+        android:textSize="10sp"/>
+
+    <TextView
+        android:id="@+id/textview_addchildcomment"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="답글 달기"
+        app:layout_constraintLeft_toRightOf="@+id/textview_time"
+        app:layout_constraintTop_toBottomOf="@+id/textview_readmore"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="5dp"
+        android:textStyle="bold"
+        android:textSize="13sp"/>
+
+    <TextView
+        android:id="@+id/textview_editcomment"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="수정"
+        app:layout_constraintRight_toLeftOf="@+id/textview_deletecomment"
+        app:layout_constraintTop_toBottomOf="@+id/textview_readmore"
+        android:layout_marginTop="5dp"
+        android:layout_marginRight="10dp"
+        android:textStyle="bold"
+        android:textSize="13sp"/>
+
+    <TextView
+        android:id="@+id/textview_deletecomment"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="15dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginRight="15dp"
+        android:text="삭제"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintLeft_toRightOf="@+id/textview_editcomment"
+        app:layout_constraintTop_toBottomOf="@+id/textview_readmore"
+        android:textSize="13sp"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerview_childcomment"
+        android:layout_width="303dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textview_addchildcomment">
+
+    </androidx.recyclerview.widget.RecyclerView>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

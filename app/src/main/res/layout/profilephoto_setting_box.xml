@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/textview_delete"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="프로필 사진 지우기"
+        android:layout_margin="20dp"
+        android:textColor="#FE0002"
+        android:textSize="20sp"
+        android:gravity="center"/>
+
+    <TextView
+        android:id="@+id/textview_change"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="프로필 사진 변경"
+        android:textColor="#000000"
+        android:textSize="20sp"
+        android:gravity="center"
+        android:layout_margin="20dp"/>
+
+
+
+</LinearLayout>

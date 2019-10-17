@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/circleimageview_profile"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:scaleType="centerCrop"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="10dp"
+        android:src="@drawable/profile"/>
+
+    <TextView
+        android:id="@+id/textview_article"
+        android:layout_width="260dp"
+        android:layout_height="wrap_content"
+        android:text="게시글"
+        android:textColor="#000000"
+        app:layout_constraintLeft_toRightOf="@+id/circleimageview_profile"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="15dp"
+        android:textSize="15sp"/>
+
+    <TextView
+        android:id="@+id/textview_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="n시간 전"
+        app:layout_constraintTop_toBottomOf="@+id/textview_article"
+        app:layout_constraintLeft_toRightOf="@+id/circleimageview_profile"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="15dp"/>
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#A9B7C6"
+        app:layout_constraintTop_toBottomOf="@+id/textview_time"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"/>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.example.sns">
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="sns"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme"
+        android:usesCleartextTraffic="true"
+        tools:replace="android:label">
+        <activity android:name=".FaceChatReceiveActivity">
+        </activity>
+        <activity android:name=".FaceChatResponseWaitingActivity">
+        </activity>
+        <activity android:name=".CallActivity" />
+
+        <activity android:name=".ChatImageListActivity" />
+
+        <activity android:name=".ChatImageDetailActivity" />
+        <activity
+            android:name=".CreateChatRoomActivity"
+            android:windowSoftInputMode="stateAlwaysHidden" />
+        <activity
+            android:name=".AddChatParticipantActivity"
+            android:windowSoftInputMode="stateAlwaysHidden" />
+        <activity
+            android:name=".ChatRoomActivity"
+            android:parentActivityName=".ChatActivity"
+            android:windowSoftInputMode="adjustPan"/><!--키보드가 올라오면 레이아웃을 위로 올려주는 설정-->
+
+        <activity android:name=".EmptyActivity" />
+
+        <activity
+            android:name=".CommentActivity"
+            android:windowSoftInputMode="adjustPan" />
+        <activity android:name=".EditPostFirstActivity" />
+        <activity android:name=".EditVideoPostFirstActivity"/>
+        <activity android:name=".EditVideoPostSecondActivity"
+            android:windowSoftInputMode="stateAlwaysHidden"/>
+        <activity
+            android:name=".EditPostSecondActivity"
+            android:windowSoftInputMode="stateAlwaysHidden" />
+        <activity android:name=".UploadActivity" />
+        <activity android:name=".MypageActivity" />
+        <activity android:name=".NotificationActivity" />
+        <activity
+            android:name=".SearchActivity"
+            android:windowSoftInputMode="stateAlwaysHidden" />
+        <activity android:name=".PostActivity" />
+        <activity android:name=".AddLocationActivity" />
+        <activity android:name=".UploadVideoFirstActivity"/>
+        <activity
+            android:name=".UploadSecondActivity"
+            android:windowSoftInputMode="stateAlwaysHidden" />
+        <activity
+            android:name=".EditProfileActivity"
+            android:windowSoftInputMode="stateAlwaysHidden" />
+        <activity android:name=".LoginActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".VerificationAcitvity" />
+        <activity android:name=".JoinActivity" />
+        <activity android:name=".StreamingActivity" />
+        <activity
+            android:name=".ChatActivity"
+            android:parentActivityName=".MainActivity" />
+        <activity android:name=".UploadFirstActivity" />
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="com.example.sns.SNS_Notification" /> <!-- 푸시알림을 눌러서 앱에 접근했을 때와 구분하기 위해서 만든 필터 -->
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".UploadVideoSecondActivity"
+            android:windowSoftInputMode="stateAlwaysHidden"/>
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyD7t_2m-6ZE8blxYMdkTdBm_BU5VgULe7k" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="@string/default_notification_channel_id" />
+
+        <receiver
+            android:name=".NotificationReceiver"
+            android:exported="true" />
+
+        <service
+            android:name=".ChatIntentService"
+            android:exported="false" />
+        <service android:name=".FirebaseMessagingService">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+    </application>
+    <uses-feature android:name="android.hardware.camera" />
+    <uses-feature android:name="android.hardware.camera.autofocus" />
+
+    <uses-feature
+        android:glEsVersion="0x00020000"
+        android:required="true" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.REORDER_TASKS" />
+
+
+</manifest>

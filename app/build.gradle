@@ -1,0 +1,101 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 28
+    defaultConfig {
+        applicationId "com.example.sns"
+        minSdkVersion 21
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        multiDexEnabled true
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+
+    }
+    //tedbottompicker라이브러리를 적용했을 때 발생한 오류가 이 옵션을 통해서 해결됐다. 람다식을 써서 그런듯
+    //람다식을 사용하기 위해서 java8버전(1.8)이상으로 설정
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    lintOptions {
+        checkReleaseBuilds false
+        // Or, if you prefer, you can continue to check for errors in release builds,
+        // but continue the build even when errors are found:
+        abortOnError false
+    }
+    //for using TedImagePicker
+    dataBinding {
+        enabled = true
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    //noinspection GradleCompatible
+    implementation 'androidx.appcompat:appcompat:1.0.0'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+    implementation 'com.android.support:support-compat'
+
+    implementation 'gun0912.ted:tedpermission:2.2.2'
+    implementation 'androidx.recyclerview:recyclerview:1.0.0'
+    implementation 'de.hdodenhof:circleimageview:3.0.0'
+    implementation 'com.theartofdev.edmodo:android-image-cropper:2.7.+'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'androidx.test:runner:1.1.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0'
+    implementation 'gun0912.ted:tedbottompicker:2.0.1'
+    implementation 'gun0912.ted:tedimagepicker:1.0.5'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7"
+    implementation 'com.github.bumptech.glide:glide:4.8.0'
+    implementation 'com.github.danylovolokh:hashtag-helper:1.1.0'
+    implementation 'com.squareup.picasso:picasso:2.71828'
+    implementation 'com.squareup.retrofit2:retrofit:2.5.0'
+    implementation 'com.google.code.gson:gson:2.8.5'
+    implementation 'com.squareup.retrofit2:converter-gson:2.5.0'
+    implementation project(':additionnal')
+    implementation project(':activation')
+    implementation project(':mail')
+    implementation project(':openCVLibrary')
+
+
+    implementation 'com.google.android.gms:play-services-maps:16.1.0'
+    implementation 'com.google.android.gms:play-services-location:16.0.0'
+    implementation 'com.google.android.libraries.places:places:1.1.0'
+    implementation 'com.google.maps.android:android-maps-utils:0.4'
+
+    implementation 'androidx.legacy:legacy-support-v13:1.0.0'
+    implementation 'com.google.android.material:material:1.0.0'
+
+    //exoplayer
+    implementation 'com.google.android.exoplayer:exoplayer-core:2.10.5'
+    implementation 'com.google.android.exoplayer:exoplayer-ui:2.10.5'
+    implementation 'com.google.android.exoplayer:exoplayer-dash:2.10.5'
+
+
+    implementation 'com.github.danylovolokh:hashtag-helper:1.1.0'
+
+    //fcm기능 사용과 관련된 의존성 추가
+    implementation 'com.google.firebase:firebase-messaging:17.6.0'
+    implementation 'com.google.firebase:firebase-core:16.0.8'
+    //스와이프 메뉴 레이아웃
+//    implementation 'com.daimajia.swipelayout:library:1.2.0@aar'
+    implementation 'com.chauthai.swipereveallayout:swipe-reveal-layout:1.4.1'
+
+    //webRTC 라이브러리
+    implementation 'io.pristine:libjingle:9694@aar'
+    //노드 js의 socket.io와 연동하기 위한 라이브러리
+    implementation('io.socket:socket.io-client:1.0.0') {
+        // excluding org.json which is provided by Android
+        exclude group: 'org.json', module: 'json'
+    }
+}
+
+apply plugin: 'com.google.gms.google-services'

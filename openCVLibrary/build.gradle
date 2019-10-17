@@ -1,0 +1,22 @@
+
+
+apply plugin: 'com.android.library'
+//원래는 하단처럼 되어있었는데 그래들 빌드 오류가 떠서 library로 수정
+//apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 27
+    buildToolsVersion "28.0.3"
+
+    defaultConfig {
+        //오류떠서 찾아보니 applicationId를 없애야 함 그냥 그래서 주석 처리
+//        applicationId "org.opencv"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+        }
+    }
+}
