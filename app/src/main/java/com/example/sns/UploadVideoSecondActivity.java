@@ -228,7 +228,6 @@ public class UploadVideoSecondActivity extends AppCompatActivity {
     }
 
 
-
     @Override
     protected void onPause() {
         super.onPause();

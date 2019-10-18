@@ -27,21 +27,20 @@ import java.util.List;
 import gun0912.tedbottompicker.TedBottomPicker;
 import gun0912.tedbottompicker.TedBottomSheetDialogFragment;
 
-import static com.example.sns.UploadFirstActivity.imageArrayList;
 
 public class EditPostFirstActivity extends AppCompatActivity implements UploadImageAdapter.UploadImageRecyclerViewClickListener {
 
-
-    Button btn_cancel, btn_next;
-    TextView tv_alert;
-    ImageView iv_detail;
-    RecyclerView rv_image;
-    LinearLayoutManager layoutManager;
-    UploadImageAdapter uploadImageAdapter;
-    ItemTouchHelper mItemTouchHelper;
+    private final String TAG = EditPostFirstActivity.class.getSimpleName();
+    private Button btn_cancel, btn_next;
+    private TextView tv_alert;
+    private ImageView iv_detail;
+    private RecyclerView rv_image;
+    private LinearLayoutManager layoutManager;
+    private UploadImageAdapter uploadImageAdapter;
+    private ItemTouchHelper mItemTouchHelper;
     //아이템을 담을 arraylist정의
     public ArrayList<UploadImageItem> uploadImageItemArrayList = new ArrayList<>();
-
+    public static ArrayList<UploadImageItem> imageArrayList = new ArrayList<>();
     private List<Uri> selectedUriList;
 
     //어떤 이미지가 선택되어있는 상태인지 확인하기 위한 인덱스 변수
@@ -92,8 +91,7 @@ public class EditPostFirstActivity extends AppCompatActivity implements UploadIm
         btn_next.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //static이기 때문에 기존의 데이터가 누적되지 않게 먼저 비워준 후 다시 넣어준다.
-                imageArrayList.clear();
+
 
                 Intent intent = new Intent(getApplicationContext(), EditPostSecondActivity.class);
 
@@ -102,13 +100,9 @@ public class EditPostFirstActivity extends AppCompatActivity implements UploadIm
 
                 //사진이 한 장 이상일 때
                 if(uploadImageItemArrayList.size()!=0){
-                    for(int i = 0; i < uploadImageItemArrayList.size(); i++){
-                        imageArrayList.add(uploadImageItemArrayList.get(i).imageSource);
-                        Log.d("이미지 소스:", uploadImageItemArrayList.get(i).imageSource);
-                        Log.d("소스 유형:", uploadImageItemArrayList.get(i).imageRoot);
-                        Log.d("어레이에 추가된 이미지: ", imageArrayList.get(i));
-                        intent.putExtra("imageRoot"+(i+1), uploadImageItemArrayList.get(i).imageRoot);
-                    }
+
+                    imageArrayList = uploadImageItemArrayList;
+                    Log.d(TAG, "imageArrayList size: " + imageArrayList.size());
 
                     //게시글이 존재하는 경우 다시 게시글을 넘겨준다.
                     if(article != null){

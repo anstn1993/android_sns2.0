@@ -6,10 +6,14 @@ import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+
 import androidx.annotation.Nullable;
+
 import com.google.android.material.tabs.TabLayout;
+
 import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -42,31 +46,27 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import static com.example.sns.EditPostFirstActivity.postNum;
 import static com.example.sns.LoginActivity.account;
 import static com.example.sns.LoginActivity.httpURLConnection;
-import static com.example.sns.UploadFirstActivity.imageArrayList;
+import static com.example.sns.EditPostFirstActivity.imageArrayList;
 
 public class EditPostSecondActivity extends AppCompatActivity {
-
-    Button btn_back, btn_edit;
-    EditText et_article;
+    private final String TAG = EditPostSecondActivity.class.getSimpleName();
+    private Button btn_back, btn_edit;
+    private EditText et_article;
     //해시태그 라이브러리 클래스
-    HashTagHelper hashTagHelper;
+    private HashTagHelper hashTagHelper;
 
 
-    TextView tv_location;
+    private TextView tv_location;
 
-    ViewPager viewPager;
+    private ViewPager viewPager;
     //게시글 담는 변수
-    String article = null;
+    private String article = null;
 
     //위치 추가로 가져온 장소의 주소
     private String address = null;
     //위치 추가로 가져온 장소의 위도와 경도
     private double latitude;
     private double longitude;
-
-
-    //넘어온 이미지가 url인지, uri인지를 담는 list
-    private ArrayList<String> imageRootArrayList;
 
     //서버로 전송시킬 이미지 파일 객체 선언
     File file1, file2, file3, file4, file5, file6 = null;
@@ -77,15 +77,12 @@ public class EditPostSecondActivity extends AppCompatActivity {
     //이미지 파일의 경로를 담는 파일
     String imagePath = null;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_post_second);
-
         btn_edit = findViewById(R.id.btn_edit);
         btn_back = findViewById(R.id.btn_back);
-
         et_article = findViewById(R.id.et_article);
 
         //hashtag어댑터를 초기화해주고
@@ -103,8 +100,12 @@ public class EditPostSecondActivity extends AppCompatActivity {
         tv_location = findViewById(R.id.tv_location);
 
         viewPager = (ViewPager) findViewById(R.id.viewpager);
+        ArrayList<String> imageSourceList = new ArrayList<>();
+        for (int i = 0; i < imageArrayList.size(); i++) {
+            imageSourceList.add(imageArrayList.get(i).imageSource);
+        }
         //뷰 페이저를 어댑터와 연결해서 보여준다.
-        viewPager.setAdapter(new UploadImageViewPagerAdapter(getSupportFragmentManager()));
+        viewPager.setAdapter(new UploadImageViewPagerAdapter(getSupportFragmentManager(), imageSourceList));
 
         //하단의 탭 설정
         TabLayout tabLayout = findViewById(R.id.tab_layout);
@@ -113,9 +114,6 @@ public class EditPostSecondActivity extends AppCompatActivity {
 
         //수정 전 게시글과 위치가 존재했다면 화면에 세팅하고 변수에 담아주는 메소드
         setArticleAddress();
-
-        //이미지의 소스 타입 설정 메소드
-        setImageRoot();
 
 
         //위치 추가 버튼 클릭 리스너
@@ -143,11 +141,8 @@ public class EditPostSecondActivity extends AppCompatActivity {
 //
 //        }
         //이미지 파일 객체 생성
-        imageFileArrayList = new ArrayList<>();
-        for (int i = 0; i < imageRootArrayList.size(); i++) {
-            UrlImageToFile urlImageToFile = new UrlImageToFile();
-            urlImageToFile.execute(String.valueOf(imageArrayList.get(i)), imageRootArrayList.get(i), String.valueOf(i));
-        }
+        addImageFileList();
+
 
         //수정 버튼 클릭 리스너
         //imageArrayList 클리어
@@ -168,10 +163,8 @@ public class EditPostSecondActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                imageArrayList.clear();
-
                 for (int i = 0; i < imageFileArrayList.size(); i++) {
-                    if (imageRootArrayList.get(i).equals("url")) {
+                    if (imageArrayList.get(i).imageRoot.equals("url")) {
                         Log.d("삭제된 이미지 경로", String.valueOf(imageFileArrayList.get(i)));
                         imageFileArrayList.get(i).delete();
 
@@ -183,6 +176,13 @@ public class EditPostSecondActivity extends AppCompatActivity {
                 return;
             }
         });
+
+    }
+
+    private void addImageFileList() {
+        imageFileArrayList = new ArrayList<>();
+        UrlImageToFile urlImageToFile = new UrlImageToFile();
+        urlImageToFile.execute();
 
     }
 
@@ -205,7 +205,7 @@ public class EditPostSecondActivity extends AppCompatActivity {
     //게시물 수정 버튼을 누를 때 서버로 데이터를 넘겨주는 메소드
     private void upload(
             String article,
-            ArrayList imageArraylist,
+            ArrayList<UploadImageItem> imageArrayList,
             String address,
             double latitude,
             double longitude) {
@@ -228,508 +228,49 @@ public class EditPostSecondActivity extends AppCompatActivity {
         RequestBody postNumPart = RequestBody.create(MultipartBody.FORM, String.valueOf(postNum));
         RequestBody accountPart = RequestBody.create(MultipartBody.FORM, account);
         //초기화를 바로 해주지 않는 이유는 이 데이터들은 쓰일 수도 있고 안 쓰일 수도 있기 때문이다.
-        RequestBody articlePart;
-        RequestBody addressPart;
-        RequestBody latitudePart;
-        RequestBody longitudePart;
+        RequestBody articlePart = null;
+        RequestBody addressPart = null;
+        RequestBody latitudePart = null;
+        RequestBody longitudePart = null;
 
-        //이미지1
-        RequestBody imageFile1;
-        MultipartBody.Part body1;
 
-        //이미지2
-        RequestBody imageFile2;
-        MultipartBody.Part body2;
+        //게시글o
+        if (article != null) {
+            articlePart = RequestBody.create(MultipartBody.FORM, article);
+        }
 
-        //이미지3
-        RequestBody imageFile3;
-        MultipartBody.Part body3;
+        //위치o
+        if (address != null) {
+            addressPart = RequestBody.create(MultipartBody.FORM, address);
+            latitudePart = RequestBody.create(MultipartBody.FORM, String.valueOf(latitude));
+            longitudePart = RequestBody.create(MultipartBody.FORM, String.valueOf(longitude));
 
-        //이미지4
-        RequestBody imageFile4;
-        MultipartBody.Part body4;
+        }
 
-        //이미지5
-        RequestBody imageFile5;
-        MultipartBody.Part body5;
-
-        //이미지6
-        RequestBody imageFile6;
-        MultipartBody.Part body6;
+        ArrayList<MultipartBody.Part> imageMultipartBodyList = createImageMultipartBody(imageArrayList);//이미지 multipartbody 생성
 
         //레트로핏 인터페이스 설정
-        RetrofitService retrofitService;
-        Call<UploadResponse> call;
-
-        //이미지 개수를 담는 변수
-        int imageCount = imageArraylist.size();
-
-        //사진 1장 선택했을 때
-        if (imageCount == 1) {
-            //이미지 파일의 이름 설정
-            String timeStamp = new SimpleDateFormat("HHmmss").format(new Date());
-            String imageFileName = account + timeStamp + "1.jpg";
-
-            file1 = imageFileArrayList.get(0);
-
-            imageFile1 = RequestBody.create(MediaType.parse("multipart/form-data"), file1);
-
-            body1 = MultipartBody.Part.createFormData("image1", imageFileName, imageFile1);
-
-
-            //게시글x 위치x
-            if (article == null && address == null) {
-
-                retrofitService = retrofit.create(RetrofitService.class);
-                //인터페이스의 uploadResponse 메소드 실행
-                call = retrofitService.editResponse(postNumPart, accountPart, null, body1, null, null, null, null, null, null, null, null);
-
-            }
-            //게시글o, 위치x
-            else if (article != null && address == null) {
-
-                articlePart = RequestBody.create(MultipartBody.FORM, article);
-                retrofitService = retrofit.create(RetrofitService.class);
-                call = retrofitService.editResponse(postNumPart, accountPart, articlePart, body1, null, null, null, null, null, null, null, null);
-
-            }
-            //게시글x, 위치o
-            else if (article == null && address != null) {
-                addressPart = RequestBody.create(MultipartBody.FORM, address);
-                latitudePart = RequestBody.create(MultipartBody.FORM, String.valueOf(latitude));
-                longitudePart = RequestBody.create(MultipartBody.FORM, String.valueOf(longitude));
-
-
-                retrofitService = retrofit.create(RetrofitService.class);
-                call = retrofitService.editResponse(postNumPart, accountPart, null, body1, null, null, null, null, null, addressPart, latitudePart, longitudePart);
-
-            }
-            //게시글o, 위치o
-            else {
-
-                articlePart = RequestBody.create(MultipartBody.FORM, article);
-                addressPart = RequestBody.create(MultipartBody.FORM, address);
-                latitudePart = RequestBody.create(MultipartBody.FORM, String.valueOf(latitude));
-                longitudePart = RequestBody.create(MultipartBody.FORM, String.valueOf(longitude));
-
-                retrofitService = retrofit.create(RetrofitService.class);
-                call = retrofitService.editResponse(postNumPart, accountPart, articlePart, body1, null, null, null, null, null, addressPart, latitudePart, longitudePart);
-
-            }
-
-        }
-        //사진 2장 선택했을 때
-        else if (imageCount == 2) {
-            //이미지 파일1의 이름
-            String timeStamp1 = new SimpleDateFormat("HHmmss").format(new Date());
-            String imageFileName1 = account + timeStamp1 + "1.jpg";
-
-            //이미지 파일2의 이름
-            String timeStamp2 = new SimpleDateFormat("HHmmss").format(new Date());
-            String imageFileName2 = account + timeStamp2 + "2.jpg";
-
-            file1 = imageFileArrayList.get(0);
-            file2 = imageFileArrayList.get(1);
-
-            imageFile1 = RequestBody.create(MediaType.parse("multipart/form-data"), file1);
-            imageFile2 = RequestBody.create(MediaType.parse("multipart/form-data"), file2);
-
-
-            body1 = MultipartBody.Part.createFormData("image1", imageFileName1, imageFile1);
-            body2 = MultipartBody.Part.createFormData("image2", imageFileName2, imageFile2);
-
-
-            //게시글x 위치x
-            if (article == null && address == null) {
-
-                retrofitService = retrofit.create(RetrofitService.class);
-                call = retrofitService.editResponse(postNumPart, accountPart, null, body1, body2, null, null, null, null, null, null, null);
-
-            }
-            //게시글o, 위치x
-            else if (article != null && address == null) {
-
-                articlePart = RequestBody.create(MultipartBody.FORM, article);
-                retrofitService = retrofit.create(RetrofitService.class);
-                call = retrofitService.editResponse(postNumPart, accountPart, articlePart, body1, body2, null, null, null, null, null, null, null);
-
-            }
-            //게시글x, 위치o
-            else if (article == null && address != null) {
-                addressPart = RequestBody.create(MultipartBody.FORM, address);
-                latitudePart = RequestBody.create(MultipartBody.FORM, String.valueOf(latitude));
-                longitudePart = RequestBody.create(MultipartBody.FORM, String.valueOf(longitude));
-
-
-                retrofitService = retrofit.create(RetrofitService.class);
-                call = retrofitService.editResponse(postNumPart, accountPart, null, body1, body2, null, null, null, null, addressPart, latitudePart, longitudePart);
-
-            }
-            //게시글o, 위치o
-            else {
-
-                articlePart = RequestBody.create(MultipartBody.FORM, article);
-                addressPart = RequestBody.create(MultipartBody.FORM, address);
-                latitudePart = RequestBody.create(MultipartBody.FORM, String.valueOf(latitude));
-                longitudePart = RequestBody.create(MultipartBody.FORM, String.valueOf(longitude));
-
-                retrofitService = retrofit.create(RetrofitService.class);
-                call = retrofitService.editResponse(postNumPart, accountPart, articlePart, body1, body2, null, null, null, null, addressPart, latitudePart, longitudePart);
-
-            }
-        }
-        //사진 3장 선택했을 때
-        else if (imageCount == 3) {
-
-            String timeStamp1 = new SimpleDateFormat("HHmmss").format(new Date());
-            String imageFileName1 = account + timeStamp1 + "1.jpg";
-
-            String timeStamp2 = new SimpleDateFormat("HHmmss").format(new Date());
-            String imageFileName2 = account + timeStamp2 + "2.jpg";
-
-            String timeStamp3 = new SimpleDateFormat("HHmmss").format(new Date());
-            String imageFileName3 = account + timeStamp3 + "3.jpg";
-
-
-            file1 = imageFileArrayList.get(0);
-            file2 = imageFileArrayList.get(1);
-            file3 = imageFileArrayList.get(2);
-
-            imageFile1 = RequestBody.create(MediaType.parse("multipart/form-data"), file1);
-            imageFile2 = RequestBody.create(MediaType.parse("multipart/form-data"), file2);
-            imageFile3 = RequestBody.create(MediaType.parse("multipart/form-data"), file3);
-
-
-            body1 = MultipartBody.Part.createFormData("image1", imageFileName1, imageFile1);
-            body2 = MultipartBody.Part.createFormData("image2", imageFileName2, imageFile2);
-            body3 = MultipartBody.Part.createFormData("image3", imageFileName3, imageFile3);
-
-
-            //게시글x 위치x
-            if (article == null && address == null) {
-
-                retrofitService = retrofit.create(RetrofitService.class);
-                call = retrofitService.editResponse(postNumPart, accountPart, null, body1, body2, body3, null, null, null, null, null, null);
-
-            }
-            //게시글o, 위치x
-            else if (article != null && address == null) {
-
-                articlePart = RequestBody.create(MultipartBody.FORM, article);
-                retrofitService = retrofit.create(RetrofitService.class);
-                call = retrofitService.editResponse(postNumPart, accountPart, articlePart, body1, body2, body3, null, null, null, null, null, null);
-
-            }
-            //게시글x, 위치o
-            else if (article == null && address != null) {
-                addressPart = RequestBody.create(MultipartBody.FORM, address);
-                latitudePart = RequestBody.create(MultipartBody.FORM, String.valueOf(latitude));
-                longitudePart = RequestBody.create(MultipartBody.FORM, String.valueOf(longitude));
-
-
-                retrofitService = retrofit.create(RetrofitService.class);
-                call = retrofitService.editResponse(postNumPart, accountPart, null, body1, body2, body3, null, null, null, addressPart, latitudePart, longitudePart);
-
-            }
-            //게시글o, 위치o
-            else {
-
-                articlePart = RequestBody.create(MultipartBody.FORM, article);
-                addressPart = RequestBody.create(MultipartBody.FORM, address);
-                latitudePart = RequestBody.create(MultipartBody.FORM, String.valueOf(latitude));
-                longitudePart = RequestBody.create(MultipartBody.FORM, String.valueOf(longitude));
-
-                retrofitService = retrofit.create(RetrofitService.class);
-                call = retrofitService.editResponse(postNumPart, accountPart, articlePart, body1, body2, body3, null, null, null, addressPart, latitudePart, longitudePart);
-
-            }
-        }
-        //사진4장 선택했을 때
-        else if (imageCount == 4) {
-            String timeStamp1 = new SimpleDateFormat("HHmmss").format(new Date());
-            String imageFileName1 = account + timeStamp1 + "1.jpg";
-
-            String timeStamp2 = new SimpleDateFormat("HHmmss").format(new Date());
-            String imageFileName2 = account + timeStamp2 + "2.jpg";
-
-            String timeStamp3 = new SimpleDateFormat("HHmmss").format(new Date());
-            String imageFileName3 = account + timeStamp3 + "3.jpg";
-
-            String timeStamp4 = new SimpleDateFormat("HHmmss").format(new Date());
-            String imageFileName4 = account + timeStamp4 + "4.jpg";
-
-            file1 = imageFileArrayList.get(0);
-            file2 = imageFileArrayList.get(1);
-            file3 = imageFileArrayList.get(2);
-            file4 = imageFileArrayList.get(3);
-
-            imageFile1 = RequestBody.create(MediaType.parse("multipart/form-data"), file1);
-            imageFile2 = RequestBody.create(MediaType.parse("multipart/form-data"), file2);
-            imageFile3 = RequestBody.create(MediaType.parse("multipart/form-data"), file3);
-            imageFile4 = RequestBody.create(MediaType.parse("multipart/form-data"), file4);
-
-
-            body1 = MultipartBody.Part.createFormData("image1", imageFileName1, imageFile1);
-            body2 = MultipartBody.Part.createFormData("image2", imageFileName2, imageFile2);
-            body3 = MultipartBody.Part.createFormData("image3", imageFileName3, imageFile3);
-            body4 = MultipartBody.Part.createFormData("image4", imageFileName4, imageFile4);
-
-
-            //게시글x 위치x
-            if (article == null && address == null) {
-
-                retrofitService = retrofit.create(RetrofitService.class);
-                call = retrofitService.editResponse(postNumPart, accountPart, null, body1, body2, body3, body4, null, null, null, null, null);
-
-            }
-            //게시글o, 위치x
-            else if (article != null && address == null) {
-
-                articlePart = RequestBody.create(MultipartBody.FORM, article);
-                retrofitService = retrofit.create(RetrofitService.class);
-                call = retrofitService.editResponse(postNumPart, accountPart, articlePart, body1, body2, body3, body4, null, null, null, null, null);
-
-            }
-            //게시글x, 위치o
-            else if (article == null && address != null) {
-                addressPart = RequestBody.create(MultipartBody.FORM, address);
-                latitudePart = RequestBody.create(MultipartBody.FORM, String.valueOf(latitude));
-                longitudePart = RequestBody.create(MultipartBody.FORM, String.valueOf(longitude));
-
-
-                retrofitService = retrofit.create(RetrofitService.class);
-                call = retrofitService.editResponse(postNumPart, accountPart, null, body1, body2, body3, body4, null, null, addressPart, latitudePart, longitudePart);
-
-            }
-            //게시글o, 위치o
-            else {
-
-                articlePart = RequestBody.create(MultipartBody.FORM, article);
-                addressPart = RequestBody.create(MultipartBody.FORM, address);
-                latitudePart = RequestBody.create(MultipartBody.FORM, String.valueOf(latitude));
-                longitudePart = RequestBody.create(MultipartBody.FORM, String.valueOf(longitude));
-
-                retrofitService = retrofit.create(RetrofitService.class);
-                call = retrofitService.editResponse(postNumPart, accountPart, articlePart, body1, body2, body3, body4, null, null, addressPart, latitudePart, longitudePart);
-
-            }
-        }
-        //사진 5장 선택했을 때
-        else if (imageCount == 5) {
-            String timeStamp1 = new SimpleDateFormat("HHmmss").format(new Date());
-            String imageFileName1 = account + timeStamp1 + "1.jpg";
-
-            String timeStamp2 = new SimpleDateFormat("HHmmss").format(new Date());
-            String imageFileName2 = account + timeStamp2 + "2.jpg";
-
-            String timeStamp3 = new SimpleDateFormat("HHmmss").format(new Date());
-            String imageFileName3 = account + timeStamp3 + "3.jpg";
-
-            String timeStamp4 = new SimpleDateFormat("HHmmss").format(new Date());
-            String imageFileName4 = account + timeStamp4 + "4.jpg";
-
-            String timeStamp5 = new SimpleDateFormat("HHmmss").format(new Date());
-            String imageFileName5 = account + timeStamp5 + "5.jpg";
-
-
-            file1 = imageFileArrayList.get(0);
-            file2 = imageFileArrayList.get(1);
-            file3 = imageFileArrayList.get(2);
-            file4 = imageFileArrayList.get(3);
-            file5 = imageFileArrayList.get(4);
-
-            imageFile1 = RequestBody.create(MediaType.parse("multipart/form-data"), file1);
-            imageFile2 = RequestBody.create(MediaType.parse("multipart/form-data"), file2);
-            imageFile3 = RequestBody.create(MediaType.parse("multipart/form-data"), file3);
-            imageFile4 = RequestBody.create(MediaType.parse("multipart/form-data"), file4);
-            imageFile5 = RequestBody.create(MediaType.parse("multipart/form-data"), file5);
-
-
-            body1 = MultipartBody.Part.createFormData("image1", imageFileName1, imageFile1);
-            body2 = MultipartBody.Part.createFormData("image2", imageFileName2, imageFile2);
-            body3 = MultipartBody.Part.createFormData("image3", imageFileName3, imageFile3);
-            body4 = MultipartBody.Part.createFormData("image4", imageFileName4, imageFile4);
-            body5 = MultipartBody.Part.createFormData("image5", imageFileName5, imageFile5);
-
-            //게시글x 위치x
-            if (article == null && address == null) {
-
-                retrofitService = retrofit.create(RetrofitService.class);
-                call = retrofitService.editResponse(postNumPart, accountPart, null, body1, body2, body3, body4, body5, null, null, null, null);
-
-            }
-            //게시글o, 위치x
-            else if (article != null && address == null) {
-
-                articlePart = RequestBody.create(MultipartBody.FORM, article);
-                retrofitService = retrofit.create(RetrofitService.class);
-                call = retrofitService.editResponse(postNumPart, accountPart, articlePart, body1, body2, body3, body4, body5, null, null, null, null);
-
-            }
-            //게시글x, 위치o
-            else if (article == null && address != null) {
-                addressPart = RequestBody.create(MultipartBody.FORM, address);
-                latitudePart = RequestBody.create(MultipartBody.FORM, String.valueOf(latitude));
-                longitudePart = RequestBody.create(MultipartBody.FORM, String.valueOf(longitude));
-
-
-                retrofitService = retrofit.create(RetrofitService.class);
-                call = retrofitService.editResponse(postNumPart, accountPart, null, body1, body2, body3, body4, body5, null, addressPart, latitudePart, longitudePart);
-
-            }
-            //게시글o, 위치o
-            else {
-
-                articlePart = RequestBody.create(MultipartBody.FORM, article);
-                addressPart = RequestBody.create(MultipartBody.FORM, address);
-                latitudePart = RequestBody.create(MultipartBody.FORM, String.valueOf(latitude));
-                longitudePart = RequestBody.create(MultipartBody.FORM, String.valueOf(longitude));
-
-                retrofitService = retrofit.create(RetrofitService.class);
-                call = retrofitService.editResponse(postNumPart, accountPart, articlePart, body1, body2, body3, body4, body5, null, addressPart, latitudePart, longitudePart);
-
-            }
-        }
-        //사진 6장 선택했을 때
-        else {
-
-
-            String timeStamp1 = new SimpleDateFormat("HHmmss").format(new Date());
-            String imageFileName1 = account + timeStamp1 + "1.jpg";
-
-            String timeStamp2 = new SimpleDateFormat("HHmmss").format(new Date());
-            String imageFileName2 = account + timeStamp2 + "2.jpg";
-
-            String timeStamp3 = new SimpleDateFormat("HHmmss").format(new Date());
-            String imageFileName3 = account + timeStamp3 + "3.jpg";
-
-            String timeStamp4 = new SimpleDateFormat("HHmmss").format(new Date());
-            String imageFileName4 = account + timeStamp4 + "4.jpg";
-
-            String timeStamp5 = new SimpleDateFormat("HHmmss").format(new Date());
-            String imageFileName5 = account + timeStamp5 + "5.jpg";
-
-            String timeStamp6 = new SimpleDateFormat("HHmmss").format(new Date());
-            String imageFileName6 = account + timeStamp6 + "6.jpg";
-
-
-            file1 = imageFileArrayList.get(0);
-            file2 = imageFileArrayList.get(1);
-            file3 = imageFileArrayList.get(2);
-            file4 = imageFileArrayList.get(3);
-            file5 = imageFileArrayList.get(4);
-            file6 = imageFileArrayList.get(5);
-
-            imageFile1 = RequestBody.create(MediaType.parse("multipart/form-data"), file1);
-            imageFile2 = RequestBody.create(MediaType.parse("multipart/form-data"), file2);
-            imageFile3 = RequestBody.create(MediaType.parse("multipart/form-data"), file3);
-            imageFile4 = RequestBody.create(MediaType.parse("multipart/form-data"), file4);
-            imageFile5 = RequestBody.create(MediaType.parse("multipart/form-data"), file5);
-            imageFile6 = RequestBody.create(MediaType.parse("multipart/form-data"), file6);
-
-
-            body1 = MultipartBody.Part.createFormData("image1", imageFileName1, imageFile1);
-            body2 = MultipartBody.Part.createFormData("image2", imageFileName2, imageFile2);
-            body3 = MultipartBody.Part.createFormData("image3", imageFileName3, imageFile3);
-            body4 = MultipartBody.Part.createFormData("image4", imageFileName4, imageFile4);
-            body5 = MultipartBody.Part.createFormData("image5", imageFileName5, imageFile5);
-            body6 = MultipartBody.Part.createFormData("image6", imageFileName6, imageFile6);
-
-
-            //게시글x 위치x
-            if (article == null && address == null) {
-
-                retrofitService = retrofit.create(RetrofitService.class);
-                call = retrofitService.editResponse(postNumPart, accountPart, null, body1, body2, body3, body4, body5, body6, null, null, null);
-
-            }
-            //게시글o, 위치x
-            else if (article != null && address == null) {
-
-                articlePart = RequestBody.create(MultipartBody.FORM, article);
-                retrofitService = retrofit.create(RetrofitService.class);
-                call = retrofitService.editResponse(postNumPart, accountPart, articlePart, body1, body2, body3, body4, body5, body6, null, null, null);
-
-            }
-            //게시글x, 위치o
-            else if (article == null && address != null) {
-                addressPart = RequestBody.create(MultipartBody.FORM, address);
-                latitudePart = RequestBody.create(MultipartBody.FORM, String.valueOf(latitude));
-                longitudePart = RequestBody.create(MultipartBody.FORM, String.valueOf(longitude));
-
-
-                retrofitService = retrofit.create(RetrofitService.class);
-                call = retrofitService.editResponse(postNumPart, accountPart, null, body1, body2, body3, body4, body5, body6, addressPart, latitudePart, longitudePart);
-
-            }
-            //게시글o, 위치o
-            else {
-
-                articlePart = RequestBody.create(MultipartBody.FORM, article);
-                addressPart = RequestBody.create(MultipartBody.FORM, address);
-                latitudePart = RequestBody.create(MultipartBody.FORM, String.valueOf(latitude));
-                longitudePart = RequestBody.create(MultipartBody.FORM, String.valueOf(longitude));
-
-                retrofitService = retrofit.create(RetrofitService.class);
-                call = retrofitService.editResponse(postNumPart, accountPart, articlePart, body1, body2, body3, body4, body5, body6, addressPart, latitudePart, longitudePart);
-
-            }
-        }
-
+        RetrofitService retrofitService = retrofit.create(RetrofitService.class);
+        Call<UploadResponse> call = retrofitService.editResponse(postNumPart, accountPart, articlePart, imageMultipartBodyList.get(0), imageMultipartBodyList.get(1), imageMultipartBodyList.get(2), imageMultipartBodyList.get(3), imageMultipartBodyList.get(4), imageMultipartBodyList.get(5), addressPart, latitudePart, longitudePart);
 
         call.enqueue(new Callback<UploadResponse>() {
             @Override
             public void onResponse(Call<UploadResponse> call, Response<UploadResponse> response) {
 
-                UploadResponse uploadResponse = response.body();
                 PostActivity.isEditted = true;
 
-                imageArraylist.clear();
                 Glide.get(getApplicationContext()).clearMemory();
 
                 //url에서 가져와 저장한 이미지는 삭제를 해준다.
-                if (file6 != null) {
-                    if (imageRootArrayList.get(5).equals("url")) {
-                        Log.d("이미지6 삭제 접근: ", "yes");
-                        file6.delete();
+                for (int i = 0; i < imageFileArrayList.size(); i++) {
+                    if (imageArrayList.get(i).imageRoot.equals("url")) {
+                        Log.d("삭제된 이미지 경로", String.valueOf(imageFileArrayList.get(i)));
+                        imageFileArrayList.get(i).delete();
+
                     }
                 }
 
-                if (file5 != null) {
-                    if (imageRootArrayList.get(4).equals("url")) {
-                        Log.d("이미지5 삭제 접근: ", "yes");
-                        file5.delete();
-                    }
-                }
-
-                if (file4 != null) {
-                    if (imageRootArrayList.get(3).equals("url")) {
-                        Log.d("이미지4 삭제 접근: ", "yes");
-                        file4.delete();
-                    }
-                }
-
-                if (file3 != null) {
-                    if (imageRootArrayList.get(2).equals("url")) {
-                        Log.d("이미지3 삭제 접근: ", "yes");
-                        file3.delete();
-                    }
-                }
-
-                if (file2 != null) {
-                    if (imageRootArrayList.get(1).equals("url")) {
-                        Log.d("이미지2 삭제 접근: ", "yes");
-                        file2.delete();
-                    }
-                }
-
-                if (file1 != null) {
-                    if (imageRootArrayList.get(0).equals("url")) {
-                        Log.d("이미지1 삭제 접근: ", "yes");
-                        file1.delete();
-                    }
-                }
-
+                imageArrayList.clear();
                 //작업이 완료되면 로딩 다이얼로그를 없애주고 메인화면으로 인텐트
                 progressDialog.dismiss();
 
@@ -755,7 +296,29 @@ public class EditPostSecondActivity extends AppCompatActivity {
         });
     }
 
-    public void setArticleAddress() {
+
+    private ArrayList createImageMultipartBody(ArrayList<UploadImageItem> imageArrayList) {//로컬 단말기의 uri가 담긴 리스트
+        ArrayList<MultipartBody.Part> imageMultipartBodyList = new ArrayList<>();//이미지 멀티파트 리스트
+        //이미지 처리 객체 초기화
+
+        for (int i = 0; i < imageArrayList.size(); i++) {
+            String timeStamp = new SimpleDateFormat("HHmmss").format(new Date());
+            String imageFileName = account + timeStamp + (i + 1) + ".jpg";//서버의 이미지 파일 명
+            RequestBody requestBody = RequestBody.create(MediaType.parse("multipart/form-data"), imageFileArrayList.get(i));//리퀘스트 body
+            MultipartBody.Part multipartBody = MultipartBody.Part.createFormData("image" + (i + 1), imageFileName, requestBody);
+            imageMultipartBodyList.add(multipartBody);//리스트에 추가
+        }
+
+        if (imageArrayList.size() != 6) {
+            for (int i = imageArrayList.size(); i < 6; i++) {
+                imageMultipartBodyList.add(null);
+            }
+        }
+
+        return imageMultipartBodyList;
+    }
+
+    private void setArticleAddress() {
         Intent intent = getIntent();
         //게시글이 존재하면 변수에 담고 변수에 세팅
         if (intent.getStringExtra("article") != null) {
@@ -777,113 +340,116 @@ public class EditPostSecondActivity extends AppCompatActivity {
         }
     }
 
-    public void setImageRoot() {
-        imageRootArrayList = new ArrayList<>();
-        Intent intent = getIntent();
-        for (int i = 0; i < imageArrayList.size(); i++) {
-            imageRootArrayList.add(intent.getStringExtra("imageRoot" + (i + 1)));
-            Log.d("이미지 root:", imageRootArrayList.get(i));
-        }
-    }
 
-    public class UrlImageToFile extends AsyncTask<String, Void, String> {
+    private class UrlImageToFile extends AsyncTask<String, Void, String> {
 
         String connectURL = null;
-        String postParameters = null;
+        String imageRoot = null;
         String filename;
         String savefolder = "/savefolder";
-
+        ProgressDialog progressDialog;
 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
+            progressDialog = new ProgressDialog(EditPostSecondActivity.this);
+
+            progressDialog = ProgressDialog.show(EditPostSecondActivity.this, "이미지 로딩중", "잠시만 기다려주세요", false, false);
 
 
         }
 
         @Override
         protected String doInBackground(String... params) {
-            //이미지가 url에서 왔을 때
-            if (params[1].equals("url")) {
-                connectURL = params[0];
+            try {
+                for (int i = 0; i < imageArrayList.size(); i++) {
+                    imageRoot = imageArrayList.get(i).imageRoot;
 
-                String savePath = Environment.getExternalStorageDirectory().toString() + savefolder;
-                File dir = new File(savePath);
-                //만약 해당 경로로 된 디텍토리가 없다면
-                if (!dir.exists()) {
-                    //해당 경로로 된 디렉토리 생성
-                    dir.mkdir();
-                }
+                    //이미지가 url에서 왔을 때
+                    if (imageRoot.equals("url")) {
+                        connectURL = imageArrayList.get(i).imageSource;
 
-                //파일 이름 설정
-                Date date = new Date();
-                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.KOREA);
-                //뒤에 숫자를 안 붙여주면 이름이 다 똑같이 생성돼서 뒤에 숫자를 하나씩 바꿔줘서 구분을 해줘야 함함
-                filename = String.valueOf(simpleDateFormat.format(date) + params[2]);
-
-                //이미지 파일의 경로 설정
-                String filePath = savePath + "/" + filename + ".jpg";
-
-
-                try {
-
-                    URL url = new URL(connectURL);
-                    httpURLConnection = (HttpURLConnection) url.openConnection();
-                    httpURLConnection.setDoOutput(true);
-                    httpURLConnection.setDoInput(true);
-                    httpURLConnection.setRequestMethod("POST");
-                    httpURLConnection.setReadTimeout(0);
-                    httpURLConnection.setConnectTimeout(0);
-                    httpURLConnection.connect();
-
-                    int length = httpURLConnection.getContentLength();
-
-
-                    byte[] tmpByte = new byte[length];
-                    //입력 스트림 생성
-                    InputStream inputStream = httpURLConnection.getInputStream();
-                    File file = new File(filePath);
-
-                    //파일 저장을 위한 스트림 생성
-                    FileOutputStream fileOutputStream = new FileOutputStream(file);
-
-                    //write할 길이를 구하기 위한 구문
-                    int read;
-                    for (; ; ) {
-                        //read함수의 param으로 byte어레이 객체를 넣어서 그 객체 안에 이미지 파일의 바이너리 코드를 넣겠다는 의미
-                        read = inputStream.read(tmpByte);
-                        if (read <= 0) {
-                            break;
+                        String savePath = Environment.getExternalStorageDirectory().toString() + savefolder;
+                        File dir = new File(savePath);
+                        //만약 해당 경로로 된 디텍토리가 없다면
+                        if (!dir.exists()) {
+                            //해당 경로로 된 디렉토리 생성
+                            dir.mkdir();
                         }
-                        //file 생성
-                        fileOutputStream.write(tmpByte, 0, read);
-                    }
-                    inputStream.close();
-                    fileOutputStream.close();
-                    httpURLConnection.disconnect();
-                    imageFileArrayList.add(new File(file.getPath()));
-                    Log.d("이미지 파일 경로" + params[2], String.valueOf(imageFileArrayList.get(Integer.parseInt(params[2]))));
-                    return file.getPath();
 
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Log.d("커넥트 에러", e.getMessage());
-                    return null;
+                        //파일 이름 설정
+                        Date date = new Date();
+                        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.KOREA);
+                        //뒤에 숫자를 안 붙여주면 이름이 다 똑같이 생성돼서 뒤에 숫자를 하나씩 바꿔줘서 구분을 해줘야 함함
+                        filename = String.valueOf(simpleDateFormat.format(date) + i);
+
+                        //이미지 파일의 경로 설정
+                        String filePath = savePath + "/" + filename + ".jpg";
+
+
+                        URL url = new URL(connectURL);
+                        httpURLConnection = (HttpURLConnection) url.openConnection();
+                        httpURLConnection.setDoOutput(true);
+                        httpURLConnection.setDoInput(true);
+                        httpURLConnection.setRequestMethod("POST");
+                        httpURLConnection.setReadTimeout(0);
+                        httpURLConnection.setConnectTimeout(0);
+                        httpURLConnection.connect();
+
+                        int length = httpURLConnection.getContentLength();
+
+
+                        byte[] tmpByte = new byte[length];
+                        //입력 스트림 생성
+                        InputStream inputStream = httpURLConnection.getInputStream();
+                        File file = new File(filePath);
+
+                        //파일 저장을 위한 스트림 생성
+                        FileOutputStream fileOutputStream = new FileOutputStream(file);
+
+                        //write할 길이를 구하기 위한 구문
+                        int read;
+                        for (; ; ) {
+                            //read함수의 param으로 byte어레이 객체를 넣어서 그 객체 안에 이미지 파일의 바이너리 코드를 넣겠다는 의미
+                            read = inputStream.read(tmpByte);
+                            if (read <= 0) {
+                                break;
+                            }
+                            //file 생성
+                            fileOutputStream.write(tmpByte, 0, read);
+                        }
+                        inputStream.close();
+                        fileOutputStream.close();
+                        httpURLConnection.disconnect();
+                        imageFileArrayList.add(new File(file.getPath()));
+                    }
+                    //이미지가 uri에서 왔을 때 마찬가지로 uri->bitmap->file의 형태로 이미지를 리사이징하여 파일화한다.
+                    else {
+                        //이미지 처리 객체 초기화
+                        ProcessImage processImage = new ProcessImage(EditPostSecondActivity.this);
+                        imageFileArrayList.add(processImage.createFileFromBitmap(processImage.getBitmapFromUri(imageArrayList.get(i).imageSource), imageArrayList.get(i).imageSource));
+                    }
+                    Log.d(TAG, "imageFilePath: " + imageFileArrayList.get(i).getPath());
                 }
 
-
-            }
-            //이미지가 uri에서 왔을 때 마찬가지로 uri->bitmap->file의 형태로 이미지를 리사이징하여 파일화한다.
-            else {
-
-//                imageFileArrayList.add(new File(Uri.parse(params[0]).getPath()));
-                //이미지 처리 객체 초기화
-                ProcessImage processImage = new ProcessImage(EditPostSecondActivity.this);
-                imageFileArrayList.add(processImage.createFileFromBitmap(processImage.getBitmapFromUri(params[0]), params[0]));
-
+                progressDialog.dismiss();
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.d("커넥트 에러", e.getMessage());
+                progressDialog.dismiss();
+                Toast.makeText(getApplicationContext(), "사진 로드에 실패하였습니다", Toast.LENGTH_SHORT).show();
+//                        progressDialog.dismiss();
+                //메인 액티비티로 데이터를 함께 넘겨준다.
+                Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                EditPostFirstActivity editPostFirstActivity = (EditPostFirstActivity) EditPostFirstActivity.editPostFirstActivity;
+                editPostFirstActivity.finish();
+                startActivity(intent);
+                finish();
                 return null;
             }
 
+            return null;
         }
 
         @Override
@@ -896,8 +462,7 @@ public class EditPostSecondActivity extends AppCompatActivity {
             } else {
                 Log.d("url이미지의 절대 경로: ", "null");
             }
-
-
+            progressDialog.dismiss();
         }
     }
 
@@ -906,11 +471,9 @@ public class EditPostSecondActivity extends AppCompatActivity {
     public void onBackPressed() {
         super.onBackPressed();
 
-        imageArrayList.clear();
-
         //url에서 가져와 저장한 이미지는 삭제를 해준다.
         for (int i = 0; i < imageFileArrayList.size(); i++) {
-            if (imageRootArrayList.get(i).equals("url")) {
+            if (imageArrayList.get(i).imageRoot.equals("url")) {
                 Log.d("삭제된 이미지 경로", String.valueOf(imageFileArrayList.get(i)));
                 imageFileArrayList.get(i).delete();
 

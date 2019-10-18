@@ -101,12 +101,15 @@ public interface RetrofitService {
             @Part("receiver") RequestBody receiver,
             @Part("message") RequestBody message,
             @Part("type") RequestBody type,
-            @Part MultipartBody.Part File1,
-            @Part MultipartBody.Part File2,
-            @Part MultipartBody.Part File3,
-            @Part MultipartBody.Part File4,
-            @Part MultipartBody.Part File5,
-            @Part MultipartBody.Part File6
+            //이미지 파일 최대 6개
+            @Part MultipartBody.Part imageFile1,
+            @Part MultipartBody.Part imageFile2,
+            @Part MultipartBody.Part imageFile3,
+            @Part MultipartBody.Part imageFile4,
+            @Part MultipartBody.Part imageFile5,
+            @Part MultipartBody.Part imageFile6,
+            //동영상 파일 1개
+            @Part MultipartBody.Part videoFile
     );
 
 

@@ -5,17 +5,18 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 import android.util.Log;
 
-import static com.example.sns.UploadFirstActivity.imageArrayList;
+import java.util.ArrayList;
 
 
 public class UploadImageViewPagerAdapter extends FragmentPagerAdapter {
 
-
+    ArrayList<String> imageArrayList;
 
 
     //뷰 페이저 어댑터의 생성자
-    public UploadImageViewPagerAdapter(FragmentManager fm) {
+    public UploadImageViewPagerAdapter(FragmentManager fm, ArrayList<String> imageArrayList) {
         super(fm);
+        this.imageArrayList = imageArrayList;
     }
 
     //param은 뷰페이저의 인덱스
