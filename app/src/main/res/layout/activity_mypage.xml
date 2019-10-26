@@ -106,9 +106,9 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:layout_marginLeft="30dp"
                         android:layout_marginTop="27dp"
-                        app:layout_constraintLeft_toRightOf="@+id/img_profile"
+                        android:layout_marginRight="20dp"
+                        app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="parent">
 
                         <LinearLayout
@@ -120,16 +120,16 @@
 
                             <TextView
                                 android:id="@+id/textview_postcount"
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_gravity="center"
+                                android:gravity="center"
                                 android:textColor="#000000"
                                 android:textSize="20sp"
                                 android:textStyle="bold" />
 
                             <TextView
                                 android:id="@+id/textview_post"
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:gravity="center"
                                 android:padding="15dp"
@@ -148,16 +148,16 @@
 
                             <TextView
                                 android:id="@+id/textview_followercount"
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_gravity="center"
+                                android:gravity="center"
                                 android:textColor="#000000"
                                 android:textSize="20sp"
                                 android:textStyle="bold" />
 
                             <TextView
                                 android:id="@+id/textview_follower"
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:gravity="center"
                                 android:padding="15dp"
@@ -174,9 +174,9 @@
 
                             <TextView
                                 android:id="@+id/textview_followingcount"
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_gravity="center"
+                                android:gravity="center"
                                 android:textColor="#000000"
                                 android:textSize="20sp"
                                 android:textStyle="bold" />
@@ -184,7 +184,7 @@
 
                             <TextView
                                 android:id="@+id/textview_following"
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:gravity="center"
                                 android:padding="15dp"

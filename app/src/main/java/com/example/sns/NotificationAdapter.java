@@ -198,10 +198,19 @@ public class NotificationAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
 
 
             //대표 사진 설정
-            Glide.with(context).load("http://13.124.105.47/uploadimage/" + notificationItemArrayList.get(position).image)
-                    .thumbnail(0.1f)
-                    .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
-                    .into(((NotificationLikeViewHolder) holder).iv_image);
+            if(notificationItemArrayList.get(position).type.equals("image")) {//이미지 게시물인 경우
+
+                Glide.with(context).load("http://13.124.105.47/uploadimage/" + notificationItemArrayList.get(position).image)
+                        .thumbnail(0.1f)
+                        .apply(new RequestOptions().centerCrop())
+                        .into(((NotificationLikeViewHolder) holder).iv_image);
+            }
+            else {//동영상 게시물인 경우
+                Glide.with(context).load("http://13.124.105.47/uploadvideo/" + notificationItemArrayList.get(position).image)
+                        .thumbnail(0.1f)
+                        .apply(new RequestOptions().centerCrop().frame(0))
+                        .into(((NotificationLikeViewHolder) holder).iv_image);
+            }
 
             //사진 클릭 리스너
             ((NotificationLikeViewHolder) holder).iv_image.setOnClickListener(new View.OnClickListener() {
@@ -304,10 +313,18 @@ public class NotificationAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
 
 
             //대표 사진 설정
-            Glide.with(context).load("http://13.124.105.47/uploadimage/" + notificationItemArrayList.get(position).image)
-                    .thumbnail(0.1f)
-                    .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
-                    .into(((NotificationCommentViewHolder) holder).iv_image);
+            if(notificationItemArrayList.get(position).type.equals("image")) {//이미지 게시물인 경우
+                Glide.with(context).load("http://13.124.105.47/uploadimage/" + notificationItemArrayList.get(position).image)
+                        .thumbnail(0.1f)
+                        .apply(new RequestOptions().centerCrop())
+                        .into(((NotificationCommentViewHolder) holder).iv_image);
+            }
+            else {//동영상 게시물인 경우
+                Glide.with(context).load("http://13.124.105.47/uploadvideo/" + notificationItemArrayList.get(position).image)
+                        .thumbnail(0.1f)
+                        .apply(new RequestOptions().centerCrop().frame(0))
+                        .into(((NotificationCommentViewHolder) holder).iv_image);
+            }
 
             //사진 클릭 리스너
             ((NotificationCommentViewHolder) holder).iv_image.setOnClickListener(new View.OnClickListener() {
@@ -406,10 +423,18 @@ public class NotificationAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
             ((NotificationChildCommentViewHolder) holder).tv_body.setMovementMethod(LinkMovementMethod.getInstance());
 
             //대표 사진 설정
-            Glide.with(context).load("http://13.124.105.47/uploadimage/" + notificationItemArrayList.get(position).image)
-                    .thumbnail(0.1f)
-                    .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
-                    .into(((NotificationChildCommentViewHolder) holder).iv_image);
+            if(notificationItemArrayList.get(position).type.equals("image")) {//이미지 게시물인 경우
+                Glide.with(context).load("http://13.124.105.47/uploadimage/" + notificationItemArrayList.get(position).image)
+                        .thumbnail(0.1f)
+                        .apply(new RequestOptions().centerCrop())
+                        .into(((NotificationChildCommentViewHolder) holder).iv_image);
+            }
+            else {//동영상 게시물인 경우
+                Glide.with(context).load("http://13.124.105.47/uploadvideo/" + notificationItemArrayList.get(position).image)
+                        .thumbnail(0.1f)
+                        .apply(new RequestOptions().centerCrop().frame(0))
+                        .into(((NotificationChildCommentViewHolder) holder).iv_image);
+            }
 
             //사진 클릭 리스너
             ((NotificationChildCommentViewHolder) holder).iv_image.setOnClickListener(new View.OnClickListener() {

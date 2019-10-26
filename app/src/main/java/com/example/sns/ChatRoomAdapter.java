@@ -15,6 +15,8 @@ import com.bumptech.glide.request.RequestOptions;
 import com.chauthai.swipereveallayout.SwipeRevealLayout;
 import com.chauthai.swipereveallayout.ViewBinderHelper;
 
+import org.w3c.dom.Text;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -128,7 +130,7 @@ public class ChatRoomAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
             if (chatRoomItemArrayList.get(position).time != null) {
                 //채팅방 마지막 메세지 도착 시간 설정
-                String time = ChatImageDetailActivity.formatDate(chatRoomItemArrayList.get(position).time, fromFromat, toFormat);
+                String time = ChatContentDetailActivity.formatDate(chatRoomItemArrayList.get(position).time, fromFromat, toFormat);
                 ((ChatListOneViewHolder) holder).tv_time.setText(time);
 
             }
@@ -187,7 +189,7 @@ public class ChatRoomAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
             //채팅방 마지막 메세지 도착 시간 설정
             if (chatRoomItemArrayList.get(position).time != null) {
-                String time = ChatImageDetailActivity.formatDate(chatRoomItemArrayList.get(position).time, fromFromat, toFormat);
+                String time = ChatContentDetailActivity.formatDate(chatRoomItemArrayList.get(position).time, fromFromat, toFormat);
                 ((ChatListTwoViewHolder) holder).tv_time.setText(time);
             }
 
@@ -253,7 +255,7 @@ public class ChatRoomAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             }
             //채팅방 마지막 메세지 도착 시간 설정
             if (chatRoomItemArrayList.get(position).time != null) {
-                String time = ChatImageDetailActivity.formatDate(chatRoomItemArrayList.get(position).time, fromFromat, toFormat);
+                String time = ChatContentDetailActivity.formatDate(chatRoomItemArrayList.get(position).time, fromFromat, toFormat);
                 ((ChatListThreeViewHolder) holder).tv_time.setText(time);
             }
 
@@ -328,7 +330,7 @@ public class ChatRoomAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
             //채팅방 마지막 메세지 도착 시간 설정
             if (chatRoomItemArrayList.get(position).time != null) {
-                String time = ChatImageDetailActivity.formatDate(chatRoomItemArrayList.get(position).time, fromFromat, toFormat);
+                String time = ChatContentDetailActivity.formatDate(chatRoomItemArrayList.get(position).time, fromFromat, toFormat);
                 ((ChatListFourViewHolder) holder).tv_time.setText(time);
 
             }
@@ -370,7 +372,7 @@ public class ChatRoomAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
             if (chatRoomItemArrayList.get(position).time != null) {
                 //채팅방 마지막 메세지 도착 시간 설정
-                String time = ChatImageDetailActivity.formatDate(chatRoomItemArrayList.get(position).time, fromFromat, toFormat);
+                String time = ChatContentDetailActivity.formatDate(chatRoomItemArrayList.get(position).time, fromFromat, toFormat);
                 ((ChatListNoneViewHolder) holder).tv_time.setText(time);
 
             }
@@ -399,86 +401,87 @@ public class ChatRoomAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         }
     }
 
-    //홀더의 아이템 데이터에 변화가 생겼을 때 아이템 홀더 전체를 새로고침하는 게 아니라 변화가 생긴 부분에만 새로고침을 해주는 메소드
+    //홀더의 아이템 데이터에 변화가 생겼을 때 아이템 홀더 전체를 새로고침하는 게 아니라 변화가 생긴 부분에만 새로고침을 해주는 콜백 메소드
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position, @NonNull List<Object> payloads) {
         if (payloads.isEmpty()) {
             super.onBindViewHolder(holder, position, payloads);
         } else {
             String payload = (String) payloads.get(0);
+            if (TextUtils.equals(payload, "updateNewMessage")) {
+                //자신을 제외한 채팅방 참여자 수가 1명(1:1채팅)
+                if (holder instanceof ChatListOneViewHolder) {
+                    //채팅방 마지막 메세지 설정
+                    if (chatRoomItemArrayList.get(position).message != null) {
+                        String message = chatRoomItemArrayList.get(position).message;
+                        ((ChatListOneViewHolder) holder).tv_content.setText(message);
+                    }
 
-            //자신을 제외한 채팅방 참여자 수가 1명(1:1채팅)
-            if (holder instanceof ChatListOneViewHolder) {
-                //채팅방 마지막 메세지 설정
-                if (chatRoomItemArrayList.get(position).message != null) {
-                    String message = chatRoomItemArrayList.get(position).message;
-                    ((ChatListOneViewHolder) holder).tv_content.setText(message);
-                }
+                    if (chatRoomItemArrayList.get(position).time != null) {
+                        //채팅방 마지막 메세지 도착 시간 설정
+                        String time = ChatContentDetailActivity.formatDate(chatRoomItemArrayList.get(position).time, fromFromat, toFormat);
+                        ((ChatListOneViewHolder) holder).tv_time.setText(time);
 
-                if (chatRoomItemArrayList.get(position).time != null) {
-                    //채팅방 마지막 메세지 도착 시간 설정
-                    String time = ChatImageDetailActivity.formatDate(chatRoomItemArrayList.get(position).time, fromFromat, toFormat);
-                    ((ChatListOneViewHolder) holder).tv_time.setText(time);
+                    }
+                    //미확인 메세지 개수를 새롭게 반영해준다.
+                    ((ChatListOneViewHolder) holder).tv_messageCount.setVisibility(View.VISIBLE);
+                    int newMessageCount = chatRoomItemArrayList.get(position).newMessageCount;
+                    ((ChatListOneViewHolder) holder).tv_messageCount.setText(String.valueOf(newMessageCount));
+                }
+                //자신을 제외한 채팅방 참여자 수가 2명
+                else if (holder instanceof ChatListTwoViewHolder) {
+                    //채팅방 마지막 메세지 설정
+                    if (chatRoomItemArrayList.get(position).message != null) {
+                        String message = chatRoomItemArrayList.get(position).message;
+                        ((ChatListTwoViewHolder) holder).tv_content.setText(message);
+                    }
+                    if (chatRoomItemArrayList.get(position).time != null) {
+                        //채팅방 마지막 메세지 도착 시간 설정
+                        String time = ChatContentDetailActivity.formatDate(chatRoomItemArrayList.get(position).time, fromFromat, toFormat);
+                        ((ChatListTwoViewHolder) holder).tv_time.setText(time);
 
+                    }
+                    //미확인 메세지 개수를 새롭게 반영해준다.
+                    ((ChatListTwoViewHolder) holder).tv_messageCount.setVisibility(View.VISIBLE);
+                    int newMessageCount = chatRoomItemArrayList.get(position).newMessageCount;
+                    ((ChatListTwoViewHolder) holder).tv_messageCount.setText(String.valueOf(newMessageCount));
                 }
-                //미확인 메세지 개수를 새롭게 반영해준다.
-                ((ChatListOneViewHolder) holder).tv_messageCount.setVisibility(View.VISIBLE);
-                int newMessageCount = chatRoomItemArrayList.get(position).newMessageCount;
-                ((ChatListOneViewHolder) holder).tv_messageCount.setText(String.valueOf(newMessageCount));
-            }
-            //자신을 제외한 채팅방 참여자 수가 2명
-            else if (holder instanceof ChatListTwoViewHolder) {
-                //채팅방 마지막 메세지 설정
-                if (chatRoomItemArrayList.get(position).message != null) {
-                    String message = chatRoomItemArrayList.get(position).message;
-                    ((ChatListTwoViewHolder) holder).tv_content.setText(message);
-                }
-                if (chatRoomItemArrayList.get(position).time != null) {
-                    //채팅방 마지막 메세지 도착 시간 설정
-                    String time = ChatImageDetailActivity.formatDate(chatRoomItemArrayList.get(position).time, fromFromat, toFormat);
-                    ((ChatListTwoViewHolder) holder).tv_time.setText(time);
+                //자신을 제외한 채팅방 참여자 수가 3명
+                else if (holder instanceof ChatListThreeViewHolder) {
+                    //채팅방 마지막 메세지 설정
+                    if (chatRoomItemArrayList.get(position).message != null) {
+                        String message = chatRoomItemArrayList.get(position).message;
+                        ((ChatListThreeViewHolder) holder).tv_content.setText(message);
+                    }
+                    if (chatRoomItemArrayList.get(position).time != null) {
+                        //채팅방 마지막 메세지 도착 시간 설정
+                        String time = ChatContentDetailActivity.formatDate(chatRoomItemArrayList.get(position).time, fromFromat, toFormat);
+                        ((ChatListThreeViewHolder) holder).tv_time.setText(time);
 
+                    }
+                    //미확인 메세지 개수를 새롭게 반영해준다.
+                    ((ChatListThreeViewHolder) holder).tv_messageCount.setVisibility(View.VISIBLE);
+                    int newMessageCount = chatRoomItemArrayList.get(position).newMessageCount;
+                    ((ChatListThreeViewHolder) holder).tv_messageCount.setText(String.valueOf(newMessageCount));
                 }
-                //미확인 메세지 개수를 새롭게 반영해준다.
-                ((ChatListTwoViewHolder) holder).tv_messageCount.setVisibility(View.VISIBLE);
-                int newMessageCount = chatRoomItemArrayList.get(position).newMessageCount;
-                ((ChatListTwoViewHolder) holder).tv_messageCount.setText(String.valueOf(newMessageCount));
-            }
-            //자신을 제외한 채팅방 참여자 수가 3명
-            else if (holder instanceof ChatListThreeViewHolder) {
-                //채팅방 마지막 메세지 설정
-                if (chatRoomItemArrayList.get(position).message != null) {
-                    String message = chatRoomItemArrayList.get(position).message;
-                    ((ChatListThreeViewHolder) holder).tv_content.setText(message);
-                }
-                if (chatRoomItemArrayList.get(position).time != null) {
-                    //채팅방 마지막 메세지 도착 시간 설정
-                    String time = ChatImageDetailActivity.formatDate(chatRoomItemArrayList.get(position).time, fromFromat, toFormat);
-                    ((ChatListThreeViewHolder) holder).tv_time.setText(time);
+                //자신을 제외한 채팅방 참여자 수가 4명 이상
+                else if (holder instanceof ChatListFourViewHolder) {
+                    //채팅방 마지막 메세지 설정
+                    if (chatRoomItemArrayList.get(position).message != null) {
+                        String message = chatRoomItemArrayList.get(position).message;
+                        ((ChatListFourViewHolder) holder).tv_content.setText(message);
+                    }
+                    if (chatRoomItemArrayList.get(position).time != null) {
+                        //채팅방 마지막 메세지 도착 시간 설정
+                        String time = ChatContentDetailActivity.formatDate(chatRoomItemArrayList.get(position).time, fromFromat, toFormat);
+                        ((ChatListFourViewHolder) holder).tv_time.setText(time);
 
+                    }
+                    //미확인 메세지 개수를 새롭게 반영해준다.
+                    ((ChatListFourViewHolder) holder).tv_messageCount.setVisibility(View.VISIBLE);
+                    int newMessageCount = chatRoomItemArrayList.get(position).newMessageCount;
+                    ((ChatListFourViewHolder) holder).tv_messageCount.setText(String.valueOf(newMessageCount));
                 }
-                //미확인 메세지 개수를 새롭게 반영해준다.
-                ((ChatListThreeViewHolder) holder).tv_messageCount.setVisibility(View.VISIBLE);
-                int newMessageCount = chatRoomItemArrayList.get(position).newMessageCount;
-                ((ChatListThreeViewHolder) holder).tv_messageCount.setText(String.valueOf(newMessageCount));
-            }
-            //자신을 제외한 채팅방 참여자 수가 4명 이상
-            else if (holder instanceof ChatListFourViewHolder) {
-                //채팅방 마지막 메세지 설정
-                if (chatRoomItemArrayList.get(position).message != null) {
-                    String message = chatRoomItemArrayList.get(position).message;
-                    ((ChatListFourViewHolder) holder).tv_content.setText(message);
-                }
-                if (chatRoomItemArrayList.get(position).time != null) {
-                    //채팅방 마지막 메세지 도착 시간 설정
-                    String time = ChatImageDetailActivity.formatDate(chatRoomItemArrayList.get(position).time, fromFromat, toFormat);
-                    ((ChatListFourViewHolder) holder).tv_time.setText(time);
-
-                }
-                //미확인 메세지 개수를 새롭게 반영해준다.
-                ((ChatListFourViewHolder) holder).tv_messageCount.setVisibility(View.VISIBLE);
-                int newMessageCount = chatRoomItemArrayList.get(position).newMessageCount;
-                ((ChatListFourViewHolder) holder).tv_messageCount.setText(String.valueOf(newMessageCount));
             }
 
 

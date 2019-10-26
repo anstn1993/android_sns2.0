@@ -4,23 +4,31 @@ import android.Manifest;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
+import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
 import com.google.android.material.navigation.NavigationView;
+
+import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.os.Bundle;
+
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import android.util.Log;
-import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -67,8 +75,6 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
     private DrawerLayout drawerLayout;
     private NavigationView navigationView;
 
-
-
     //채팅방 번호
     public static int roomNum;
     //미확인 메세지 수
@@ -83,7 +89,7 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
     //서버로 전송할 때 사용될 이미지 파일의 이름을 담을 리스트
     private ArrayList<String> imageNameForServerList;
     //이 채팅방에 존재하는 모든 이미지 파일의 이름을 담을 리스트
-    private ArrayList<String> totalImageArrayList;
+    private ArrayList<String> totalContentArrayList;
     //채팅 메세지를 표시해줄 리사이클러뷰
     private RecyclerView rv_chatContent;
     private LinearLayoutManager linearLayoutManager;
@@ -101,6 +107,8 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
     //채팅 아이템 간의 전송 시간 비교를 위한 시간 포맷
     private String fromFormat = "yyyy-MM-dd HH:mm:ss";
     private String toFormat = "yyyy-MM-dd";
+
+    private boolean isNewRoom;//새로운 채팅방 여부
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,11 +129,13 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
         drawerLayout = findViewById(R.id.drawerlayout);
         navigationView = findViewById(R.id.navigationview);
 
+
         setRecyclerView();
 
         if (getIntent() != null) {
 
             roomNum = getIntent().getIntExtra("roomNum", 0);
+            isNewRoom = getIntent().getBooleanExtra("isNewRoom", false);
             // ex) [{"account":"gggg","nickname":"진처리","profile":"gggg021103.jpg"},{"account":"rlarpdlcm","nickname":"정후이","profile":"rlarpdlcm025328.jpg"}]
             //참여자가 없는 경우에는 "null"
             String participantListString = getIntent().getStringExtra("participantList");
@@ -178,7 +188,7 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
 
         imageArrayList = new ArrayList<>();
         imageNameForServerList = new ArrayList<>();
-        totalImageArrayList = new ArrayList<>();
+        totalContentArrayList = new ArrayList<>();
 
 
         //채팅 서비스에서 넘어온 메세지를 받는 핸들러
@@ -195,6 +205,7 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                         int roomNum_ = jsonObject.getInt("roomNum");
                         //넘어온 메세지가 현재 채팅방의 메세지인 경우에만 화면에 표시를 해준다.
                         if (roomNum == roomNum_) {
+                            String type = jsonObject.getString("type");
                             String account = jsonObject.getString("account");
                             String nickname = jsonObject.getString("nickname");
                             String profile = jsonObject.getString("profile");
@@ -204,9 +215,9 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                             //시간 구분 아이템을 함께 추가해준다.
                             if (chatContentItemArrayList.size() >= 1) {
                                 //지금 받은 메세지가 가장 늦은 시간
-                                String laterTime = ChatImageDetailActivity.formatDate(time, fromFormat, toFormat);
+                                String laterTime = ChatContentDetailActivity.formatDate(time, fromFormat, toFormat);
                                 //메세지를 받기 전에 있었던 가장 최하단의 메세지
-                                String earlierTime = ChatImageDetailActivity.formatDate(chatContentItemArrayList.get(chatContentItemArrayList.size() - 1).time, fromFormat, toFormat);
+                                String earlierTime = ChatContentDetailActivity.formatDate(chatContentItemArrayList.get(chatContentItemArrayList.size() - 1).time, fromFormat, toFormat);
                                 //연, 월, 일이 다르면 다른 날에 전송된 아이템이기 때문에 시간 구분 아이템을 추가하여 아이템에 구분을 준다.
                                 if (!earlierTime.equals(laterTime)) {
                                     ChatContentItem chatContentItem = new ChatContentItem();
@@ -220,6 +231,7 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                             boolean isSent = true;
                             ChatContentItem chatContentItem = new ChatContentItem();
                             chatContentItem.setRoomNum(roomNum_);
+                            chatContentItem.setType(type);
                             chatContentItem.setAccount(account);
                             chatContentItem.setNickname(nickname);
                             chatContentItem.setProfile(profile);
@@ -248,7 +260,7 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                                     isAdded = true;
                                 }
 
-                                if(isAdded) {//미확인 계정이 추가됐을 때만 stringBuilder로 값을 바꿔준다.
+                                if (isAdded) {//미확인 계정이 추가됐을 때만 stringBuilder로 값을 바꿔준다.
                                     unCheckedParticipant = stringBuilder.toString();
                                 }
                             }
@@ -256,7 +268,7 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
 
 
                             //현재 완전히 보이는 채팅 아이템이 최신 채팅 아이템인 경우
-                            if(linearLayoutManager.findLastCompletelyVisibleItemPosition() == chatContentItemArrayList.size()-1) {
+                            if (linearLayoutManager.findLastCompletelyVisibleItemPosition() == chatContentItemArrayList.size() - 1) {
                                 chatContentItemArrayList.add(chatContentItem);
                                 chatContentAdapter.notifyItemInserted(chatContentItemArrayList.size() - 1);
                                 //채팅 리사이클러뷰를 최하단으로 스크롤
@@ -266,7 +278,7 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                             else {
                                 chatContentItemArrayList.add(chatContentItem);
                                 chatContentAdapter.notifyItemInserted(chatContentItemArrayList.size() - 1);
-                                tv_newMessage.setText(nickname+": "+message);//새로운 메세지 박스에 메세지를 set
+                                tv_newMessage.setText(nickname + ": " + message);//새로운 메세지 박스에 메세지를 set
                                 tv_newMessage.setVisibility(View.VISIBLE);//새로운 메세지 박스 visible
                             }
                         }
@@ -291,6 +303,7 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                         int roomNum_ = jsonObject.getInt("roomNum");
                         //넘어온 메세지가 현재 채팅방의 메세지인 경우에만 화면에 표시를 해준다.
                         if (roomNum == roomNum_) {
+                            String type = jsonObject.getString("type");
                             String account = jsonObject.getString("account");
                             String nickname = jsonObject.getString("nickname");
                             String profile = jsonObject.getString("profile");
@@ -307,9 +320,9 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                             //시간 구분 아이템을 함께 추가해준다.
                             if (chatContentItemArrayList.size() >= 1) {
                                 //지금 받은 메세지가 가장 늦은 시간
-                                String laterTime = ChatImageDetailActivity.formatDate(time, fromFormat, toFormat);
+                                String laterTime = ChatContentDetailActivity.formatDate(time, fromFormat, toFormat);
                                 //메세지를 받기 전에 있었던 가장 최하단의 메세지
-                                String earlierTime = ChatImageDetailActivity.formatDate(chatContentItemArrayList.get(chatContentItemArrayList.size() - 1).time, fromFormat, toFormat);
+                                String earlierTime = ChatContentDetailActivity.formatDate(chatContentItemArrayList.get(chatContentItemArrayList.size() - 1).time, fromFormat, toFormat);
                                 //연, 월, 일이 다르면 다른 날에 전송된 아이템이기 때문에 시간 구분 아이템을 추가하여 아이템에 구분을 준다.
                                 if (!earlierTime.equals(laterTime)) {
                                     ChatContentItem chatContentItem = new ChatContentItem();
@@ -323,6 +336,7 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                             boolean isSent = true;
                             ChatContentItem chatContentItem = new ChatContentItem();
                             chatContentItem.setRoomNum(roomNum_);
+                            chatContentItem.setType(type);
                             chatContentItem.setAccount(account);
                             chatContentItem.setNickname(nickname);
                             chatContentItem.setProfile(profile);
@@ -351,13 +365,13 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                                     isAdded = true;
                                 }
                             }
-                            if(isAdded) {
+                            if (isAdded) {
                                 unCheckedParticipant = stringBuilder.toString();
                             }
                             chatContentItem.setUnCheckedParticipant(unCheckedParticipant);
 
                             //현재 완전히 보이는 채팅 아이템이 최신 채팅 아이템인 경우
-                            if(linearLayoutManager.findLastCompletelyVisibleItemPosition() == chatContentItemArrayList.size()-1) {
+                            if (linearLayoutManager.findLastCompletelyVisibleItemPosition() == chatContentItemArrayList.size() - 1) {
                                 chatContentItemArrayList.add(chatContentItem);
                                 chatContentAdapter.notifyItemInserted(chatContentItemArrayList.size() - 1);
                                 //채팅 리사이클러뷰를 최하단으로 스크롤
@@ -367,21 +381,22 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                             else {
                                 chatContentItemArrayList.add(chatContentItem);
                                 chatContentAdapter.notifyItemInserted(chatContentItemArrayList.size() - 1);
-                                tv_newMessage.setText(nickname+": 새로운 사진을 보냈습니다.");//새로운 메세지 박스에 메세지를 set
+                                tv_newMessage.setText(nickname + ": 새로운 사진을 보냈습니다.");//새로운 메세지 박스에 메세지를 set
                                 tv_newMessage.setVisibility(View.VISIBLE);//새로운 메세지 박스 visible
                             }
-                            //사진 상세보기 페이지에서 이미지를 볼 수 있게 해주기 위해 채팅방의 전체 이미지 리스트에 추가를 해준다.
+                            //사진 상세보기 페이지에서 컨텐츠를 볼 수 있게 해주기 위해 채팅방의 전체 컨텐츠 리스트에 추가를 해준다.
                             //ex) "{"account":"rangkim", "nickname":"뢩킴","profile":"...","time":"...","imageList":["image1","image2"...]}"
-                            JSONObject imageData = new JSONObject();
+                            JSONObject contentData = new JSONObject();
 
                             //사용자가 전송한 이미지를 담을 json어레이
                             for (int i = 0; i < imageArrayList.size(); i++) {
-                                imageData.put("account", account);
-                                imageData.put("nickname", nickname);
-                                imageData.put("profile", profile);
-                                imageData.put("time", time);
-                                imageData.put("image", imageArrayList.get(i));
-                                totalImageArrayList.add(imageData.toString());
+                                contentData.put("account", account);
+                                contentData.put("nickname", nickname);
+                                contentData.put("profile", profile);
+                                contentData.put("time", time);
+                                contentData.put("type", type);
+                                contentData.put("content", imageArrayList.get(i));
+                                totalContentArrayList.add(contentData.toString());
                             }
                         }
                         //다른 채팅방의 메세지인 경우에는 안 읽은 메세지 수를 추가해준다.
@@ -528,9 +543,9 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                             //시간 구분 아이템을 함께 추가해준다.
                             if (chatContentItemArrayList.size() >= 1) {
                                 //지금 받은 메세지가 가장 늦은 시간
-                                String laterTime = ChatImageDetailActivity.formatDate(time, fromFormat, toFormat);
+                                String laterTime = ChatContentDetailActivity.formatDate(time, fromFormat, toFormat);
                                 //메세지를 받기 전에 있었던 가장 최하단의 메세지
-                                String earlierTime = ChatImageDetailActivity.formatDate(chatContentItemArrayList.get(chatContentItemArrayList.size() - 1).time, fromFormat, toFormat);
+                                String earlierTime = ChatContentDetailActivity.formatDate(chatContentItemArrayList.get(chatContentItemArrayList.size() - 1).time, fromFormat, toFormat);
                                 //연, 월, 일이 다르면 다른 날에 전송된 아이템이기 때문에 시간 구분 아이템을 추가하여 아이템에 구분을 준다.
                                 if (!earlierTime.equals(laterTime)) {
                                     ChatContentItem chatContentItem = new ChatContentItem();
@@ -674,12 +689,12 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-                } else if(msg.what == 7777) {//영상통화 요청이 상대방에게 잘 전달됐는지에 대한 메세지
+                } else if (msg.what == 7777) {//영상통화 요청이 상대방에게 잘 전달됐는지에 대한 메세지
                     try {
                         String jsonString = msg.obj.toString();
                         JSONObject faceChatRequestResult = new JSONObject(jsonString);
                         String result = faceChatRequestResult.getString("type");
-                        if("successFaceChatRequest".equals(result)) {//영상통화 요청이 잘 전달된 경우
+                        if ("successFaceChatRequest".equals(result)) {//영상통화 요청이 잘 전달된 경우
                             Intent intent = new Intent(ChatRoomActivity.this, FaceChatResponseWaitingActivity.class);
                             intent.putExtra("screenOn", true);//화면 켜짐 상태에서 call 액티비티 진입
                             intent.putExtra("roomName", faceChatRequestResult.getString("roomName"));//방 번호
@@ -687,15 +702,123 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                             intent.putExtra("receiverNickname", faceChatRequestResult.getString("receiverNickname"));//수신자 닉네임
                             intent.putExtra("receiverProfile", faceChatRequestResult.getString("receiverProfile"));//수신자 프로필
                             startActivity(intent);  //통화화면으로 이동
-                        }else if ("failFaceChatRequest".equals(result)){//영상통화 요청이 전달되지 않은 경우
+                        } else if ("failFaceChatRequest".equals(result)) {//영상통화 요청이 전달되지 않은 경우
                             Toast.makeText(getApplicationContext(), "현재 상대방이 통화 불가능한 상태 입니다.", Toast.LENGTH_LONG).show();//통화 불가능 토스트
-                        }else {//상대방이 통화중인 경우
+                        } else {//상대방이 통화중인 경우
                             Toast.makeText(getApplicationContext(), "상대방이 통화중 입니다.", Toast.LENGTH_LONG).show();//통화 불가능 토스트
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
 
+                }
+                //채팅 내용이 동영상인 경우
+                else if (msg.what == 8888) {
+                    Log.d("채팅화면에 넘어온 메세지", msg.obj.toString());
+                    try {
+                        String jsonString = msg.obj.toString();
+                        JSONObject jsonObject = new JSONObject(jsonString);
+                        int roomNum_ = jsonObject.getInt("roomNum");
+                        //넘어온 메세지가 현재 채팅방의 메세지인 경우에만 화면에 표시를 해준다.
+                        if (roomNum == roomNum_) {
+                            String type = jsonObject.getString("type");
+                            String account = jsonObject.getString("account");
+                            String nickname = jsonObject.getString("nickname");
+                            String profile = jsonObject.getString("profile");
+                            String time = jsonObject.getString("time");
+                            String video = jsonObject.getString("video");
+                            //아이템 리스트에 아이템이 두개 이상이 되면 메세지의 전송 시간을 비교해서 두 아이템의 전송 날짜가 다른 경우
+                            //시간 구분 아이템을 함께 추가해준다.
+                            if (chatContentItemArrayList.size() >= 1) {
+                                //지금 받은 메세지가 가장 늦은 시간
+                                String laterTime = ChatContentDetailActivity.formatDate(time, fromFormat, toFormat);
+                                //메세지를 받기 전에 있었던 가장 최하단의 메세지
+                                String earlierTime = ChatContentDetailActivity.formatDate(chatContentItemArrayList.get(chatContentItemArrayList.size() - 1).time, fromFormat, toFormat);
+                                //연, 월, 일이 다르면 다른 날에 전송된 아이템이기 때문에 시간 구분 아이템을 추가하여 아이템에 구분을 준다.
+                                if (!earlierTime.equals(laterTime)) {
+                                    ChatContentItem chatContentItem = new ChatContentItem();
+                                    chatContentItem.setTime(time);
+                                    chatContentItem.setTimeDivider(true);
+                                    chatContentItemArrayList.add(chatContentItem);
+                                    chatContentAdapter.notifyItemInserted(chatContentItemArrayList.size() - 1);
+                                }
+                            }
+                            boolean isMyContent = false;
+                            boolean isSent = true;
+                            ChatContentItem chatContentItem = new ChatContentItem();
+                            chatContentItem.setRoomNum(roomNum_);
+                            chatContentItem.setType(type);
+                            chatContentItem.setAccount(account);
+                            chatContentItem.setNickname(nickname);
+                            chatContentItem.setProfile(profile);
+                            chatContentItem.setMyContent(isMyContent);
+                            chatContentItem.setVideo(video);
+                            chatContentItem.setSent(isSent);
+                            chatContentItem.setTime(time);
+                            //미확인자 리스트 스트링을 송신자의 계정을 빼고 만들어준다.
+                            //최종적으로 아이템에 셋을 해줄 미확인자 리스트 스트링
+                            String unCheckedParticipant = "null";
+                            //송신자의 계정은 제외한다.
+                            boolean isFirst = true;
+                            boolean isAdded = false;
+                            StringBuilder stringBuilder = new StringBuilder();
+                            for (int i = 0; i < chatParticipantItemArrayList.size(); i++) {
+                                if (!chatParticipantItemArrayList.get(i).account.equals(account)) {
+                                    //송신자의 계정이 아닌 첫번째 계정인 경우
+                                    if (isFirst) {
+                                        stringBuilder.append(chatParticipantItemArrayList.get(i).account);
+                                        isFirst = false;
+                                    }
+                                    //첫번째 계정이 아닌 경우
+                                    else {
+                                        stringBuilder.append("/" + chatParticipantItemArrayList.get(i).account);
+                                    }
+                                    isAdded = true;
+                                }
+                            }
+                            if (isAdded) {
+                                unCheckedParticipant = stringBuilder.toString();
+                            }
+                            chatContentItem.setUnCheckedParticipant(unCheckedParticipant);
+
+                            //현재 완전히 보이는 채팅 아이템이 최신 채팅 아이템인 경우
+                            if (linearLayoutManager.findLastCompletelyVisibleItemPosition() == chatContentItemArrayList.size() - 1) {
+                                chatContentItemArrayList.add(chatContentItem);
+                                chatContentAdapter.notifyItemInserted(chatContentItemArrayList.size() - 1);
+                                //채팅 리사이클러뷰를 최하단으로 스크롤
+                                rv_chatContent.scrollToPosition(chatContentItemArrayList.size() - 1);
+                            }
+                            //현재 완전히 보이는 채팅 아이템이 최신 채팅 아이템이 아닌 경우
+                            else {
+                                chatContentItemArrayList.add(chatContentItem);
+                                chatContentAdapter.notifyItemInserted(chatContentItemArrayList.size() - 1);
+                                tv_newMessage.setText(nickname + ": 새로운 동영상을 보냈습니다.");//새로운 메세지 박스에 메세지를 set
+                                tv_newMessage.setVisibility(View.VISIBLE);//새로운 메세지 박스 visible
+                            }
+                            //사진 상세보기 페이지에서 컨텐츠를 볼 수 있게 해주기 위해 채팅방의 전체 컨텐츠 리스트에 추가를 해준다.
+                            //ex) "{"account":"rangkim", "nickname":"뢩킴","profile":"...","time":"...","imageList":["image1","image2"...]}"
+                            JSONObject contentData = new JSONObject();
+
+                            //사용자가 전송한 이미지를 담을 json어레이
+                            contentData.put("account", account);
+                            contentData.put("nickname", nickname);
+                            contentData.put("profile", profile);
+                            contentData.put("time", time);
+                            contentData.put("type", type);
+                            contentData.put("content", video);
+                            totalContentArrayList.add(contentData.toString());
+                        }
+                        //다른 채팅방의 메세지인 경우에는 안 읽은 메세지 수를 추가해준다.
+                        else {
+                            if (newMessageCount == 0) {
+                                tv_messageCount.setVisibility(View.VISIBLE);
+                            }
+                            newMessageCount += 1;
+                            tv_messageCount.setText(String.valueOf(newMessageCount));
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         };
@@ -713,6 +836,8 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                         Toast.makeText(getApplicationContext(), "참여자가 없습니다.", Toast.LENGTH_SHORT).show();
                     } else {
                         try {
+
+
                             //메세지 데이터를 json객체에 담아준다.
                             JSONObject messageData = new JSONObject();
                             messageData.put("type", "message");
@@ -724,6 +849,7 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
 
                             ChatContentItem chatContentItem = new ChatContentItem();
                             chatContentItem.setRoomNum(roomNum);
+                            chatContentItem.setType("message");
                             chatContentItem.setAccount(LoginActivity.account);
                             chatContentItem.setNickname(LoginActivity.nickname);
                             chatContentItem.setProfile(LoginActivity.profile);
@@ -736,7 +862,7 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                             chatContentItemArrayList.add(chatContentItem);
                             chatContentAdapter.notifyItemInserted(chatContentItemArrayList.size() - 1);
                             rv_chatContent.scrollToPosition(chatContentItemArrayList.size() - 1);
-                            if(tv_newMessage.getVisibility() == View.VISIBLE) {//메세지 박스가 보이는 경우 메세지 박스를 지워준다
+                            if (tv_newMessage.getVisibility() == View.VISIBLE) {//메세지 박스가 보이는 경우 메세지 박스를 지워준다
                                 tv_newMessage.setVisibility(View.GONE);
                             }
                             //수신자 스트링을 만들어준다.
@@ -751,7 +877,7 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                                 }
                             }
                             receiverString = stringBuilder.toString();
-                            addChat(String.valueOf(roomNum), LoginActivity.account, receiverString, chat, "message", messageData.toString(), imageArrayList);
+                            addChat(String.valueOf(roomNum), LoginActivity.account, receiverString, chat, "message", messageData.toString(), imageArrayList, null, null, null);
                             et_chat.setText("");
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -765,89 +891,221 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
             }
         });
 
-        //이미지 추가 버튼 클릭 리스너
+        //컨텐츠 추가 버튼 클릭 리스너
         ib_addContent.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //tedbottompicker라이브러리
-                TedBottomPicker.with(ChatRoomActivity.this)
-                        //이미지 피커액티비티가 올라오는 높이 설정
-                        .setPeekHeight(2000)
-                        .showTitle(false)
-                        .setCompleteButtonText("완료")
-                        .setEmptySelectionText("이미지 없음")
-                        .setPreviewMaxCount(1000)
-                        .setSelectMaxCount(6)
-                        .setSelectMinCount(1)
-                        .setEmptySelectionText("이미지를 선택해주세요.")
-                        .showMultiImage(new TedBottomSheetDialogFragment.OnMultiImageSelectedListener() {
-                            //이미지를 선택한 후 완료버튼을 누르면 호출되는 메소드
-                            @Override
-                            public void onImagesSelected(List<Uri> uriList) {
-                                try {
-                                    //소켓 서버로 전달할 json스트링
-                                    JSONObject imageData = new JSONObject();
-                                    imageData.put("type", "image");
-                                    imageData.put("roomNum", roomNum);
-                                    imageData.put("account", LoginActivity.account);
-                                    imageData.put("nickname", LoginActivity.nickname);
-                                    imageData.put("profile", LoginActivity.profile);
-                                    imageData.put("message", LoginActivity.nickname + "님이 사진을 보냈습니다.");
+                Dialog dialog = new Dialog(ChatRoomActivity.this);
+                dialog.setContentView(R.layout.upload_content_select_box);
 
-                                    JSONArray imageList = new JSONArray();
-                                    //선택한 이미지 경로를 json 어레이에 넣어준다.
-                                    for (int i = 0; i < uriList.size(); i++) {
-                                        imageArrayList.add(uriList.get(i).toString());
-                                        //이미지 파일의 이름 설정
-                                        String timeStamp = new SimpleDateFormat("HHmmss").format(new Date());
-                                        String imageFileName = account + timeStamp + (i + 1) + ".jpg";
-                                        imageNameForServerList.add(imageFileName);
-                                        Log.d("이미지 파일명", imageNameForServerList.get(i));
-                                        imageList.put(imageNameForServerList.get(i));
-                                    }
-                                    imageData.put("imageList", imageList);
-                                    ChatContentItem chatContentItem = new ChatContentItem();
-                                    chatContentItem.setRoomNum(roomNum);
-                                    chatContentItem.setAccount(LoginActivity.account);
-                                    chatContentItem.setNickname(LoginActivity.nickname);
-                                    chatContentItem.setProfile(LoginActivity.profile);
-                                    chatContentItem.setMessage(LoginActivity.nickname + "님이 사진을 보냈습니다.");
-                                    for (int j = 0; j < imageArrayList.size(); j++) {
-                                        chatContentItem.imageList.add(imageArrayList.get(j));
-                                    }
-                                    chatContentItem.setMyContent(true);
-                                    chatContentItem.setSent(false);
-                                    chatContentItem.setImageFromServer(false);
-                                    chatContentItem.setExit(false);
-                                    chatContentItem.setAddedParticipantMessage(false);
-                                    chatContentItemArrayList.add(chatContentItem);
-                                    chatContentAdapter.notifyItemInserted(chatContentItemArrayList.size() - 1);
-                                    rv_chatContent.scrollToPosition(chatContentItemArrayList.size() - 1);
-                                    if(tv_newMessage.getVisibility() == View.VISIBLE) {//메세지 박스가 보이는 경우 메세지 박스를 지워준다
-                                        tv_newMessage.setVisibility(View.GONE);
-                                    }
+                WindowManager.LayoutParams layoutParams = new WindowManager.LayoutParams();
+                layoutParams.copyFrom(dialog.getWindow().getAttributes());
+                layoutParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
+                layoutParams.width = WindowManager.LayoutParams.MATCH_PARENT;
+                dialog.getWindow().setAttributes(layoutParams);
 
-                                    //수신자 스트링을 만들어준다.
-                                    String receiverString = null;
-                                    StringBuilder stringBuilder = new StringBuilder();
-                                    for (int i = 0; i < chatParticipantItemArrayList.size(); i++) {
-                                        String account = chatParticipantItemArrayList.get(i).account;
-                                        if (i == 0) {
-                                            stringBuilder.append(account);
-                                        } else {
-                                            stringBuilder.append("/" + account);
+
+                Button btn_photo, btn_video;//사진, 동영상 버튼
+
+                btn_photo = dialog.findViewById(R.id.button_photo);
+                btn_video = dialog.findViewById(R.id.button_video);
+
+                btn_photo.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        //tedbottompicker라이브러리
+                        TedBottomPicker.with(ChatRoomActivity.this)
+                                //이미지 피커액티비티가 올라오는 높이 설정
+                                .setPeekHeight(2000)
+                                .showTitle(false)
+                                .setCompleteButtonText("완료")
+                                .setEmptySelectionText("이미지 없음")
+                                .setPreviewMaxCount(1000)
+                                .setSelectMaxCount(6)
+                                .setSelectMinCount(1)
+                                .setEmptySelectionText("이미지를 선택해주세요.")
+                                .showMultiImage(new TedBottomSheetDialogFragment.OnMultiImageSelectedListener() {
+                                    //이미지를 선택한 후 완료버튼을 누르면 호출되는 메소드
+                                    @Override
+                                    public void onImagesSelected(List<Uri> uriList) {
+
+                                        dialog.dismiss();
+
+                                        try {
+                                            //소켓 서버로 전달할 json스트링
+                                            JSONObject imageData = new JSONObject();
+                                            imageData.put("type", "image");
+                                            imageData.put("roomNum", roomNum);
+                                            imageData.put("account", LoginActivity.account);
+                                            imageData.put("nickname", LoginActivity.nickname);
+                                            imageData.put("profile", LoginActivity.profile);
+                                            imageData.put("message", LoginActivity.nickname + "님이 사진을 보냈습니다.");
+
+                                            JSONArray imageList = new JSONArray();
+                                            //선택한 이미지 경로를 json 어레이에 넣어준다.
+                                            for (int i = 0; i < uriList.size(); i++) {
+                                                imageArrayList.add(uriList.get(i).toString());
+                                                //이미지 파일의 이름 설정
+                                                String timeStamp = new SimpleDateFormat("HHmmss").format(new Date());
+                                                String imageFileName = account + timeStamp + (i + 1) + ".jpg";
+                                                imageNameForServerList.add(imageFileName);
+                                                Log.d("이미지 파일명", imageNameForServerList.get(i));
+                                                imageList.put(imageNameForServerList.get(i));
+                                            }
+                                            imageData.put("imageList", imageList);
+                                            ChatContentItem chatContentItem = new ChatContentItem();
+                                            chatContentItem.setRoomNum(roomNum);
+                                            chatContentItem.setType("image");
+                                            chatContentItem.setAccount(LoginActivity.account);
+                                            chatContentItem.setNickname(LoginActivity.nickname);
+                                            chatContentItem.setProfile(LoginActivity.profile);
+                                            chatContentItem.setMessage(LoginActivity.nickname + "님이 사진을 보냈습니다.");
+                                            for (int j = 0; j < imageArrayList.size(); j++) {
+                                                chatContentItem.imageList.add(imageArrayList.get(j));
+                                            }
+                                            chatContentItem.setMyContent(true);
+                                            chatContentItem.setSent(false);
+                                            chatContentItem.setImageFromServer(false);
+                                            chatContentItem.setExit(false);
+                                            chatContentItem.setAddedParticipantMessage(false);
+                                            chatContentItemArrayList.add(chatContentItem);
+                                            chatContentAdapter.notifyItemInserted(chatContentItemArrayList.size() - 1);
+                                            rv_chatContent.scrollToPosition(chatContentItemArrayList.size() - 1);
+                                            if (tv_newMessage.getVisibility() == View.VISIBLE) {//메세지 박스가 보이는 경우 메세지 박스를 지워준다
+                                                tv_newMessage.setVisibility(View.GONE);
+                                            }
+
+                                            //수신자 스트링을 만들어준다.
+                                            String receiverString = null;
+                                            StringBuilder stringBuilder = new StringBuilder();
+                                            for (int i = 0; i < chatParticipantItemArrayList.size(); i++) {
+                                                String account = chatParticipantItemArrayList.get(i).account;
+                                                if (i == 0) {
+                                                    stringBuilder.append(account);
+                                                } else {
+                                                    stringBuilder.append("/" + account);
+                                                }
+                                            }
+                                            receiverString = stringBuilder.toString();
+                                            Log.d("이미지 메세지 데이터", imageData.toString());
+                                            addChat(String.valueOf(roomNum), LoginActivity.account, receiverString, LoginActivity.nickname + "님이 사진을 보냈습니다.", "image", imageData.toString(), imageArrayList, null, null, null);
+
+
+                                        } catch (JSONException e) {
+                                            e.printStackTrace();
                                         }
                                     }
-                                    receiverString = stringBuilder.toString();
-                                    Log.d("이미지 메세지 데이터", imageData.toString());
-                                    addChat(String.valueOf(roomNum), LoginActivity.account, receiverString, LoginActivity.nickname + "님이 사진을 보냈습니다.", "image", imageData.toString(), imageArrayList);
+                                });
+                    }
+                });
 
+                btn_video.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        //tedbottompicker라이브러리
+                        TedBottomPicker.with(ChatRoomActivity.this)
+                                //이미지 피커액티비티가 올라오는 높이 설정
+                                .setPeekHeight(2000)
+                                .showTitle(true)
+                                .setTitle("동영상")
+                                .setCompleteButtonText("완료")
+                                .setEmptySelectionText("동영상 없음")
+                                .setPreviewMaxCount(1000)
+                                .setEmptySelectionText("동영상을 선택해주세요.")
+                                .showVideoMedia()
+                                .setSelectMaxCount(1)
+                                .setSelectMinCount(1)
+                                .showMultiImage(new TedBottomSheetDialogFragment.OnMultiImageSelectedListener() {
+                                    //이미지를 선택한 후 완료버튼을 누르면 호출되는 메소드
+                                    @Override
+                                    public void onImagesSelected(List<Uri> uriList) {
 
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        });
+                                        int[] videoSize = new int[2];//비디오 해상도를 담는 배열
+                                        //비디오 데이터의 해상도를 구하기 위해서 메타데이터 리트리버 사용
+                                        MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
+                                        mediaMetadataRetriever.setDataSource(uriList.get(0).getPath());//비디오 소스 셋
+                                        //비디오 데이터의 ratation에 따라서 width, height값이 정확히 안 나올 수 있기 때문에 rotation에 따라 설정해준다.
+                                        String metaRotation = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION);
+                                        int rotation = metaRotation == null ? 0 : Integer.parseInt(metaRotation);
+                                        Log.d(TAG, "media rotation = " + rotation);
+                                        //rotation이 90이나 270인 경우 width와 height값이 실제와 반대로 나타나기 때문에 width에 height값을 height에 width값을 넣는다.
+                                        if (rotation == 90 || rotation == 270) {
+                                            videoSize[0] = Integer.parseInt(mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
+                                            videoSize[1] = Integer.parseInt(mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH));
+                                        }
+                                        //그렇지 않은 경우는 그냥 정상적으로 대입한다.
+                                        else {
+                                            videoSize[0] = Integer.parseInt(mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH));
+                                            videoSize[1] = Integer.parseInt(mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
+                                        }
+                                        //비디오 데이터의 해상도를 구한다.
+                                        dialog.dismiss();
+                                        String timeStamp = new SimpleDateFormat("HHmmss").format(new Date());
+                                        String videoFileName = account + timeStamp + ".mp4";//서버로 업로드할 비디오 파일 명
+                                        //소켓 서버로 전달할 json스트링
+                                        JSONObject videoData = new JSONObject();
+                                        try {
+                                            videoData.put("type", "video");
+                                            videoData.put("roomNum", roomNum);
+                                            videoData.put("account", LoginActivity.account);
+                                            videoData.put("nickname", LoginActivity.nickname);
+                                            videoData.put("profile", LoginActivity.profile);
+                                            videoData.put("message", LoginActivity.nickname + "님이 동영상을 보냈습니다.");
+                                            videoData.put("video", videoFileName);
+
+                                        } catch (JSONException e) {
+                                            e.printStackTrace();
+                                        }
+
+                                        ChatContentItem chatContentItem = new ChatContentItem();
+                                        chatContentItem.setRoomNum(roomNum);
+                                        chatContentItem.setType("video");
+                                        chatContentItem.setAccount(LoginActivity.account);
+                                        chatContentItem.setNickname(LoginActivity.nickname);
+                                        chatContentItem.setProfile(LoginActivity.profile);
+                                        chatContentItem.setMessage(LoginActivity.nickname + "님이 동영상을 보냈습니다.");
+                                        chatContentItem.setVideo(uriList.get(0).getPath());//아직 서버에 업로드하기 전이기 때문에 local uri에서 썸네일 추출
+                                        chatContentItem.setMyContent(true);
+                                        chatContentItem.setSent(false);
+                                        chatContentItem.setVideoFromServer(false);
+                                        chatContentItem.setExit(false);
+                                        chatContentItem.setAddedParticipantMessage(false);
+                                        chatContentItemArrayList.add(chatContentItem);
+                                        chatContentAdapter.notifyItemInserted(chatContentItemArrayList.size() - 1);
+                                        rv_chatContent.scrollToPosition(chatContentItemArrayList.size() - 1);
+                                        if (tv_newMessage.getVisibility() == View.VISIBLE) {//메세지 박스가 보이는 경우 메세지 박스를 지워준다
+                                            tv_newMessage.setVisibility(View.GONE);
+                                        }
+
+                                        //수신자 스트링을 만들어준다.
+                                        String receiverString = null;
+                                        StringBuilder stringBuilder = new StringBuilder();
+                                        for (int i = 0; i < chatParticipantItemArrayList.size(); i++) {
+                                            String account = chatParticipantItemArrayList.get(i).account;
+                                            if (i == 0) {
+                                                stringBuilder.append(account);
+                                            } else {
+                                                stringBuilder.append("/" + account);
+                                            }
+                                        }
+                                        receiverString = stringBuilder.toString();
+                                        String finalReceiverString = receiverString;
+                                        new Thread(
+                                                new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        addChat(String.valueOf(roomNum), LoginActivity.account, finalReceiverString, LoginActivity.nickname + "님이 동영상을 보냈습니다.", "video", videoData.toString(), imageArrayList, uriList.get(0), videoFileName, videoSize);
+                                                    }
+                                                }
+                                        ).start();
+                                    }
+                                });
+
+                    }
+                });
+
+                dialog.show();
+
             }
         });
 
@@ -857,7 +1115,7 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
             @Override
             public void onClick(View v) {
                 //방을 만들고 채팅을 보내지 않은 상태에서 그냥 나가는 경우
-                if (chatContentItemArrayList.size() == 0) {
+                if (chatContentItemArrayList.size() == 0 && isNewRoom == true) {
                     try {
                         //채팅 방을 삭제
                         deleteChatRoom(roomNum);
@@ -889,7 +1147,7 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
             @Override
             public void onClick(View v) {
                 //채팅방 서랍 오픈
-                drawerLayout.openDrawer(Gravity.END);
+                drawerLayout.openDrawer(GravityCompat.END);
             }
         });
 
@@ -897,7 +1155,7 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
         tv_newMessage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                rv_chatContent.scrollToPosition(chatContentItemArrayList.size()-1);
+                rv_chatContent.scrollToPosition(chatContentItemArrayList.size() - 1);
                 tv_newMessage.setVisibility(View.GONE);
             }
         });
@@ -951,12 +1209,12 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
                 switch (menuItem.getItemId()) {
-                    case R.id.photo:
+                    case R.id.content:
                         //채팅방의 사진을 그리드 형식의 리사이클러뷰로 볼 수 있는 액티비티로 이동
-                        Intent intent = new Intent(ChatRoomActivity.this, ChatImageListActivity.class);
-                        intent.putExtra("totalImageCount", totalImageArrayList.size());//전체 이미지 수
-                        for (int i = 0; i < totalImageArrayList.size(); i++) {
-                            intent.putExtra("imageData" + i, totalImageArrayList.get(i));//json 스트링 이미지 데이터
+                        Intent intent = new Intent(ChatRoomActivity.this, ChatContentListActivity.class);
+                        intent.putExtra("totalContentCount", totalContentArrayList.size());//전체 이미지 수
+                        for (int i = 0; i < totalContentArrayList.size(); i++) {
+                            intent.putExtra("contentData" + i, totalContentArrayList.get(i));//json 스트링 컨텐츠 데이터
                         }
                         startActivity(intent);
 
@@ -979,7 +1237,7 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                                 //다이얼로그 종료
                                 dialog.dismiss();
                                 //채팅방 서랍 닫기
-                                drawerLayout.closeDrawer(Gravity.END);
+                                drawerLayout.closeDrawer(GravityCompat.END);
                             }
                         });
                         //아니요 클릭 리스너
@@ -1170,9 +1428,9 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                         //아이템 리스트에 아이템이 두개 이상이 되면 메세지의 전송 시간을 비교해서 두 아이템의 전송 날짜가 다른 경우
                         //시간 구분 아이템을 함께 추가해준다.
                         if (chatContentItemArrayList.size() >= 1) {
-                            String earlierTime = ChatImageDetailActivity.formatDate(time, fromFormat, toFormat);
+                            String earlierTime = ChatContentDetailActivity.formatDate(time, fromFormat, toFormat);
                             //현재 로드된 아이템 중 제일 시간이 빠른 아이템
-                            String laterTime = ChatImageDetailActivity.formatDate(chatContentItemArrayList.get(0).time, fromFormat, toFormat);
+                            String laterTime = ChatContentDetailActivity.formatDate(chatContentItemArrayList.get(0).time, fromFormat, toFormat);
                             //연, 월, 일이 다르면 다른 날에 전송된 아이템이기 때문에 시간 구분 아이템을 추가하여 아이템에 구분을 준다.
                             if (!earlierTime.equals(laterTime)) {
                                 ChatContentItem chatContentItem = new ChatContentItem();
@@ -1188,17 +1446,17 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                     }
 
                     chatContentAdapter.notifyDataSetChanged();
-                    rv_chatContent.scrollToPosition(chatContentItemArrayList.size()-1);
+                    rv_chatContent.scrollToPosition(chatContentItemArrayList.size() - 1);
 
                     //현재 채팅방에 이미지가 존재한다면 전체 이미지를 조회할 수 있도록 리스트에 담아주는 작업을 한다.
 
-                    if (!responseBody.isNull("totalImageData")) {
-                        jsonArray = responseBody.getJSONArray("totalImageData");
-                        Log.d("이미지 수", String.valueOf(jsonArray.length()));
-                        Log.d("전체 이미지 데이터", jsonArray.toString());
+                    if (!responseBody.isNull("totalContentData")) {
+                        jsonArray = responseBody.getJSONArray("totalContentData");
+                        Log.d("컨텐츠 수", String.valueOf(jsonArray.length()));
+                        Log.d("전체 컨텐츠 데이터", jsonArray.toString());
                         if (jsonArray != null) {
                             for (int i = 0; i < jsonArray.length(); i++) {
-                                totalImageArrayList.add(String.valueOf(jsonArray.get(i)));
+                                totalContentArrayList.add(String.valueOf(jsonArray.get(i)));
                             }
                         }
                     }
@@ -1241,9 +1499,9 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                         //아이템 리스트에 아이템이 두개 이상이 되면 메세지의 전송 시간을 비교해서 두 아이템의 전송 날짜가 다른 경우
                         //시간 구분 아이템을 함께 추가해준다.
                         if (chatContentItemArrayList.size() >= 1) {
-                            String earlierTime = ChatImageDetailActivity.formatDate(time, fromFormat, toFormat);
+                            String earlierTime = ChatContentDetailActivity.formatDate(time, fromFormat, toFormat);
                             //현재 로드된 아이템 중 제일 시간이 빠른 아이템
-                            String laterTime = ChatImageDetailActivity.formatDate(chatContentItemArrayList.get(0).time, fromFormat, toFormat);
+                            String laterTime = ChatContentDetailActivity.formatDate(chatContentItemArrayList.get(0).time, fromFormat, toFormat);
                             //연, 월, 일이 다르면 다른 날에 전송된 아이템이기 때문에 시간 구분 아이템을 추가하여 아이템에 구분을 준다.
                             if (!earlierTime.equals(laterTime)) {
                                 ChatContentItem chatContentItem = new ChatContentItem();
@@ -1371,13 +1629,9 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
     }
 
 
-    public void addChat(String roomNum, String sender, String receiverString, String message, String type, String messageData, ArrayList imageArrayList) {
+    private void addChat(String roomNum, String sender, String receiverString, String message, String type, String messageData, ArrayList imageArrayList, Uri videoUri, String video, int[] videoSize) {
 
-        //레트로핏 세팅
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://13.124.105.47/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
+
         //필수로 넘어가야 하는 값은 모두 초기화해준다.
         RequestBody roomNumPart = RequestBody.create(MultipartBody.FORM, roomNum);
         RequestBody senderPart = RequestBody.create(MultipartBody.FORM, sender);
@@ -1387,30 +1641,12 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
         //필수가 아닌 값들은 선언만 해준다.
         //채팅 메세지
 
+        ArrayList<MultipartBody.Part> imageMultipartBodyList = new ArrayList<>();//이미지 multipartbody를 담을 리스트
 
-        //이미지1
-        RequestBody imageFile1;
-        MultipartBody.Part body1;
 
-        //이미지2
-        RequestBody imageFile2;
-        MultipartBody.Part body2;
-
-        //이미지3
-        RequestBody imageFile3;
-        MultipartBody.Part body3;
-
-        //이미지4
-        RequestBody imageFile4;
-        MultipartBody.Part body4;
-
-        //이미지5
-        RequestBody imageFile5;
-        MultipartBody.Part body5;
-
-        //이미지6
-        RequestBody imageFile6;
-        MultipartBody.Part body6;
+        RequestBody videoFile = null;
+        MultipartBody.Part videoBody = null;
+        File compressedFile = null;
 
         //레트로핏 인터페이스 설정
         RetrofitService retrofitService;
@@ -1418,206 +1654,61 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
 
         //이미지 개수를 담는 변수
         int imageCount = imageArrayList.size();
-        //이미지 처리 객체 초기화
-        ProcessImage processImage = new ProcessImage(ChatRoomActivity.this);
-
-        //이미지는 보내지 않는 경우
-        if (imageCount == 0) {
-
-            retrofitService = retrofit.create(RetrofitService.class);
-            call = retrofitService.addChatResponse(roomNumPart, senderPart, participantStringPart, messagePart, typePart, null, null, null, null, null, null);
-
+        //문자 텍스트를 보내는 경우
+        if (imageCount == 0 && video == null) {
+            for (int i = 0; i < 6; i++) {
+                imageMultipartBodyList.add(null);
+            }
         }
-        //사진 1장 선택했을 때
-        else if (imageCount == 1) {
-            //이미지 파일의 이름
+        //이미지는 보내지 않고 비디오를 보내는 경우
+        if (imageCount == 0 && video != null) {
+            int width = videoSize[0];
+            int height = videoSize[1];
+            //동영상을 압축해주는 객체 선언(압축 사이즈 1280X720 or 720X1280 or 720X720)
+            CompressMedia compressMedia = new CompressMedia(
+                    videoUri.toString(),
+                    video,
+                    ChatRoomActivity.this,
+                    (width > height) ? 1280 : 720,
+                    (height > width) ? 1280 : 720);
+            String compressedFilePath = null;//압축된 파일의 경로
+            try {
+                compressedFilePath = compressMedia.startCompress();
+            } catch (Throwable throwable) {
+                throwable.printStackTrace();
+            }
+            compressedFile = new File(compressedFilePath);//압축된 파일 객체
+            videoFile = RequestBody.create(MediaType.parse("multipart/form-data"), compressedFile);
+            videoBody = MultipartBody.Part.createFormData("video", video, videoFile);
 
-            String imageFileName = imageNameForServerList.get(0);
-
-            //이미지 파일 생성
-            File file = processImage.createFileFromBitmap(processImage.getBitmapFromUri(String.valueOf(imageArrayList.get(0))), String.valueOf(imageArrayList.get(0)));
-            imageFile1 = RequestBody.create(MediaType.parse("multipart/form-data"), file);
-
-            body1 = MultipartBody.Part.createFormData("image1", imageFileName, imageFile1);
-
-            retrofitService = retrofit.create(RetrofitService.class);
-            call = retrofitService.addChatResponse(roomNumPart, senderPart, participantStringPart, messagePart, typePart, body1, null, null, null, null, null);
-
-
+            for (int i = 0; i < 6; i++) {
+                imageMultipartBodyList.add(null);
+            }
         }
-        //사진 2장 선택했을 때
-        else if (imageCount == 2) {
-            //이미지 파일1의 이름
-            String imageFileName1 = imageNameForServerList.get(0);
-
-            //이미지 파일2의 이름
-            String imageFileName2 = imageNameForServerList.get(1);
-
-            File file1 = processImage.createFileFromBitmap(processImage.getBitmapFromUri(String.valueOf(imageArrayList.get(0))), String.valueOf(imageArrayList.get(0)));
-            File file2 = processImage.createFileFromBitmap(processImage.getBitmapFromUri(String.valueOf(imageArrayList.get(1))), String.valueOf(imageArrayList.get(1)));
-
-
-            imageFile1 = RequestBody.create(MediaType.parse("multipart/form-data"), file1);
-            imageFile2 = RequestBody.create(MediaType.parse("multipart/form-data"), file2);
-
-
-            body1 = MultipartBody.Part.createFormData("image1", imageFileName1, imageFile1);
-            body2 = MultipartBody.Part.createFormData("image2", imageFileName2, imageFile2);
-
-            retrofitService = retrofit.create(RetrofitService.class);
-            call = retrofitService.addChatResponse(roomNumPart, senderPart, participantStringPart, messagePart, typePart, body1, body2, null, null, null, null);
-
-
-        }
-        //사진 3장 선택했을 때
-        else if (imageCount == 3) {
-
-            //이미지 파일1의 이름
-            String imageFileName1 = imageNameForServerList.get(0);
-
-            //이미지 파일2의 이름
-            String imageFileName2 = imageNameForServerList.get(1);
-
-            //이미지 파일3의 이름
-            String imageFileName3 = imageNameForServerList.get(2);
-
-            File file1 = processImage.createFileFromBitmap(processImage.getBitmapFromUri(String.valueOf(imageArrayList.get(0))), String.valueOf(imageArrayList.get(0)));
-            File file2 = processImage.createFileFromBitmap(processImage.getBitmapFromUri(String.valueOf(imageArrayList.get(1))), String.valueOf(imageArrayList.get(1)));
-            File file3 = processImage.createFileFromBitmap(processImage.getBitmapFromUri(String.valueOf(imageArrayList.get(2))), String.valueOf(imageArrayList.get(2)));
-
-
-            imageFile1 = RequestBody.create(MediaType.parse("multipart/form-data"), file1);
-            imageFile2 = RequestBody.create(MediaType.parse("multipart/form-data"), file2);
-            imageFile3 = RequestBody.create(MediaType.parse("multipart/form-data"), file3);
-
-
-            body1 = MultipartBody.Part.createFormData("image1", imageFileName1, imageFile1);
-            body2 = MultipartBody.Part.createFormData("image2", imageFileName2, imageFile2);
-            body3 = MultipartBody.Part.createFormData("image3", imageFileName3, imageFile3);
-
-            retrofitService = retrofit.create(RetrofitService.class);
-            call = retrofitService.addChatResponse(roomNumPart, senderPart, participantStringPart, messagePart, typePart, body1, body2, body3, null, null, null);
-
-
-        }
-        //사진4장 선택했을 때
-        else if (imageCount == 4) {
-
-            //이미지 파일1의 이름
-            String imageFileName1 = imageNameForServerList.get(0);
-            //이미지 파일2의 이름
-            String imageFileName2 = imageNameForServerList.get(1);
-            //이미지 파일3의 이름
-            String imageFileName3 = imageNameForServerList.get(2);
-            //이미지 파일4의 이름
-            String imageFileName4 = imageNameForServerList.get(3);
-
-            File file1 = processImage.createFileFromBitmap(processImage.getBitmapFromUri(String.valueOf(imageArrayList.get(0))), String.valueOf(imageArrayList.get(0)));
-            File file2 = processImage.createFileFromBitmap(processImage.getBitmapFromUri(String.valueOf(imageArrayList.get(1))), String.valueOf(imageArrayList.get(1)));
-            File file3 = processImage.createFileFromBitmap(processImage.getBitmapFromUri(String.valueOf(imageArrayList.get(2))), String.valueOf(imageArrayList.get(2)));
-            File file4 = processImage.createFileFromBitmap(processImage.getBitmapFromUri(String.valueOf(imageArrayList.get(3))), String.valueOf(imageArrayList.get(3)));
-
-            imageFile1 = RequestBody.create(MediaType.parse("multipart/form-data"), file1);
-            imageFile2 = RequestBody.create(MediaType.parse("multipart/form-data"), file2);
-            imageFile3 = RequestBody.create(MediaType.parse("multipart/form-data"), file3);
-            imageFile4 = RequestBody.create(MediaType.parse("multipart/form-data"), file4);
-
-
-            body1 = MultipartBody.Part.createFormData("image1", imageFileName1, imageFile1);
-            body2 = MultipartBody.Part.createFormData("image2", imageFileName2, imageFile2);
-            body3 = MultipartBody.Part.createFormData("image3", imageFileName3, imageFile3);
-            body4 = MultipartBody.Part.createFormData("image4", imageFileName4, imageFile4);
-
-            retrofitService = retrofit.create(RetrofitService.class);
-            call = retrofitService.addChatResponse(roomNumPart, senderPart, participantStringPart, messagePart, typePart, body1, body2, body3, body4, null, null);
-
-        }
-        //사진 5장 선택했을 때
-        else if (imageCount == 5) {
-            //이미지 파일1의 이름
-            String imageFileName1 = imageNameForServerList.get(0);
-            //이미지 파일2의 이름
-            String imageFileName2 = imageNameForServerList.get(1);
-            //이미지 파일3의 이름
-            String imageFileName3 = imageNameForServerList.get(2);
-            //이미지 파일4의 이름
-            String imageFileName4 = imageNameForServerList.get(3);
-            //이미지 파일5의 이름
-            String imageFileName5 = imageNameForServerList.get(4);
-
-
-            File file1 = processImage.createFileFromBitmap(processImage.getBitmapFromUri(String.valueOf(imageArrayList.get(0))), String.valueOf(imageArrayList.get(0)));
-            File file2 = processImage.createFileFromBitmap(processImage.getBitmapFromUri(String.valueOf(imageArrayList.get(1))), String.valueOf(imageArrayList.get(1)));
-            File file3 = processImage.createFileFromBitmap(processImage.getBitmapFromUri(String.valueOf(imageArrayList.get(2))), String.valueOf(imageArrayList.get(2)));
-            File file4 = processImage.createFileFromBitmap(processImage.getBitmapFromUri(String.valueOf(imageArrayList.get(3))), String.valueOf(imageArrayList.get(3)));
-            File file5 = processImage.createFileFromBitmap(processImage.getBitmapFromUri(String.valueOf(imageArrayList.get(4))), String.valueOf(imageArrayList.get(4)));
-
-            imageFile1 = RequestBody.create(MediaType.parse("multipart/form-data"), file1);
-            imageFile2 = RequestBody.create(MediaType.parse("multipart/form-data"), file2);
-            imageFile3 = RequestBody.create(MediaType.parse("multipart/form-data"), file3);
-            imageFile4 = RequestBody.create(MediaType.parse("multipart/form-data"), file4);
-            imageFile5 = RequestBody.create(MediaType.parse("multipart/form-data"), file5);
-
-
-            body1 = MultipartBody.Part.createFormData("image1", imageFileName1, imageFile1);
-            body2 = MultipartBody.Part.createFormData("image2", imageFileName2, imageFile2);
-            body3 = MultipartBody.Part.createFormData("image3", imageFileName3, imageFile3);
-            body4 = MultipartBody.Part.createFormData("image4", imageFileName4, imageFile4);
-            body5 = MultipartBody.Part.createFormData("image5", imageFileName5, imageFile5);
-
-            retrofitService = retrofit.create(RetrofitService.class);
-            call = retrofitService.addChatResponse(roomNumPart, senderPart, participantStringPart, messagePart, typePart, body1, body2, body3, body4, body5, null);
-
-        }
-        //사진 6장 선택했을 때
-        else {
-
-            //이미지 파일1의 이름
-            String imageFileName1 = imageNameForServerList.get(0);
-            //이미지 파일2의 이름
-            String imageFileName2 = imageNameForServerList.get(1);
-            //이미지 파일3의 이름
-            String imageFileName3 = imageNameForServerList.get(2);
-            //이미지 파일4의 이름
-            String imageFileName4 = imageNameForServerList.get(3);
-            //이미지 파일5의 이름
-            String imageFileName5 = imageNameForServerList.get(4);
-            //이미지 파일6의 이름
-            String imageFileName6 = imageNameForServerList.get(5);
-
-
-            File file1 = processImage.createFileFromBitmap(processImage.getBitmapFromUri(String.valueOf(imageArrayList.get(0))), String.valueOf(imageArrayList.get(0)));
-            File file2 = processImage.createFileFromBitmap(processImage.getBitmapFromUri(String.valueOf(imageArrayList.get(1))), String.valueOf(imageArrayList.get(1)));
-            File file3 = processImage.createFileFromBitmap(processImage.getBitmapFromUri(String.valueOf(imageArrayList.get(2))), String.valueOf(imageArrayList.get(2)));
-            File file4 = processImage.createFileFromBitmap(processImage.getBitmapFromUri(String.valueOf(imageArrayList.get(3))), String.valueOf(imageArrayList.get(3)));
-            File file5 = processImage.createFileFromBitmap(processImage.getBitmapFromUri(String.valueOf(imageArrayList.get(4))), String.valueOf(imageArrayList.get(4)));
-            File file6 = processImage.createFileFromBitmap(processImage.getBitmapFromUri(String.valueOf(imageArrayList.get(4))), String.valueOf(imageArrayList.get(5)));
-
-            imageFile1 = RequestBody.create(MediaType.parse("multipart/form-data"), file1);
-            imageFile2 = RequestBody.create(MediaType.parse("multipart/form-data"), file2);
-            imageFile3 = RequestBody.create(MediaType.parse("multipart/form-data"), file3);
-            imageFile4 = RequestBody.create(MediaType.parse("multipart/form-data"), file4);
-            imageFile5 = RequestBody.create(MediaType.parse("multipart/form-data"), file5);
-            imageFile6 = RequestBody.create(MediaType.parse("multipart/form-data"), file6);
-
-
-            body1 = MultipartBody.Part.createFormData("image1", imageFileName1, imageFile1);
-            body2 = MultipartBody.Part.createFormData("image2", imageFileName2, imageFile2);
-            body3 = MultipartBody.Part.createFormData("image3", imageFileName3, imageFile3);
-            body4 = MultipartBody.Part.createFormData("image4", imageFileName4, imageFile4);
-            body5 = MultipartBody.Part.createFormData("image5", imageFileName5, imageFile5);
-            body6 = MultipartBody.Part.createFormData("image6", imageFileName6, imageFile6);
-
-
-            retrofitService = retrofit.create(RetrofitService.class);
-            call = retrofitService.addChatResponse(roomNumPart, senderPart, participantStringPart, messagePart, typePart, body1, body2, body3, body4, body5, body6);
-
+        //이미지를 보내는 경우
+        else if (imageCount != 0 && video == null) {
+            imageMultipartBodyList = createImageMultipartBody(imageArrayList);//이미지의 수만큼 multipartbody를 생성
         }
 
+        //레트로핏 세팅
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("http://13.124.105.47/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        retrofitService = retrofit.create(RetrofitService.class);
+        call = retrofitService.addChatResponse(roomNumPart, senderPart, participantStringPart, messagePart, typePart, imageMultipartBodyList.get(0), imageMultipartBodyList.get(1), imageMultipartBodyList.get(2), imageMultipartBodyList.get(3), imageMultipartBodyList.get(4), imageMultipartBodyList.get(5), videoBody);
+
+        File finalCompressedFile = compressedFile;
         call.enqueue(new Callback<AddChatResponse>() {
             @Override
             public void onResponse(Call<AddChatResponse> call, Response<AddChatResponse> response) {
                 Log.d("레트로핏 통신", "성공");
+
+                if(isNewRoom == true) {//처음 만들어진 방에서 채팅을 처음 보내는 경우
+                    isNewRoom = false;//더 이상 새로운 방으로 간주하지 않는다.
+                }
+
                 //채팅방에서 처음으로 메세지를 보내는 경우 방을 만들고 메세지를 보내는 것이기 때문에 채팅방을 활성화시켜준다.
                 //chatroom 테이블의 activated_participant에 모든 참여자를 다 넣어준다.
                 if (chatContentItemArrayList.size() == 1) {
@@ -1656,13 +1747,14 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                             imageList = new String[]{image1};
                             //이미지를 전송한 사람의 계정, 닉네임, 프로필,전송 시간, 이미지을 담은 Json객체
                             for (int i = 0; i < imageList.length; i++) {
-                                JSONObject imageData = new JSONObject();
-                                imageData.put("account", LoginActivity.account);
-                                imageData.put("nickname", LoginActivity.nickname);
-                                imageData.put("profile", LoginActivity.profile);
-                                imageData.put("time", time);
-                                imageData.put("image", imageList[i]);
-                                totalImageArrayList.add(imageData.toString());
+                                JSONObject contentData = new JSONObject();
+                                contentData.put("type", "image");
+                                contentData.put("account", LoginActivity.account);
+                                contentData.put("nickname", LoginActivity.nickname);
+                                contentData.put("profile", LoginActivity.profile);
+                                contentData.put("time", time);
+                                contentData.put("content", imageList[i]);
+                                totalContentArrayList.add(contentData.toString());
                                 chatContentItemArrayList.get(chatContentItemArrayList.size() - 1).imageList.add(imageList[i]);
                             }
 
@@ -1672,13 +1764,14 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                             image2 = addChatResponse.image2;
                             imageList = new String[]{image1, image2};
                             for (int i = 0; i < imageList.length; i++) {
-                                JSONObject imageData = new JSONObject();
-                                imageData.put("account", LoginActivity.account);
-                                imageData.put("nickname", LoginActivity.nickname);
-                                imageData.put("profile", LoginActivity.profile);
-                                imageData.put("time", time);
-                                imageData.put("image", imageList[i]);
-                                totalImageArrayList.add(imageData.toString());
+                                JSONObject contentData = new JSONObject();
+                                contentData.put("type", "image");
+                                contentData.put("account", LoginActivity.account);
+                                contentData.put("nickname", LoginActivity.nickname);
+                                contentData.put("profile", LoginActivity.profile);
+                                contentData.put("time", time);
+                                contentData.put("content", imageList[i]);
+                                totalContentArrayList.add(contentData.toString());
                                 chatContentItemArrayList.get(chatContentItemArrayList.size() - 1).imageList.add(imageList[i]);
                             }
                             break;
@@ -1688,13 +1781,14 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                             image3 = addChatResponse.image3;
                             imageList = new String[]{image1, image2, image3};
                             for (int i = 0; i < imageList.length; i++) {
-                                JSONObject imageData = new JSONObject();
-                                imageData.put("account", LoginActivity.account);
-                                imageData.put("nickname", LoginActivity.nickname);
-                                imageData.put("profile", LoginActivity.profile);
-                                imageData.put("time", time);
-                                imageData.put("image", imageList[i]);
-                                totalImageArrayList.add(imageData.toString());
+                                JSONObject contentData = new JSONObject();
+                                contentData.put("type", "image");
+                                contentData.put("account", LoginActivity.account);
+                                contentData.put("nickname", LoginActivity.nickname);
+                                contentData.put("profile", LoginActivity.profile);
+                                contentData.put("time", time);
+                                contentData.put("content", imageList[i]);
+                                totalContentArrayList.add(contentData.toString());
                                 chatContentItemArrayList.get(chatContentItemArrayList.size() - 1).imageList.add(imageList[i]);
                             }
                             break;
@@ -1705,14 +1799,15 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                             image4 = addChatResponse.image4;
                             imageList = new String[]{image1, image2, image3, image4};
                             for (int i = 0; i < imageList.length; i++) {
-                                JSONObject imageData = new JSONObject();
-                                imageData.put("account", LoginActivity.account);
-                                imageData.put("nickname", LoginActivity.nickname);
-                                imageData.put("profile", LoginActivity.profile);
-                                imageData.put("time", time);
-                                imageData.put("image", imageList[i]);
-                                totalImageArrayList.add(imageData.toString());
-//                                chatContentItemArrayList.get(chatContentItemArrayList.size() - 1).imageList.add(imageList[i]);
+                                JSONObject contentData = new JSONObject();
+                                contentData.put("type", "image");
+                                contentData.put("account", LoginActivity.account);
+                                contentData.put("nickname", LoginActivity.nickname);
+                                contentData.put("profile", LoginActivity.profile);
+                                contentData.put("time", time);
+                                contentData.put("content", imageList[i]);
+                                totalContentArrayList.add(contentData.toString());
+                                chatContentItemArrayList.get(chatContentItemArrayList.size() - 1).imageList.add(imageList[i]);
                             }
                             break;
                         case 5:
@@ -1723,13 +1818,14 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                             image5 = addChatResponse.image5;
                             imageList = new String[]{image1, image2, image3, image4, image5};
                             for (int i = 0; i < imageList.length; i++) {
-                                JSONObject imageData = new JSONObject();
-                                imageData.put("account", LoginActivity.account);
-                                imageData.put("nickname", LoginActivity.nickname);
-                                imageData.put("profile", LoginActivity.profile);
-                                imageData.put("time", time);
-                                imageData.put("image", imageList[i]);
-                                totalImageArrayList.add(imageData.toString());
+                                JSONObject contentData = new JSONObject();
+                                contentData.put("type", "image");
+                                contentData.put("account", LoginActivity.account);
+                                contentData.put("nickname", LoginActivity.nickname);
+                                contentData.put("profile", LoginActivity.profile);
+                                contentData.put("time", time);
+                                contentData.put("content", imageList[i]);
+                                totalContentArrayList.add(contentData.toString());
                                 chatContentItemArrayList.get(chatContentItemArrayList.size() - 1).imageList.add(imageList[i]);
                             }
                             break;
@@ -1742,13 +1838,14 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                             image6 = addChatResponse.image6;
                             imageList = new String[]{image1, image2, image3, image4, image5, image6};
                             for (int i = 0; i < imageList.length; i++) {
-                                JSONObject imageData = new JSONObject();
-                                imageData.put("account", LoginActivity.account);
-                                imageData.put("nickname", LoginActivity.nickname);
-                                imageData.put("profile", LoginActivity.profile);
-                                imageData.put("time", time);
-                                imageData.put("image", imageList[i]);
-                                totalImageArrayList.add(imageData.toString());
+                                JSONObject contentData = new JSONObject();
+                                contentData.put("type", "image");
+                                contentData.put("account", LoginActivity.account);
+                                contentData.put("nickname", LoginActivity.nickname);
+                                contentData.put("profile", LoginActivity.profile);
+                                contentData.put("time", time);
+                                contentData.put("content", imageList[i]);
+                                totalContentArrayList.add(contentData.toString());
                                 chatContentItemArrayList.get(chatContentItemArrayList.size() - 1).imageList.add(imageList[i]);
                             }
                             break;
@@ -1759,7 +1856,27 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
 
 
                 //서버 이미지로 세팅
-                chatContentItemArrayList.get(chatContentItemArrayList.size() - 1).setImageFromServer(true);
+                if (video == null) {
+                    chatContentItemArrayList.get(chatContentItemArrayList.size() - 1).setImageFromServer(true);
+                }
+                //서버 동영상으로 세팅
+                else {
+                    chatContentItemArrayList.get(chatContentItemArrayList.size() - 1).setVideoFromServer(true);
+                    chatContentItemArrayList.get(chatContentItemArrayList.size() - 1).setVideo(video);
+                    JSONObject contentData = new JSONObject();
+                    try {
+                        contentData.put("type", "video");
+                        contentData.put("account", LoginActivity.account);
+                        contentData.put("nickname", LoginActivity.nickname);
+                        contentData.put("profile", LoginActivity.profile);
+                        contentData.put("time", time);
+                        contentData.put("content", video);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    totalContentArrayList.add(contentData.toString());
+                    finalCompressedFile.delete();//압축된 동영상 파일 삭제
+                }
                 //전송 완료 상태로 셋
                 chatContentItemArrayList.get(chatContentItemArrayList.size() - 1).setSent(true);
                 //전송 시간 셋
@@ -1770,9 +1887,9 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                 //시간 구분 아이템을 함께 추가해준다.
                 if (chatContentItemArrayList.size() >= 2) {
                     //지금 보낸 메세지가 가장 늦은 시간
-                    String laterTime = ChatImageDetailActivity.formatDate(time, fromFormat, toFormat);
+                    String laterTime = ChatContentDetailActivity.formatDate(time, fromFormat, toFormat);
                     //메세지를 보내기 전에 있었던 가장 최하단의 메세지
-                    String earlierTime = ChatImageDetailActivity.formatDate(chatContentItemArrayList.get(chatContentItemArrayList.size() - 2).time, fromFormat, toFormat);
+                    String earlierTime = ChatContentDetailActivity.formatDate(chatContentItemArrayList.get(chatContentItemArrayList.size() - 2).time, fromFormat, toFormat);
                     //연, 월, 일이 다르면 다른 날에 전송된 아이템이기 때문에 시간 구분 아이템을 추가하여 아이템에 구분을 준다.
                     if (!earlierTime.equals(laterTime)) {
                         ChatContentItem chatContentItem = new ChatContentItem();
@@ -1816,56 +1933,86 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
             public void onFailure(Call<AddChatResponse> call, Throwable t) {
                 Log.d("레트로핏 에러", t.getMessage());
                 imageNameForServerList.clear();
+                if(video != null) {
+                    finalCompressedFile.delete();//압축된 동영상 파일 삭제
+                }
             }
         });
 
 
     }
 
+    private ArrayList createImageMultipartBody(ArrayList<String> imageArrayList) {//로컬 단말기의 uri가 담긴 리스트
+        ArrayList<MultipartBody.Part> imageMultipartBodyList = new ArrayList<>();//이미지 멀티파트 리스트
+        //이미지 처리 객체 초기화
+        ProcessImage processImage = new ProcessImage(ChatRoomActivity.this);
+        for (int i = 0; i < imageArrayList.size(); i++) {
+            String imageFileName = imageNameForServerList.get(i);//서버의 이미지 파일 명
+            File imageFile = processImage.createFileFromBitmap(processImage.getBitmapFromUri(String.valueOf(imageArrayList.get(i))), String.valueOf(imageArrayList.get(i)));
+            RequestBody requestBody = RequestBody.create(MediaType.parse("multipart/form-data"), imageFile);//리퀘스트 body
+            MultipartBody.Part multipartBody = MultipartBody.Part.createFormData("image" + (i + 1), imageFileName, requestBody);
+            imageMultipartBodyList.add(multipartBody);//리스트에 추가
+        }
+
+        if (imageArrayList.size() != 6) {
+            for (int i = imageArrayList.size(); i < 6; i++) {
+                imageMultipartBodyList.add(null);
+            }
+        }
+
+        return imageMultipartBodyList;
+    }
+
+
     @Override
     protected void onResume() {
         Log.d("채팅화면 onResume", "호출");
         super.onResume();
         //채팅 내용을 서버로부터 가져오는 asynctask
-        if (totalImageArrayList.isEmpty()) {//전체 이미지 리스트에 값이 없으면 최초 로드로 간주해서 서버에서 전체 이미지 데이터를 가져온다.
+        if (totalContentArrayList.isEmpty()) {//전체 이미지 리스트에 값이 없으면 최초 로드로 간주해서 서버에서 전체 이미지 데이터를 가져온다.
             getChatContent(roomNum, LoginActivity.account, 0, listSize, true);
         } else {
             getChatContent(roomNum, LoginActivity.account, 0, listSize, false);
         }
     }
 
-
     //채팅방의 이미지를 클릭했을 때 호출되는 메소드
     @Override
-    public void onImageclicked(int position, int imagePosition) {
+    public void onContentClicked(int position, int contentPosition) {
 
-        Intent intent = new Intent(this, ChatImageDetailActivity.class);
+        Intent intent = new Intent(this, ChatContentDetailActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-        //채팅창의 전체 이미지 수
-        intent.putExtra("imageListCount", totalImageArrayList.size());
-        for (int i = 0; i < totalImageArrayList.size(); i++) {
-            //전체 이미지 데이터(json스트링)
-            intent.putExtra("imageData" + i, totalImageArrayList.get(i));
+        //채팅창의 전체 컨텐츠 수
+        intent.putExtra("contentListCount", totalContentArrayList.size());
+        for (int i = 0; i < totalContentArrayList.size(); i++) {
+            //전체 컨텐츠 데이터(json스트링)
+            intent.putExtra("contentData" + i, totalContentArrayList.get(i));
         }
-        //클릭한 이미지의 인덱스 구해준다.
-        String image = chatContentItemArrayList.get(position).imageList.get(imagePosition);//선택한 이미지 파일 명
         int index = 0;//인덱스
-        //전체 이미지 데이터를 돌면서
-        for (int i = 0; i < totalImageArrayList.size(); i++) {
+        String content = null;//클릭한 content의 파일 명
+        if (chatContentItemArrayList.get(position).type.equals("image")) {//클릭한 컨텐츠가 이미지 컨텐츠인 경우
+            content = chatContentItemArrayList.get(position).imageList.get(contentPosition);//선택한 이미지 파일 명
+            intent.putExtra("type", "image");//컨텐츠 타입을 image로 설정
+        }
+        else {//동영상 컨텐츠인 경우
+            content = chatContentItemArrayList.get(position).video;//선택한 동영상 파일 명
+            intent.putExtra("type", "video");//컨텐츠 타입을 video로 설정
+        }
+        //전체 컨텐츠 데이터를 돌면서
+        for (int i = 0; i < totalContentArrayList.size(); i++) {
             try {
                 //이미지의 파일명을 꺼내서 클릭한 이미지 파일 명과 같은지 비교를 해서
-                JSONObject imageData = new JSONObject(totalImageArrayList.get(i));
-                if (imageData.getString("image").equals(image)) {
+                JSONObject imageData = new JSONObject(totalContentArrayList.get(i));
+                if (imageData.getString("content").equals(content)) {
                     //같은 경우 그 이미지의 인덱스를 넣어준다.
                     index = i;
                     break;
                 }
-                ;
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
-        intent.putExtra("imageIndex", index);
+        intent.putExtra("contentIndex", index);//클릭한 컨텐츠의 index
         startActivity(intent);
     }
 
@@ -1903,7 +2050,7 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
         tv_nickname.setText(chatContentItemArrayList.get(position).nickname);
 
         //1:1채팅의 경우 이미 1:1채팅방에 들어와있는 경우에는 버튼을 없애준다.
-        if(chatParticipantItemArrayList.size()<2) {
+        if (chatParticipantItemArrayList.size() < 2) {
             tv_chat.setVisibility(View.GONE);
         }
 
@@ -2026,16 +2173,16 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
 
             //프로필사진 설정
             Glide.with(getApplicationContext())
-                    .load("http://13.124.105.47/profileimage/" + chatParticipantItemArrayList.get(position-1).profile)
+                    .load("http://13.124.105.47/profileimage/" + chatParticipantItemArrayList.get(position - 1).profile)
                     .thumbnail(0.1f)
                     .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
                     .into(cv_profile);
 
             //닉네임 설정
-            tv_nickname.setText(chatParticipantItemArrayList.get(position-1).nickname);
+            tv_nickname.setText(chatParticipantItemArrayList.get(position - 1).nickname);
 
             //1:1채팅의 경우 이미 1:1채팅방에 들어와있는 경우에는 버튼을 없애준다.
-            if(chatParticipantItemArrayList.size()<2) {
+            if (chatParticipantItemArrayList.size() < 2) {
                 tv_chat.setVisibility(View.GONE);
             }
 
@@ -2055,11 +2202,11 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                                     try {
                                         JSONObject jsonObject = new JSONObject();
                                         jsonObject.put("type", "requestFaceChat");
-                                        jsonObject.put("roomName", account + chatParticipantItemArrayList.get(position-1).account);//영상통화의 방 이름을 보내준다. 이때 방은 두 peer의 계정을 합쳐서 구성한다.
+                                        jsonObject.put("roomName", account + chatParticipantItemArrayList.get(position - 1).account);//영상통화의 방 이름을 보내준다. 이때 방은 두 peer의 계정을 합쳐서 구성한다.
                                         jsonObject.put("account", account);//발신자 계정
                                         jsonObject.put("nickname", nickname);//발신자 닉네임
                                         jsonObject.put("profile", profile);//발신자 프로필 사진
-                                        jsonObject.put("receiver", chatParticipantItemArrayList.get(position-1).account);//수신자 계정
+                                        jsonObject.put("receiver", chatParticipantItemArrayList.get(position - 1).account);//수신자 계정
                                         //소켓 서버로 영상통화 토큰을 날려준다.
                                         Message message = ChatIntentService.handler.obtainMessage();
                                         message.what = 7777;
@@ -2068,7 +2215,7 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                                     } catch (JSONException e) {
                                         e.printStackTrace();
                                     }
-                                    drawerLayout.closeDrawer(Gravity.END, true);
+                                    drawerLayout.closeDrawer(GravityCompat.END, true);
                                 }
 
                                 //권한 허가 거부가 됐을 때 콜백
@@ -2094,7 +2241,7 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                     //chatactivity로 intent
                     startActivity(new Intent(getApplicationContext(), ChatActivity.class)
                             .putExtra("isFromChatRoom", true)
-                            .putExtra("selectedUserAccount", chatParticipantItemArrayList.get(position-1).account)
+                            .putExtra("selectedUserAccount", chatParticipantItemArrayList.get(position - 1).account)
                             .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
                 }
             });
@@ -2135,9 +2282,9 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
     @Override
     public void onBackPressed() {
         //채팅방 서랍이 열려있는 경우
-        if (drawerLayout.isDrawerOpen(Gravity.END)) {
+        if (drawerLayout.isDrawerOpen(GravityCompat.END)) {
             //채팅방 서랍을 닫아준다.
-            drawerLayout.closeDrawer(Gravity.END);
+            drawerLayout.closeDrawer(GravityCompat.END);
         }
         //채팅방 서랍이 열려있지 않은 경우
         else {

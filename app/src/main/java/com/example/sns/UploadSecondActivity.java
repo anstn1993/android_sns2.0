@@ -181,7 +181,7 @@ public class UploadSecondActivity extends AppCompatActivity {
         }
 
         //위치o
-        if (article == null && address != null) {
+        if (address != null) {
             addressPart = RequestBody.create(MultipartBody.FORM, address);
             latitudePart = RequestBody.create(MultipartBody.FORM, String.valueOf(latitude));
             longitudePart = RequestBody.create(MultipartBody.FORM, String.valueOf(longitude));

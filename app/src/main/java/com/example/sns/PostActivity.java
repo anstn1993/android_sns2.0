@@ -1085,7 +1085,7 @@ public class PostActivity extends AppCompatActivity implements PostAdapter.PostR
                 //어댑터에 notify
                 postAdapter.notifyItemChanged(position, "false");
             }
-        } catch (JSONException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }//end of onHttpResponse method

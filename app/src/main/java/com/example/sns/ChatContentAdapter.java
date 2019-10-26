@@ -1,13 +1,16 @@
 package com.example.sns;
 
 import android.content.Context;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
@@ -20,23 +23,27 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
-    public final int VIEW_MINE = 0;
-    public final int VIEW_OTHERS = 1;
-    public final int VIEW_MINE_IMAGE_ONE = 2;
-    public final int VIEW_MINE_IMAGE_TWO = 3;
-    public final int VIEW_MINE_IMAGE_THREE = 4;
-    public final int VIEW_MINE_IMAGE_FOUR = 5;
-    public final int VIEW_MINE_IMAGE_FIVE = 6;
-    public final int VIEW_MINE_IMAGE_SIX = 7;
-    public final int VIEW_OTHERS_IMAGE_ONE = 8;
-    public final int VIEW_OTHERS_IMAGE_TWO = 9;
-    public final int VIEW_OTHERS_IMAGE_THREE = 10;
-    public final int VIEW_OTHERS_IMAGE_FOUR = 11;
-    public final int VIEW_OTHERS_IMAGE_FIVE = 12;
-    public final int VIEW_OTHERS_IMAGE_SIX = 13;
-    public final int VIEW_TIMEDIVIDER = 14;
-    public final int VIEW_EXIT = 15;
-    public final int VIEW_ADD = 16;
+    private final int VIEW_MINE = 0;
+    private final int VIEW_OTHERS = 1;
+    private final int VIEW_MINE_IMAGE_ONE = 2;
+    private final int VIEW_MINE_IMAGE_TWO = 3;
+    private final int VIEW_MINE_IMAGE_THREE = 4;
+    private final int VIEW_MINE_IMAGE_FOUR = 5;
+    private final int VIEW_MINE_IMAGE_FIVE = 6;
+    private final int VIEW_MINE_IMAGE_SIX = 7;
+    private final int VIEW_MINE_VIDEO = 8;
+
+    private final int VIEW_OTHERS_IMAGE_ONE = 9;
+    private final int VIEW_OTHERS_IMAGE_TWO = 10;
+    private final int VIEW_OTHERS_IMAGE_THREE = 11;
+    private final int VIEW_OTHERS_IMAGE_FOUR = 12;
+    private final int VIEW_OTHERS_IMAGE_FIVE = 13;
+    private final int VIEW_OTHERS_IMAGE_SIX = 14;
+    private final int VIEW_OTHERS_VIDEO = 15;
+
+    private final int VIEW_TIMEDIVIDER = 16;
+    private final int VIEW_EXIT = 17;
+    private final int VIEW_ADD = 18;
 
     //시간 포맷
     private String fromFromat = "yyyy-MM-dd HH:mm:ss";
@@ -52,7 +59,8 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     }
 
     public interface ChatContentRecyclerViewListener {
-        void onImageclicked(int position, int imagePosition);
+        void onContentClicked(int position, int contentPosition);
+
         void onProfileClicked(int position);
     }
 
@@ -79,8 +87,10 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         //시간 경계 아이템이나 채팅방 퇴장 아이템, 사용자 초대 아이템이 아닌 경우
         else {
             if (chatContentItemArrayList.get(position).isMyContent) {
-                if (chatContentItemArrayList.get(position).imageList.size() == 0) {
+                if (chatContentItemArrayList.get(position).type.equals("message")) {
                     return VIEW_MINE;
+                } else if (chatContentItemArrayList.get(position).type.equals("video")) {
+                    return VIEW_MINE_VIDEO;
                 } else if (chatContentItemArrayList.get(position).imageList.size() == 1) {
                     return VIEW_MINE_IMAGE_ONE;
                 } else if (chatContentItemArrayList.get(position).imageList.size() == 2) {
@@ -96,8 +106,10 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 }
 
             } else {
-                if (chatContentItemArrayList.get(position).imageList.size() == 0) {
+                if (chatContentItemArrayList.get(position).type.equals("message")) {
                     return VIEW_OTHERS;
+                } else if (chatContentItemArrayList.get(position).type.equals("video")) {
+                    return VIEW_OTHERS_VIDEO;
                 } else if (chatContentItemArrayList.get(position).imageList.size() == 1) {
                     return VIEW_OTHERS_IMAGE_ONE;
                 } else if (chatContentItemArrayList.get(position).imageList.size() == 2) {
@@ -144,6 +156,9 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         } else if (viewType == VIEW_MINE_IMAGE_SIX) {
             View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.mychatimge_six, viewGroup, false);
             return new MyChatImageSixViewHolder(view);
+        } else if (viewType == VIEW_MINE_VIDEO) {
+            View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.mychatvideo, viewGroup, false);
+            return new MyChatVideoViewHolder(view);
         } else if (viewType == VIEW_OTHERS_IMAGE_ONE) {
             View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.otherschatimage_one, viewGroup, false);
             return new OthersChatImageOneViewHolder(view);
@@ -162,6 +177,9 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         } else if (viewType == VIEW_OTHERS_IMAGE_SIX) {
             View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.otherschatimage_six, viewGroup, false);
             return new OthersChatImageSixViewHolder(view);
+        } else if (viewType == VIEW_OTHERS_VIDEO) {
+            View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.otherschatvideo, viewGroup, false);
+            return new OthersChatVideoViewHolder(view);
         } else if (viewType == VIEW_TIMEDIVIDER) {
             View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.chatcontenttimeitem, viewGroup, false);
             return new TimeDividerViewHolder(view);
@@ -184,7 +202,7 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             //채팅이 완전히 보내진 경우
             if (chatContentItemArrayList.get(position).isSent) {
                 ((MyChatContentViewHolder) holder).iv_sending.setVisibility(View.INVISIBLE);
-                String time = ChatImageDetailActivity.formatDate(chatContentItemArrayList.get(position).time, fromFromat, toFormat);
+                String time = ChatContentDetailActivity.formatDate(chatContentItemArrayList.get(position).time, fromFromat, toFormat);
                 ((MyChatContentViewHolder) holder).tv_time.setText(time);
                 ((MyChatContentViewHolder) holder).tv_uncheckCount.setVisibility(View.VISIBLE);
                 //미확인자가 없는 경우
@@ -215,7 +233,7 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             //채팅이 완전히 보내진 경우
             if (chatContentItemArrayList.get(position).isSent) {
                 ((MyChatImageOneViewHolder) holder).iv_sending.setVisibility(View.INVISIBLE);
-                String time = ChatImageDetailActivity.formatDate(chatContentItemArrayList.get(position).time, fromFromat, toFormat);
+                String time = ChatContentDetailActivity.formatDate(chatContentItemArrayList.get(position).time, fromFromat, toFormat);
                 ((MyChatImageOneViewHolder) holder).tv_time.setText(time);
                 ((MyChatImageOneViewHolder) holder).tv_uncheckCount.setVisibility(View.VISIBLE);
                 //미확인자가 없는 경우
@@ -241,22 +259,15 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             if (chatContentItemArrayList.get(position).isImageFromServer) {
                 Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(0))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageOneViewHolder) holder).iv_image1);
             } else {
                 Glide.with(context).load(chatContentItemArrayList.get(position).imageList.get(0))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageOneViewHolder) holder).iv_image1);
             }
-//
-//            //이미지 클릭 리스너
-//            ((MyChatImageOneViewHolder) holder).iv_image1.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 0);
-//                }
-//            });
+
         }
         //내가 보낸 이미지(2장)
         else if (holder instanceof MyChatImageTwoViewHolder) {
@@ -265,7 +276,7 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             //채팅이 완전히 보내진 경우
             if (chatContentItemArrayList.get(position).isSent) {
                 ((MyChatImageTwoViewHolder) holder).iv_sending.setVisibility(View.INVISIBLE);
-                String time = ChatImageDetailActivity.formatDate(chatContentItemArrayList.get(position).time, fromFromat, toFormat);
+                String time = ChatContentDetailActivity.formatDate(chatContentItemArrayList.get(position).time, fromFromat, toFormat);
                 ((MyChatImageTwoViewHolder) holder).tv_time.setText(time);
                 ((MyChatImageTwoViewHolder) holder).tv_uncheckCount.setVisibility(View.VISIBLE);
                 //미확인자가 없는 경우
@@ -292,46 +303,32 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             if (chatContentItemArrayList.get(position).isImageFromServer) {
                 Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(0))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageTwoViewHolder) holder).iv_image1);
 
                 Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(1))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageTwoViewHolder) holder).iv_image2);
             } else {
                 Glide.with(context).load(chatContentItemArrayList.get(position).imageList.get(0))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageTwoViewHolder) holder).iv_image1);
 
                 Glide.with(context).load(chatContentItemArrayList.get(position).imageList.get(1))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageTwoViewHolder) holder).iv_image2);
             }
-//
-//            //이미지 클릭 리스너
-//            ((MyChatImageTwoViewHolder) holder).iv_image1.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 0);
-//                }
-//            });
-//
-//            ((MyChatImageTwoViewHolder) holder).iv_image2.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 1);
-//                }
-//            });
+
         }
         //내가 보낸 이미지(3장)
         else if (holder instanceof MyChatImageThreeViewHolder) {
             //채팅이 완전히 보내진 경우
             if (chatContentItemArrayList.get(position).isSent) {
                 ((MyChatImageThreeViewHolder) holder).iv_sending.setVisibility(View.INVISIBLE);
-                String time = ChatImageDetailActivity.formatDate(chatContentItemArrayList.get(position).time, fromFromat, toFormat);
+                String time = ChatContentDetailActivity.formatDate(chatContentItemArrayList.get(position).time, fromFromat, toFormat);
                 ((MyChatImageThreeViewHolder) holder).tv_time.setText(time);
                 ((MyChatImageThreeViewHolder) holder).tv_uncheckCount.setVisibility(View.VISIBLE);
                 //미확인자가 없는 경우
@@ -357,55 +354,35 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             if (chatContentItemArrayList.get(position).isImageFromServer) {
                 Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(0))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageThreeViewHolder) holder).iv_image1);
 
                 Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(1))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageThreeViewHolder) holder).iv_image2);
 
                 Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(2))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageThreeViewHolder) holder).iv_image3);
             } else {
                 Glide.with(context).load(chatContentItemArrayList.get(position).imageList.get(0))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageThreeViewHolder) holder).iv_image1);
 
                 Glide.with(context).load(chatContentItemArrayList.get(position).imageList.get(1))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageThreeViewHolder) holder).iv_image2);
 
                 Glide.with(context).load(chatContentItemArrayList.get(position).imageList.get(2))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageThreeViewHolder) holder).iv_image3);
             }
-//            //이미지 클릭 리스너
-//            ((MyChatImageThreeViewHolder) holder).iv_image1.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 0);
-//                }
-//            });
-//
-//            ((MyChatImageThreeViewHolder) holder).iv_image2.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 1);
-//                }
-//            });
-//
-//            ((MyChatImageThreeViewHolder) holder).iv_image3.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 2);
-//                }
-//            });
+
 
         }
         //내가 보낸 이미지(4장)
@@ -414,7 +391,7 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             //채팅이 완전히 보내진 경우
             if (chatContentItemArrayList.get(position).isSent) {
                 ((MyChatImageFourViewHolder) holder).iv_sending.setVisibility(View.INVISIBLE);
-                String time = ChatImageDetailActivity.formatDate(chatContentItemArrayList.get(position).time, fromFromat, toFormat);
+                String time = ChatContentDetailActivity.formatDate(chatContentItemArrayList.get(position).time, fromFromat, toFormat);
                 ((MyChatImageFourViewHolder) holder).tv_time.setText(time);
                 ((MyChatImageFourViewHolder) holder).tv_uncheckCount.setVisibility(View.VISIBLE);
                 //미확인자가 없는 경우
@@ -441,73 +418,45 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             if (chatContentItemArrayList.get(position).isImageFromServer) {
                 Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(0))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageFourViewHolder) holder).iv_image1);
 
                 Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(1))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageFourViewHolder) holder).iv_image2);
 
                 Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(2))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageFourViewHolder) holder).iv_image3);
 
                 Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(3))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageFourViewHolder) holder).iv_image4);
             } else {
                 Glide.with(context).load(chatContentItemArrayList.get(position).imageList.get(0))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageFourViewHolder) holder).iv_image1);
 
                 Glide.with(context).load(chatContentItemArrayList.get(position).imageList.get(1))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageFourViewHolder) holder).iv_image2);
 
                 Glide.with(context).load(chatContentItemArrayList.get(position).imageList.get(2))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageFourViewHolder) holder).iv_image3);
 
                 Glide.with(context).load(chatContentItemArrayList.get(position).imageList.get(3))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageFourViewHolder) holder).iv_image4);
             }
 
-//            //이미지 클릭 리스너
-//            ((MyChatImageFourViewHolder) holder).iv_image1.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 0);
-//                }
-//            });
-//
-//            ((MyChatImageFourViewHolder) holder).iv_image2.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 1);
-//                }
-//            });
-//
-//            ((MyChatImageFourViewHolder) holder).iv_image3.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 2);
-//                }
-//            });
-//
-//            ((MyChatImageFourViewHolder) holder).iv_image4.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 3);
-//                }
-//            });
         }
         //내가 보낸 이미지(5장)
         else if (holder instanceof MyChatImageFiveViewHolder) {
@@ -515,7 +464,7 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             //채팅이 완전히 보내진 경우
             if (chatContentItemArrayList.get(position).isSent) {
                 ((MyChatImageFiveViewHolder) holder).iv_sending.setVisibility(View.INVISIBLE);
-                String time = ChatImageDetailActivity.formatDate(chatContentItemArrayList.get(position).time, fromFromat, toFormat);
+                String time = ChatContentDetailActivity.formatDate(chatContentItemArrayList.get(position).time, fromFromat, toFormat);
                 ((MyChatImageFiveViewHolder) holder).tv_time.setText(time);
                 ((MyChatImageFiveViewHolder) holder).tv_uncheckCount.setVisibility(View.VISIBLE);
                 //미확인자가 없는 경우
@@ -542,52 +491,52 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             if (chatContentItemArrayList.get(position).isImageFromServer) {
                 Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(0))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageFiveViewHolder) holder).iv_image1);
 
                 Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(1))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageFiveViewHolder) holder).iv_image2);
 
                 Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(2))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageFiveViewHolder) holder).iv_image3);
 
                 Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(3))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageFiveViewHolder) holder).iv_image4);
 
                 Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(4))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageFiveViewHolder) holder).iv_image5);
             } else {
                 Glide.with(context).load(chatContentItemArrayList.get(position).imageList.get(0))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageFiveViewHolder) holder).iv_image1);
 
                 Glide.with(context).load(chatContentItemArrayList.get(position).imageList.get(1))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageFiveViewHolder) holder).iv_image2);
 
                 Glide.with(context).load(chatContentItemArrayList.get(position).imageList.get(2))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageFiveViewHolder) holder).iv_image3);
 
                 Glide.with(context).load(chatContentItemArrayList.get(position).imageList.get(3))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageFiveViewHolder) holder).iv_image4);
 
                 Glide.with(context).load(chatContentItemArrayList.get(position).imageList.get(4))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageFiveViewHolder) holder).iv_image5);
             }
 
@@ -595,35 +544,35 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             ((MyChatImageFiveViewHolder) holder).iv_image1.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(position, 0);
+                    mListner.onContentClicked(position, 0);
                 }
             });
 
             ((MyChatImageFiveViewHolder) holder).iv_image2.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(position, 1);
+                    mListner.onContentClicked(position, 1);
                 }
             });
 
             ((MyChatImageFiveViewHolder) holder).iv_image3.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(position, 2);
+                    mListner.onContentClicked(position, 2);
                 }
             });
 
             ((MyChatImageFiveViewHolder) holder).iv_image4.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(position, 3);
+                    mListner.onContentClicked(position, 3);
                 }
             });
 
             ((MyChatImageFiveViewHolder) holder).iv_image5.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(position, 4);
+                    mListner.onContentClicked(position, 4);
                 }
             });
         }
@@ -633,7 +582,7 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             //채팅이 완전히 보내진 경우
             if (chatContentItemArrayList.get(position).isSent) {
                 ((MyChatImageSixViewHolder) holder).iv_sending.setVisibility(View.INVISIBLE);
-                String time = ChatImageDetailActivity.formatDate(chatContentItemArrayList.get(position).time, fromFromat, toFormat);
+                String time = ChatContentDetailActivity.formatDate(chatContentItemArrayList.get(position).time, fromFromat, toFormat);
                 ((MyChatImageSixViewHolder) holder).tv_time.setText(time);
                 ((MyChatImageSixViewHolder) holder).tv_uncheckCount.setVisibility(View.VISIBLE);
                 //미확인자가 없는 경우
@@ -659,114 +608,123 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             if (chatContentItemArrayList.get(position).isImageFromServer) {
                 Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(0))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageSixViewHolder) holder).iv_image1);
 
                 Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(1))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageSixViewHolder) holder).iv_image2);
 
                 Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(2))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageSixViewHolder) holder).iv_image3);
 
                 Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(3))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageSixViewHolder) holder).iv_image4);
 
                 Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(4))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageSixViewHolder) holder).iv_image5);
 
                 Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(5))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageSixViewHolder) holder).iv_image6);
             } else {
                 Glide.with(context).load(chatContentItemArrayList.get(position).imageList.get(0))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageSixViewHolder) holder).iv_image1);
 
                 Glide.with(context).load(chatContentItemArrayList.get(position).imageList.get(1))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageSixViewHolder) holder).iv_image2);
 
                 Glide.with(context).load(chatContentItemArrayList.get(position).imageList.get(2))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageSixViewHolder) holder).iv_image3);
 
                 Glide.with(context).load(chatContentItemArrayList.get(position).imageList.get(3))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageSixViewHolder) holder).iv_image4);
 
                 Glide.with(context).load(chatContentItemArrayList.get(position).imageList.get(4))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageSixViewHolder) holder).iv_image5);
 
                 Glide.with(context).load(chatContentItemArrayList.get(position).imageList.get(5))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((MyChatImageSixViewHolder) holder).iv_image6);
             }
 
-//            //이미지 클릭 리스너
-//            ((MyChatImageSixViewHolder) holder).iv_image1.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 0);
-//                }
-//            });
-//
-//            ((MyChatImageSixViewHolder) holder).iv_image2.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 1);
-//                }
-//            });
-//
-//            ((MyChatImageSixViewHolder) holder).iv_image3.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 2);
-//                }
-//            });
-//
-//            ((MyChatImageSixViewHolder) holder).iv_image4.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 3);
-//                }
-//            });
-//
-//            ((MyChatImageSixViewHolder) holder).iv_image5.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 4);
-//                }
-//            });
-//
-//            ((MyChatImageSixViewHolder) holder).iv_image6.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 5);
-//                }
-//            });
+        }
+        //내가 보낸 동영상
+        else if (holder instanceof MyChatVideoViewHolder) {
+
+            //채팅이 완전히 보내진 경우
+            if (chatContentItemArrayList.get(position).isSent) {
+                ((MyChatVideoViewHolder) holder).iv_sending.setVisibility(View.INVISIBLE);
+                ((MyChatVideoViewHolder) holder).progressBar.setVisibility(View.INVISIBLE);//로딩바 invisible
+                ((MyChatVideoViewHolder) holder).iv_play.setVisibility(View.VISIBLE);//재생버튼 visible
+                String time = ChatContentDetailActivity.formatDate(chatContentItemArrayList.get(position).time, fromFromat, toFormat);
+                ((MyChatVideoViewHolder) holder).tv_time.setText(time);
+                ((MyChatVideoViewHolder) holder).tv_uncheckCount.setVisibility(View.VISIBLE);
+                //미확인자가 없는 경우
+                if (chatContentItemArrayList.get(position).unCheckedParticipant.equals("null")) {
+                    ((MyChatVideoViewHolder) holder).tv_uncheckCount.setText("");
+                }
+                //미확인자가 존재하는 경우
+                else {
+                    //미확인자를 배열에 넣고
+                    String[] unCheckepParticipantList = chatContentItemArrayList.get(position).unCheckedParticipant.split("/");
+                    //그 수만큼 미확인자의 수로 지정해준다.
+                    int uncheckedCount = unCheckepParticipantList.length;
+                    ((MyChatVideoViewHolder) holder).tv_uncheckCount.setText(String.valueOf(uncheckedCount));
+                }
+                //동영상 썸네일 설정
+                Glide.with(context).load("http://13.124.105.47/chatvideo/" + chatContentItemArrayList.get(position).video)
+                        .thumbnail(0.1f)
+                        .apply(new RequestOptions().centerCrop())
+                        .into(((MyChatVideoViewHolder) holder).iv_image);
+            }
+            //채팅을 보내는 중인 경우
+            else {
+                ((MyChatVideoViewHolder) holder).iv_sending.setVisibility(View.VISIBLE);
+                ((MyChatVideoViewHolder) holder).progressBar.setVisibility(View.VISIBLE);//로딩바 visible
+                ((MyChatVideoViewHolder) holder).iv_play.setVisibility(View.INVISIBLE);//재생 버튼 invisible
+                ((MyChatVideoViewHolder) holder).tv_time.setVisibility(View.INVISIBLE);
+                ((MyChatVideoViewHolder) holder).tv_uncheckCount.setVisibility(View.INVISIBLE);
+                if (chatContentItemArrayList.get(position).isVideoFromServer) {
+                    Glide.with(context).load("http://13.124.105.47/chatvideo/" + chatContentItemArrayList.get(position).video)
+                            .thumbnail(0.1f)
+                            .apply(new RequestOptions().centerCrop())
+                            .into(((MyChatVideoViewHolder) holder).iv_image);
+                } else {
+                    Glide.with(context).load(chatContentItemArrayList.get(position).video)
+                            .thumbnail(0.1f)
+                            .apply(new RequestOptions().centerCrop())
+                            .into(((MyChatVideoViewHolder) holder).iv_image);
+                }
+            }
+
+
         }
         //다른 사람들이 보낸 채팅
         else if (holder instanceof OthersChatContentViewHolder) {
             //프로필 사진 설정
             Glide.with(context).load("http://13.124.105.47/profileimage/" + chatContentItemArrayList.get(position).profile)
                     .thumbnail(0.1f)
-                    .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                    .apply(new RequestOptions().centerCrop())
                     .into(((OthersChatContentViewHolder) holder).cv_profile);
 
             //닉네임 설정
@@ -774,7 +732,7 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             //채팅 설정
             ((OthersChatContentViewHolder) holder).tv_content.setText(chatContentItemArrayList.get(position).message);
             //메세지 전송 시간 설정
-            String time = ChatImageDetailActivity.formatDate(chatContentItemArrayList.get(position).time, fromFromat, toFormat);
+            String time = ChatContentDetailActivity.formatDate(chatContentItemArrayList.get(position).time, fromFromat, toFormat);
             ((OthersChatContentViewHolder) holder).tv_time.setText(time);
 
             //미확인자가 없는 경우
@@ -796,7 +754,7 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             //프로필 사진 설정
             Glide.with(context).load("http://13.124.105.47/profileimage/" + chatContentItemArrayList.get(position).profile)
                     .thumbnail(0.1f)
-                    .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                    .apply(new RequestOptions().centerCrop())
                     .into(((OthersChatImageOneViewHolder) holder).cv_profile);
 
             //닉네임 설정
@@ -804,19 +762,11 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
             Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(0))
                     .thumbnail(0.1f)
-                    .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                    .apply(new RequestOptions().centerCrop())
                     .into(((OthersChatImageOneViewHolder) holder).iv_image1);
-//
-//            //이미지 클릭 리스너
-//            ((OthersChatImageOneViewHolder) holder).iv_image1.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 0);
-//                }
-//            });
 
             //메세지 전송 시간 설정
-            String time = ChatImageDetailActivity.formatDate(chatContentItemArrayList.get(position).time, fromFromat, toFormat);
+            String time = ChatContentDetailActivity.formatDate(chatContentItemArrayList.get(position).time, fromFromat, toFormat);
             ((OthersChatImageOneViewHolder) holder).tv_time.setText(time);
 
             //미확인자가 없는 경우
@@ -838,7 +788,7 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             //프로필 사진 설정
             Glide.with(context).load("http://13.124.105.47/profileimage/" + chatContentItemArrayList.get(position).profile)
                     .thumbnail(0.1f)
-                    .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                    .apply(new RequestOptions().centerCrop())
                     .into(((OthersChatImageTwoViewHolder) holder).cv_profile);
 
             //닉네임 설정
@@ -847,30 +797,16 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
             Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(0))
                     .thumbnail(0.1f)
-                    .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                    .apply(new RequestOptions().centerCrop())
                     .into(((OthersChatImageTwoViewHolder) holder).iv_image1);
 
             Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(1))
                     .thumbnail(0.1f)
-                    .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                    .apply(new RequestOptions().centerCrop())
                     .into(((OthersChatImageTwoViewHolder) holder).iv_image2);
-//
-//            //이미지 클릭 리스너
-//            ((OthersChatImageTwoViewHolder) holder).iv_image1.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 0);
-//                }
-//            });
-//
-//            ((OthersChatImageTwoViewHolder) holder).iv_image2.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 1);
-//                }
-//            });
+
             //메세지 전송 시간 설정
-            String time = ChatImageDetailActivity.formatDate(chatContentItemArrayList.get(position).time, fromFromat, toFormat);
+            String time = ChatContentDetailActivity.formatDate(chatContentItemArrayList.get(position).time, fromFromat, toFormat);
             ((OthersChatImageTwoViewHolder) holder).tv_time.setText(time);
 
             //미확인자가 없는 경우
@@ -892,7 +828,7 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             //프로필 사진 설정
             Glide.with(context).load("http://13.124.105.47/profileimage/" + chatContentItemArrayList.get(position).profile)
                     .thumbnail(0.1f)
-                    .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                    .apply(new RequestOptions().centerCrop())
                     .into(((OthersChatImageThreeViewHolder) holder).cv_profile);
 
             //닉네임 설정
@@ -901,43 +837,22 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
             Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(0))
                     .thumbnail(0.1f)
-                    .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                    .apply(new RequestOptions().centerCrop())
                     .into(((OthersChatImageThreeViewHolder) holder).iv_image1);
 
             Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(1))
                     .thumbnail(0.1f)
-                    .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                    .apply(new RequestOptions().centerCrop())
                     .into(((OthersChatImageThreeViewHolder) holder).iv_image2);
 
             Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(2))
                     .thumbnail(0.1f)
-                    .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                    .apply(new RequestOptions().centerCrop())
                     .into(((OthersChatImageThreeViewHolder) holder).iv_image3);
 
-//            //이미지 클릭 리스너
-//            ((OthersChatImageThreeViewHolder) holder).iv_image1.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 0);
-//                }
-//            });
-//
-//            ((OthersChatImageThreeViewHolder) holder).iv_image2.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 1);
-//                }
-//            });
-//
-//            ((OthersChatImageThreeViewHolder) holder).iv_image3.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 2);
-//                }
-//            });
 
             //메세지 전송 시간 설정
-            String time = ChatImageDetailActivity.formatDate(chatContentItemArrayList.get(position).time, fromFromat, toFormat);
+            String time = ChatContentDetailActivity.formatDate(chatContentItemArrayList.get(position).time, fromFromat, toFormat);
             ((OthersChatImageThreeViewHolder) holder).tv_time.setText(time);
 
 
@@ -960,7 +875,7 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             //프로필 사진 설정
             Glide.with(context).load("http://13.124.105.47/profileimage/" + chatContentItemArrayList.get(position).profile)
                     .thumbnail(0.1f)
-                    .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                    .apply(new RequestOptions().centerCrop())
                     .into(((OthersChatImageFourViewHolder) holder).cv_profile);
 
             //닉네임 설정
@@ -969,55 +884,27 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
             Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(0))
                     .thumbnail(0.1f)
-                    .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                    .apply(new RequestOptions().centerCrop())
                     .into(((OthersChatImageFourViewHolder) holder).iv_image1);
 
             Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(1))
                     .thumbnail(0.1f)
-                    .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                    .apply(new RequestOptions().centerCrop())
                     .into(((OthersChatImageFourViewHolder) holder).iv_image2);
 
             Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(2))
                     .thumbnail(0.1f)
-                    .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                    .apply(new RequestOptions().centerCrop())
                     .into(((OthersChatImageFourViewHolder) holder).iv_image3);
 
             Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(3))
                     .thumbnail(0.1f)
-                    .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                    .apply(new RequestOptions().centerCrop())
                     .into(((OthersChatImageFourViewHolder) holder).iv_image4);
 
-//            //이미지 클릭 리스너
-//            ((OthersChatImageFourViewHolder) holder).iv_image1.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 0);
-//                }
-//            });
-//
-//            ((OthersChatImageFourViewHolder) holder).iv_image2.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 1);
-//                }
-//            });
-//
-//            ((OthersChatImageFourViewHolder) holder).iv_image3.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 2);
-//                }
-//            });
-//
-//            ((OthersChatImageFourViewHolder) holder).iv_image4.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 3);
-//                }
-//            });
 
             //메세지 전송 시간 설정
-            String time = ChatImageDetailActivity.formatDate(chatContentItemArrayList.get(position).time, fromFromat, toFormat);
+            String time = ChatContentDetailActivity.formatDate(chatContentItemArrayList.get(position).time, fromFromat, toFormat);
             ((OthersChatImageFourViewHolder) holder).tv_time.setText(time);
             //미확인자가 없는 경우
             if (chatContentItemArrayList.get(position).unCheckedParticipant.equals("null")) {
@@ -1038,7 +925,7 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             //프로필 사진 설정
             Glide.with(context).load("http://13.124.105.47/profileimage/" + chatContentItemArrayList.get(position).profile)
                     .thumbnail(0.1f)
-                    .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                    .apply(new RequestOptions().centerCrop())
                     .into(((OthersChatImageFiveViewHolder) holder).cv_profile);
 
             //닉네임 설정
@@ -1047,67 +934,32 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
             Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(0))
                     .thumbnail(0.1f)
-                    .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                    .apply(new RequestOptions().centerCrop())
                     .into(((OthersChatImageFiveViewHolder) holder).iv_image1);
 
             Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(1))
                     .thumbnail(0.1f)
-                    .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                    .apply(new RequestOptions().centerCrop())
                     .into(((OthersChatImageFiveViewHolder) holder).iv_image2);
 
             Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(2))
                     .thumbnail(0.1f)
-                    .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                    .apply(new RequestOptions().centerCrop())
                     .into(((OthersChatImageFiveViewHolder) holder).iv_image3);
 
             Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(3))
                     .thumbnail(0.1f)
-                    .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                    .apply(new RequestOptions().centerCrop())
                     .into(((OthersChatImageFiveViewHolder) holder).iv_image4);
 
             Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(4))
                     .thumbnail(0.1f)
-                    .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                    .apply(new RequestOptions().centerCrop())
                     .into(((OthersChatImageFiveViewHolder) holder).iv_image5);
-//
-//            //이미지 클릭 리스너
-//            ((OthersChatImageFiveViewHolder) holder).iv_image1.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 0);
-//                }
-//            });
-//
-//            ((OthersChatImageFiveViewHolder) holder).iv_image2.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 1);
-//                }
-//            });
-//
-//            ((OthersChatImageFiveViewHolder) holder).iv_image3.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 2);
-//                }
-//            });
-//
-//            ((OthersChatImageFiveViewHolder) holder).iv_image4.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 3);
-//                }
-//            });
-//
-//            ((OthersChatImageFiveViewHolder) holder).iv_image5.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 4);
-//                }
-//            });
+
 
             //메세지 전송 시간 설정
-            String time = ChatImageDetailActivity.formatDate(chatContentItemArrayList.get(position).time, fromFromat, toFormat);
+            String time = ChatContentDetailActivity.formatDate(chatContentItemArrayList.get(position).time, fromFromat, toFormat);
             ((OthersChatImageFiveViewHolder) holder).tv_time.setText(time);
 
             //미확인자가 없는 경우
@@ -1130,7 +982,7 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             //프로필 사진 설정
             Glide.with(context).load("http://13.124.105.47/profileimage/" + chatContentItemArrayList.get(position).profile)
                     .thumbnail(0.1f)
-                    .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                    .apply(new RequestOptions().centerCrop())
                     .into(((OthersChatImageSixViewHolder) holder).cv_profile);
 
             //닉네임 설정
@@ -1139,78 +991,36 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
             Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(0))
                     .thumbnail(0.1f)
-                    .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                    .apply(new RequestOptions().centerCrop())
                     .into(((OthersChatImageSixViewHolder) holder).iv_image1);
 
             Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(1))
                     .thumbnail(0.1f)
-                    .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                    .apply(new RequestOptions().centerCrop())
                     .into(((OthersChatImageSixViewHolder) holder).iv_image2);
 
             Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(2))
                     .thumbnail(0.1f)
-                    .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                    .apply(new RequestOptions().centerCrop())
                     .into(((OthersChatImageSixViewHolder) holder).iv_image3);
 
             Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(3))
                     .thumbnail(0.1f)
-                    .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                    .apply(new RequestOptions().centerCrop())
                     .into(((OthersChatImageSixViewHolder) holder).iv_image4);
 
             Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(4))
                     .thumbnail(0.1f)
-                    .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                    .apply(new RequestOptions().centerCrop())
                     .into(((OthersChatImageSixViewHolder) holder).iv_image5);
 
             Glide.with(context).load("http://13.124.105.47/chatimage/" + chatContentItemArrayList.get(position).imageList.get(5))
                     .thumbnail(0.1f)
-                    .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
+                    .apply(new RequestOptions().centerCrop())
                     .into(((OthersChatImageSixViewHolder) holder).iv_image6);
-//
-//            //이미지 클릭 리스너
-//            ((OthersChatImageSixViewHolder) holder).iv_image1.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 0);
-//                }
-//            });
-//
-//            ((OthersChatImageSixViewHolder) holder).iv_image2.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 1);
-//                }
-//            });
-//
-//            ((OthersChatImageSixViewHolder) holder).iv_image3.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 2);
-//                }
-//            });
-//
-//            ((OthersChatImageSixViewHolder) holder).iv_image4.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 3);
-//                }
-//            });
-//
-//            ((OthersChatImageSixViewHolder) holder).iv_image5.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 4);
-//                }
-//            });
-//
-//            ((OthersChatImageSixViewHolder) holder).iv_image6.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mListner.onImageclicked(position, 5);
-//                }
-//            });
+
             //메세지 전송 시간 설정
-            String time = ChatImageDetailActivity.formatDate(chatContentItemArrayList.get(position).time, fromFromat, toFormat);
+            String time = ChatContentDetailActivity.formatDate(chatContentItemArrayList.get(position).time, fromFromat, toFormat);
             ((OthersChatImageSixViewHolder) holder).tv_time.setText(time);
 
             //미확인자가 없는 경우
@@ -1226,10 +1036,44 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 ((OthersChatImageSixViewHolder) holder).tv_uncheckCount.setText(String.valueOf(uncheckedCount));
             }
         }
+        //남이 보낸 동영상
+        else if (holder instanceof OthersChatVideoViewHolder) {
+
+            //프로필 사진 설정
+            Glide.with(context).load("http://13.124.105.47/profileimage/" + chatContentItemArrayList.get(position).profile)
+                    .thumbnail(0.1f)
+                    .apply(new RequestOptions().centerCrop())
+                    .into(((OthersChatVideoViewHolder) holder).cv_profile);
+
+            //닉네임 설정
+            ((OthersChatVideoViewHolder) holder).tv_nickname.setText(chatContentItemArrayList.get(position).nickname);
+            //동영상 썸네일 설정
+            Glide.with(context).load("http://13.124.105.47/chatvideo/" + chatContentItemArrayList.get(position).video)
+                    .thumbnail(0.1f)
+                    .apply(new RequestOptions().centerCrop())
+                    .into(((OthersChatVideoViewHolder) holder).iv_image);
+
+            //메세지 전송 시간 설정
+            String time = ChatContentDetailActivity.formatDate(chatContentItemArrayList.get(position).time, fromFromat, toFormat);
+            ((OthersChatVideoViewHolder) holder).tv_time.setText(time);
+
+            //미확인자가 없는 경우
+            if (chatContentItemArrayList.get(position).unCheckedParticipant.equals("null")) {
+                ((OthersChatVideoViewHolder) holder).tv_uncheckCount.setText("");
+            }
+            //미확인자가 존재하는 경우
+            else {
+                //미확인자를 배열에 넣고
+                String[] unCheckepParticipantList = chatContentItemArrayList.get(position).unCheckedParticipant.split("/");
+                //그 수만큼 미확인자의 수로 지정해준다.
+                int uncheckedCount = unCheckepParticipantList.length;
+                ((OthersChatVideoViewHolder) holder).tv_uncheckCount.setText(String.valueOf(uncheckedCount));
+            }
+        }
         //시간 경계 아이템
         else if (holder instanceof TimeDividerViewHolder) {
 
-            String time = ChatImageDetailActivity.formatDate(chatContentItemArrayList.get(position).time, fromFromat, "yyyy년 M월 d일");
+            String time = ChatContentDetailActivity.formatDate(chatContentItemArrayList.get(position).time, fromFromat, "yyyy년 M월 d일");
             ((TimeDividerViewHolder) holder).tv_timeDivider.setText(time);
         }
         //채팅방 퇴장 아이템
@@ -1239,7 +1083,7 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             ((ExitViewHolder) holder).tv_exit.setText(message);
         }
         //사용자 초대 아이템
-        else if(holder instanceof AddViewHolder){
+        else if (holder instanceof AddViewHolder) {
             //초대 메세지 셋
             String message = chatContentItemArrayList.get(position).message;
             ((AddViewHolder) holder).tv_add.setText(message);
@@ -1346,6 +1190,20 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                         int uncheckedCount = unCheckepParticipantList.length;
                         ((MyChatImageSixViewHolder) holder).tv_uncheckCount.setText(String.valueOf(uncheckedCount));
                     }
+
+                }else if (holder instanceof MyChatVideoViewHolder) {
+                    //미확인자가 없는 경우
+                    if (chatContentItemArrayList.get(position).unCheckedParticipant.equals("null")) {
+                        ((MyChatVideoViewHolder) holder).tv_uncheckCount.setText("");
+                    }
+                    //미확인자가 존재하는 경우
+                    else {
+                        //미확인자를 배열에 넣고
+                        String[] unCheckepParticipantList = chatContentItemArrayList.get(position).unCheckedParticipant.split("/");
+                        //그 수만큼 미확인자의 수로 지정해준다.
+                        int uncheckedCount = unCheckepParticipantList.length;
+                        ((MyChatVideoViewHolder) holder).tv_uncheckCount.setText(String.valueOf(uncheckedCount));
+                    }
                 } else if (holder instanceof OthersChatContentViewHolder) {
                     //미확인자가 없는 경우
                     if (chatContentItemArrayList.get(position).unCheckedParticipant.equals("null")) {
@@ -1436,6 +1294,19 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                         //그 수만큼 미확인자의 수로 지정해준다.
                         int uncheckedCount = unCheckepParticipantList.length;
                         ((OthersChatImageSixViewHolder) holder).tv_uncheckCount.setText(String.valueOf(uncheckedCount));
+                    }
+                } else if (holder instanceof OthersChatVideoViewHolder) {
+                    //미확인자가 없는 경우
+                    if (chatContentItemArrayList.get(position).unCheckedParticipant.equals("null")) {
+                        ((OthersChatVideoViewHolder) holder).tv_uncheckCount.setText("");
+                    }
+                    //미확인자가 존재하는 경우
+                    else {
+                        //미확인자를 배열에 넣고
+                        String[] unCheckepParticipantList = chatContentItemArrayList.get(position).unCheckedParticipant.split("/");
+                        //그 수만큼 미확인자의 수로 지정해준다.
+                        int uncheckedCount = unCheckepParticipantList.length;
+                        ((OthersChatVideoViewHolder) holder).tv_uncheckCount.setText(String.valueOf(uncheckedCount));
                     }
                 }
             } else if (TextUtils.equals(payload, "exit")) {
@@ -1531,6 +1402,19 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                         int uncheckedCount = unCheckepParticipantList.length;
                         ((MyChatImageSixViewHolder) holder).tv_uncheckCount.setText(String.valueOf(uncheckedCount));
                     }
+                }else if (holder instanceof MyChatVideoViewHolder) {
+                    //미확인자가 없는 경우
+                    if (chatContentItemArrayList.get(position).unCheckedParticipant.equals("null")) {
+                        ((MyChatVideoViewHolder) holder).tv_uncheckCount.setText("");
+                    }
+                    //미확인자가 존재하는 경우
+                    else {
+                        //미확인자를 배열에 넣고
+                        String[] unCheckepParticipantList = chatContentItemArrayList.get(position).unCheckedParticipant.split("/");
+                        //그 수만큼 미확인자의 수로 지정해준다.
+                        int uncheckedCount = unCheckepParticipantList.length;
+                        ((MyChatVideoViewHolder) holder).tv_uncheckCount.setText(String.valueOf(uncheckedCount));
+                    }
                 } else if (holder instanceof OthersChatContentViewHolder) {
                     //미확인자가 없는 경우
                     if (chatContentItemArrayList.get(position).unCheckedParticipant.equals("null")) {
@@ -1623,6 +1507,20 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                         ((OthersChatImageSixViewHolder) holder).tv_uncheckCount.setText(String.valueOf(uncheckedCount));
                     }
 
+                } else if (holder instanceof OthersChatVideoViewHolder) {
+                    //미확인자가 없는 경우
+                    if (chatContentItemArrayList.get(position).unCheckedParticipant.equals("null")) {
+                        ((OthersChatVideoViewHolder) holder).tv_uncheckCount.setText("");
+                    }
+                    //미확인자가 존재하는 경우
+                    else {
+                        //미확인자를 배열에 넣고
+                        String[] unCheckepParticipantList = chatContentItemArrayList.get(position).unCheckedParticipant.split("/");
+                        //그 수만큼 미확인자의 수로 지정해준다.
+                        int uncheckedCount = unCheckepParticipantList.length;
+                        ((OthersChatVideoViewHolder) holder).tv_uncheckCount.setText(String.valueOf(uncheckedCount));
+                    }
+
                 }
             }
         }
@@ -1687,7 +1585,7 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             iv_image1.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 0);
+                    mListner.onContentClicked(getAdapterPosition(), 0);
                 }
             });
         }
@@ -1710,14 +1608,14 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             iv_image1.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 0);
+                    mListner.onContentClicked(getAdapterPosition(), 0);
                 }
             });
 
             iv_image2.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 1);
+                    mListner.onContentClicked(getAdapterPosition(), 1);
                 }
             });
         }
@@ -1741,21 +1639,21 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             iv_image1.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 0);
+                    mListner.onContentClicked(getAdapterPosition(), 0);
                 }
             });
 
             iv_image2.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 1);
+                    mListner.onContentClicked(getAdapterPosition(), 1);
                 }
             });
 
             iv_image3.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 2);
+                    mListner.onContentClicked(getAdapterPosition(), 2);
                 }
             });
 
@@ -1780,28 +1678,28 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             iv_image1.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 0);
+                    mListner.onContentClicked(getAdapterPosition(), 0);
                 }
             });
 
             iv_image2.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 1);
+                    mListner.onContentClicked(getAdapterPosition(), 1);
                 }
             });
 
             iv_image3.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 2);
+                    mListner.onContentClicked(getAdapterPosition(), 2);
                 }
             });
 
             iv_image4.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 3);
+                    mListner.onContentClicked(getAdapterPosition(), 3);
                 }
             });
 
@@ -1828,35 +1726,35 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             iv_image1.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 0);
+                    mListner.onContentClicked(getAdapterPosition(), 0);
                 }
             });
 
             iv_image2.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 1);
+                    mListner.onContentClicked(getAdapterPosition(), 1);
                 }
             });
 
             iv_image3.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 2);
+                    mListner.onContentClicked(getAdapterPosition(), 2);
                 }
             });
 
             iv_image4.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 3);
+                    mListner.onContentClicked(getAdapterPosition(), 3);
                 }
             });
 
             iv_image5.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 4);
+                    mListner.onContentClicked(getAdapterPosition(), 4);
                 }
             });
 
@@ -1883,42 +1781,42 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             iv_image1.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 0);
+                    mListner.onContentClicked(getAdapterPosition(), 0);
                 }
             });
 
             iv_image2.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 1);
+                    mListner.onContentClicked(getAdapterPosition(), 1);
                 }
             });
 
             iv_image3.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 2);
+                    mListner.onContentClicked(getAdapterPosition(), 2);
                 }
             });
 
             iv_image4.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 3);
+                    mListner.onContentClicked(getAdapterPosition(), 3);
                 }
             });
 
             iv_image5.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 4);
+                    mListner.onContentClicked(getAdapterPosition(), 4);
                 }
             });
 
             iv_image6.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 5);
+                    mListner.onContentClicked(getAdapterPosition(), 5);
                 }
             });
 
@@ -1950,7 +1848,7 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             iv_image1.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 0);
+                    mListner.onContentClicked(getAdapterPosition(), 0);
                 }
             });
 
@@ -1984,14 +1882,14 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             iv_image1.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 0);
+                    mListner.onContentClicked(getAdapterPosition(), 0);
                 }
             });
 
             iv_image2.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 1);
+                    mListner.onContentClicked(getAdapterPosition(), 1);
                 }
             });
 
@@ -2025,21 +1923,21 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             iv_image1.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 0);
+                    mListner.onContentClicked(getAdapterPosition(), 0);
                 }
             });
 
             iv_image2.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 1);
+                    mListner.onContentClicked(getAdapterPosition(), 1);
                 }
             });
 
             iv_image3.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 2);
+                    mListner.onContentClicked(getAdapterPosition(), 2);
                 }
             });
 
@@ -2075,28 +1973,28 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             iv_image1.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 0);
+                    mListner.onContentClicked(getAdapterPosition(), 0);
                 }
             });
 
             iv_image2.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 1);
+                    mListner.onContentClicked(getAdapterPosition(), 1);
                 }
             });
 
             iv_image3.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 2);
+                    mListner.onContentClicked(getAdapterPosition(), 2);
                 }
             });
 
             iv_image4.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 3);
+                    mListner.onContentClicked(getAdapterPosition(), 3);
                 }
             });
 
@@ -2133,35 +2031,35 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             iv_image1.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 0);
+                    mListner.onContentClicked(getAdapterPosition(), 0);
                 }
             });
 
             iv_image2.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 1);
+                    mListner.onContentClicked(getAdapterPosition(), 1);
                 }
             });
 
             iv_image3.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 2);
+                    mListner.onContentClicked(getAdapterPosition(), 2);
                 }
             });
 
             iv_image4.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 3);
+                    mListner.onContentClicked(getAdapterPosition(), 3);
                 }
             });
 
             iv_image5.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 4);
+                    mListner.onContentClicked(getAdapterPosition(), 4);
                 }
             });
 
@@ -2198,42 +2096,42 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             iv_image1.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 0);
+                    mListner.onContentClicked(getAdapterPosition(), 0);
                 }
             });
 
             iv_image2.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 1);
+                    mListner.onContentClicked(getAdapterPosition(), 1);
                 }
             });
 
             iv_image3.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 2);
+                    mListner.onContentClicked(getAdapterPosition(), 2);
                 }
             });
 
             iv_image4.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 3);
+                    mListner.onContentClicked(getAdapterPosition(), 3);
                 }
             });
 
             iv_image5.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 4);
+                    mListner.onContentClicked(getAdapterPosition(), 4);
                 }
             });
 
             iv_image6.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListner.onImageclicked(getAdapterPosition(), 5);
+                    mListner.onContentClicked(getAdapterPosition(), 5);
                 }
             });
         }
@@ -2265,6 +2163,60 @@ public class ChatContentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         public AddViewHolder(View view) {
             super(view);
             tv_add = view.findViewById(R.id.textview_add);
+        }
+    }
+
+    private class MyChatVideoViewHolder extends RecyclerView.ViewHolder {
+        ImageView iv_image, iv_play;
+        ImageView iv_sending;
+        TextView tv_time, tv_uncheckCount;
+        ProgressBar progressBar;
+
+        public MyChatVideoViewHolder(View view) {
+            super(view);
+            iv_image = view.findViewById(R.id.imageview_image);
+            iv_play = view.findViewById(R.id.imageview_play);
+            iv_sending = view.findViewById(R.id.imageview_sending);
+            tv_time = view.findViewById(R.id.textview_time);
+            tv_uncheckCount = view.findViewById(R.id.textview_uncheckcount);
+            progressBar = view.findViewById(R.id.progressbar);
+
+            iv_image.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mListner.onContentClicked(getAdapterPosition(), 0);
+                }
+            });
+        }
+    }
+
+    private class OthersChatVideoViewHolder extends RecyclerView.ViewHolder {
+        CircleImageView cv_profile;
+        TextView tv_nickname, tv_time, tv_uncheckCount;
+        ImageView iv_image, iv_play;
+
+        public OthersChatVideoViewHolder(View view) {
+            super(view);
+            cv_profile = view.findViewById(R.id.circleimageview_profile);
+            tv_nickname = view.findViewById(R.id.textview_nickname);
+            iv_image = view.findViewById(R.id.imageview_image);
+            iv_play = view.findViewById(R.id.imageview_play);
+            tv_time = view.findViewById(R.id.textview_time);
+            tv_uncheckCount = view.findViewById(R.id.textview_uncheckcount);
+
+            cv_profile.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mListner.onProfileClicked(getAdapterPosition());
+                }
+            });
+
+            iv_image.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mListner.onContentClicked(getAdapterPosition(), 0);
+                }
+            });
         }
     }
 }

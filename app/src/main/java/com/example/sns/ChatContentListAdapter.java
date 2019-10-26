@@ -3,7 +3,6 @@ package com.example.sns;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -22,21 +21,21 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-class ChatImageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+class ChatContentListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
-    private ArrayList<ChatImageItem> chatImageArrayList;
+    private ArrayList<ChatContentListItem> chatImageArrayList;
     private Context context;
 
 
-    public ChatImageAdapter(ArrayList<ChatImageItem> chatImageArrayList, Context context) {
+    public ChatContentListAdapter(ArrayList<ChatContentListItem> chatImageArrayList, Context context) {
         this.chatImageArrayList = chatImageArrayList;
         this.context = context;
     }
 
     interface ChatImageRecyclerViewListener {
-        void onImageClicked(int position);//이미지 클릭시 호출될 메소드
+        void onContentClicked(int position);//컨텐츠 클릭시 호출될 메소드
 
-        void onImageLongClicked(int position);//이미지 롱 클릭시 호출될 메소드
+        void onContentLongClicked(int position);//컨텐츠 롱 클릭시 호출될 메소드
     }
 
     ChatImageRecyclerViewListener mListener;
@@ -50,7 +49,7 @@ class ChatImageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int viewType) {
-        View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.chatimageitem, viewGroup, false);
+        View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.chatcontentitem, viewGroup, false);
         return new ChatImageViewHolder(view);
     }
 
@@ -58,14 +57,30 @@ class ChatImageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
 
         try {
-            JSONObject imageData = new JSONObject(chatImageArrayList.get(position).imageData);
-            String image = imageData.getString("image");
-            //이미지 설정
-            Glide.with(context)
-                    .load("http://13.124.105.47/chatimage/" + image)
-                    .apply(new RequestOptions().centerCrop())
-                    .thumbnail(0.1f)
-                    .into(((ChatImageViewHolder) holder).iv_image);
+            JSONObject contentData = new JSONObject(chatImageArrayList.get(position).contentData);
+            String type = contentData.getString("type");//컨텐츠 타입
+            String content = contentData.getString("content");//컨텐츠 파일 명
+            if(type.equals("image")) {//이미지 컨텐츠인 경우
+                //이미지 설정
+                Glide.with(context)
+                        .load("http://13.124.105.47/chatimage/" + content)
+                        .apply(new RequestOptions().centerCrop())
+                        .thumbnail(0.1f)
+                        .into(((ChatImageViewHolder) holder).iv_image);
+                //동영상 아이콘 invisible
+                ((ChatImageViewHolder) holder).iv_video.setVisibility(View.INVISIBLE);
+            }
+            else {
+                //이미지 설정
+                Glide.with(context)
+                        .load("http://13.124.105.47/chatvideo/" + content)
+                        .apply(new RequestOptions().centerCrop().frame(0))
+                        .thumbnail(0.1f)
+                        .into(((ChatImageViewHolder) holder).iv_image);
+                //동영상 아이콘 visible
+                ((ChatImageViewHolder) holder).iv_video.setVisibility(View.VISIBLE);
+
+            }
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -133,7 +148,7 @@ class ChatImageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private class ChatImageViewHolder extends RecyclerView.ViewHolder {
         ConstraintLayout container;
         FrameLayout frame;
-        ImageView iv_image;
+        ImageView iv_image, iv_video;
         ImageButton ib_checkbox;
 
 
@@ -141,6 +156,7 @@ class ChatImageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             super(view);
             container = view.findViewById(R.id.container);
             iv_image = view.findViewById(R.id.imageview_gridpicture);
+            iv_video = view.findViewById(R.id.imageview_video);
             ib_checkbox = view.findViewById(R.id.imagebutton_checkbox);
             frame = view.findViewById(R.id.frame);
 
@@ -148,7 +164,7 @@ class ChatImageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             container.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListener.onImageClicked(getAdapterPosition());
+                    mListener.onContentClicked(getAdapterPosition());
                 }
             });
 
@@ -156,7 +172,7 @@ class ChatImageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             container.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
-                    mListener.onImageLongClicked(getAdapterPosition());
+                    mListener.onContentLongClicked(getAdapterPosition());
                     return true;//false-다음 동작인 click이벤트로 전환, true-long클릭에서 이벤트 종료
                 }
             });

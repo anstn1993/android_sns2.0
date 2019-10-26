@@ -213,6 +213,46 @@ public class ChatActivity extends AppCompatActivity implements ChatRoomAdapter.C
                         e.printStackTrace();
                     }
                 }
+                //메세지가 동영상인 경우
+                else if(msg.what == 8888) {
+                    String messageData = msg.obj.toString();
+                    try {
+                        JSONObject jsonObject = new JSONObject(messageData);
+                        int roomNum = jsonObject.getInt("roomNum");
+                        //넘어온 메세지가 기존에 존재하는 채팅방의 메세지인 경우인지 아닌지를 파악하기 위한 불린 변수
+                        boolean isRoomExist = false;
+                        //채팅방 리사이클러뷰에서 메세지를 수신한 채팅방의 index를 알아내기 위한 변수
+                        int position = 0;
+                        //새롭게 채팅방을 만든 사람이 최초로 보낸 메세지
+                        String message = jsonObject.getString("message");
+                        //메세지 타입
+                        String type = jsonObject.getString("type");
+                        //메세지를 보낸 시간
+                        String time = jsonObject.getString("time");
+                        //반복문을 통해서 메세지가 기존에 존재하는 채팅방인지 파악
+                        for (int i = 0; i < chatRoomItemArrayList.size(); i++) {
+                            if (chatRoomItemArrayList.get(i).roomNum == roomNum) {
+                                //기존에 존재하는 방이면 true로 변환 후 반복문 탈출
+                                isRoomExist = true;
+                                position = i;
+                                break;
+                            }
+                        }
+                        //메세지가 기존에 존재하는 채팅방의 메세지인 경우
+                        if (isRoomExist) {
+                            //기존 채팅방 아이템 리스트를 수정해준다.
+                            updateChatRoom(position, message, type, time);
+
+                        }
+                        //새로운 채팅방의 메세지인 경우
+                        else {
+                            //새로운 채팅방 생성
+                            createNewChatRoom(LoginActivity.account, roomNum, message, time);
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
 
             }
         };
@@ -522,6 +562,7 @@ public class ChatActivity extends AppCompatActivity implements ChatRoomAdapter.C
                     //생성된 채팅방 액티비티로 넘겨준다.
                     Intent intent = new Intent(getApplicationContext(), ChatRoomActivity.class);
                     intent.putExtra("roomNum", chatRoomItem.roomNum);//채팅방 번호
+                    intent.putExtra("isNewRoom", true);//새롭게 생성된 채팅방 여부
                     //자기 자신의 데이터는 다시 지워주고 인텐트
                     participantList.remove(participantList.length() - 1);
                     // ex) [{"account":"gggg","nickname":"진처리","profile":"gggg021103.jpg"},{"account":"rlarpdlcm","nickname":"정후이","profile":"rlarpdlcm025328.jpg"}]
@@ -579,6 +620,7 @@ public class ChatActivity extends AppCompatActivity implements ChatRoomAdapter.C
                             if (selectedUserAccount.equals(account)) {
                                 Intent intent = new Intent(this, ChatRoomActivity.class);
                                 intent.putExtra("roomNum", chatRoomItemArrayList.get(i).roomNum);
+                                intent.putExtra("isNewRoom", false);//새로운 채팅방인지 여부
                                 //대화 상대의 정보를 json스트링으로 만들어서 intent
                                 JSONObject jsonObject = new JSONObject();
                                 try {
@@ -617,6 +659,7 @@ public class ChatActivity extends AppCompatActivity implements ChatRoomAdapter.C
         Intent intent = new Intent(this, ChatRoomActivity.class);
         //채팅방 번호
         intent.putExtra("roomNum", chatRoomItemArrayList.get(position).roomNum);
+        intent.putExtra("isNewRoom", false);//새롭게 생성된 채팅방 여부
         int size = chatRoomItemArrayList.get(position).userList.size();
         //자신을 제외한 참여자가 존재하는 경우
         if (size > 0) {

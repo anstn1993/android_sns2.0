@@ -4,22 +4,26 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
+
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.os.Bundle;
+
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -29,40 +33,40 @@ import java.util.Locale;
 
 import static com.example.sns.LoginActivity.httpURLConnection;
 
-public class ChatImageListActivity extends AppCompatActivity implements ChatImageAdapter.ChatImageRecyclerViewListener {
+public class ChatContentListActivity extends AppCompatActivity implements ChatContentListAdapter.ChatImageRecyclerViewListener {
     private int roomNum = 0;
     private ImageButton ib_check, ib_back, ib_download;
     private TextView tv_cancel;
-    //채팅 이미지 데이터의 json스트링을 담아서 어댑터와 연동할 리스트
-    private ArrayList<ChatImageItem> chatImageArrayList;
-    private RecyclerView rv_chatImage;//리사이클러뷰
+    //채팅 컨텐츠 데이터의 json스트링을 담아서 어댑터와 연동할 리스트
+    private ArrayList<ChatContentListItem> chatContentArrayList;
+    private RecyclerView rv_chatContent;//리사이클러뷰
     private GridLayoutManager gridLayoutManager;//레이아웃 메니저
-    private ChatImageAdapter chatImageAdapter;
+    private ChatContentListAdapter chatContentListAdapter;
 
-    private boolean isSelectMode = false;//이미지 선택모드인지를 가리는 boolean
+    private boolean isSelectMode = false;//컨텐츠 선택모드 boolean
 
-    private ArrayList<String> selectedImageArrayList;//선택모드에서 선택한 이미지들을 담는 리스트
+    private ArrayList<Integer> selectedContentIndexList;//선택모드에서 선택한 컨텐츠의 index를 담는 리스트
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_chat_image_list);
+        setContentView(R.layout.activity_chat_content_list);
 
         initView();//뷰 초기화
         setRecyclerView();//리사이클러뷰 셋
-        selectedImageArrayList = new ArrayList<>();//선택모드에서 선택한 이미지 리스트 초기화
+        selectedContentIndexList = new ArrayList<>();//선택모드에서 선택한 이미지 리스트 초기화
 
         //이미지 데이터 셋
         if (getIntent() != null) {
-            int totalImageCount = getIntent().getIntExtra("totalImageCount", 0);
+            int totalImageCount = getIntent().getIntExtra("totalContentCount", 0);
             for (int i = 0; i < totalImageCount; i++) {
-                String imageData = getIntent().getStringExtra("imageData" + i);
-                ChatImageItem chatImageItem = new ChatImageItem();
-                chatImageItem.setImageData(imageData);
-                chatImageItem.setSelectMode(false);
-                chatImageItem.setSelected(false);
-                chatImageArrayList.add(chatImageItem);
+                String contentData = getIntent().getStringExtra("contentData" + i);
+                ChatContentListItem chatContentListItem = new ChatContentListItem();
+                chatContentListItem.setContentData(contentData);
+                chatContentListItem.setSelectMode(false);
+                chatContentListItem.setSelected(false);
+                chatContentArrayList.add(chatContentListItem);
             }
         }
 
@@ -75,10 +79,10 @@ public class ChatImageListActivity extends AppCompatActivity implements ChatImag
                 tv_cancel.setVisibility(View.VISIBLE);//취소 버튼 visible
                 ib_download.setVisibility(View.VISIBLE);//다운로드 버튼 visible
                 //모든 이미지를 선택 모드로 전환해준다.
-                for (int i = 0; i < chatImageArrayList.size(); i++) {
-                    chatImageArrayList.get(i).setSelectMode(true);
+                for (int i = 0; i < chatContentArrayList.size(); i++) {
+                    chatContentArrayList.get(i).setSelectMode(true);
                 }
-                chatImageAdapter.notifyItemRangeChanged(0, chatImageAdapter.getItemCount(), "selectMode");
+                chatContentListAdapter.notifyItemRangeChanged(0, chatContentListAdapter.getItemCount(), "selectMode");
             }
         });
 
@@ -90,13 +94,13 @@ public class ChatImageListActivity extends AppCompatActivity implements ChatImag
                 tv_cancel.setVisibility(View.GONE);//이미지 취소 버튼 GONE
                 ib_download.setVisibility(View.GONE);//다운로드 버튼 GONE
                 ib_check.setVisibility(View.VISIBLE);//이미지 선택 버튼 VISIBLE
-                selectedImageArrayList.clear();//선택된 이미지 리스트를 비워준다.
+                selectedContentIndexList.clear();//선택된 이미지 리스트를 비워준다.
                 //모든 이미지의 선택 모드를 해제한다.
-                for (int i = 0; i < chatImageArrayList.size(); i++) {
-                    chatImageArrayList.get(i).setSelectMode(false);//선택모드 해제
-                    chatImageArrayList.get(i).setSelected(false);//모든 이미지를 미선택 상태로 전환
+                for (int i = 0; i < chatContentArrayList.size(); i++) {
+                    chatContentArrayList.get(i).setSelectMode(false);//선택모드 해제
+                    chatContentArrayList.get(i).setSelected(false);//모든 이미지를 미선택 상태로 전환
                 }
-                chatImageAdapter.notifyItemRangeChanged(0, chatImageAdapter.getItemCount(), "cancel");
+                chatContentListAdapter.notifyItemRangeChanged(0, chatContentListAdapter.getItemCount(), "cancel");
             }
         });
 
@@ -112,9 +116,9 @@ public class ChatImageListActivity extends AppCompatActivity implements ChatImag
         ib_download.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //선택한 이미지
-                UrlImageToFile urlImageToFile = new UrlImageToFile();
-                urlImageToFile.execute(selectedImageArrayList);//선택한 이미지 리스트를 넘겨줘서 이미지들을 다운받는 스레드 실행
+                //선택한 컨텐츠
+                UrlContentToFile urlContentToFile = new UrlContentToFile();
+                urlContentToFile.execute(selectedContentIndexList);//선택한 이미지 리스트를 넘겨줘서 이미지들을 다운받는 스레드 실행
             }
         });
     }
@@ -133,66 +137,54 @@ public class ChatImageListActivity extends AppCompatActivity implements ChatImag
 
     private void setRecyclerView() {
 
-        chatImageArrayList = new ArrayList<>();
+        chatContentArrayList = new ArrayList<>();
 
-        rv_chatImage = findViewById(R.id.recyclerview_chatimage);
-        rv_chatImage.setHasFixedSize(true);
+        rv_chatContent = findViewById(R.id.recyclerview_chatimage);
+        rv_chatContent.setHasFixedSize(true);
 
         //레이아웃 메니저 초기화
         gridLayoutManager = new GridLayoutManager(this, 3);
-        rv_chatImage.setLayoutManager(gridLayoutManager);
+        rv_chatContent.setLayoutManager(gridLayoutManager);
         //어댑터 초기화
-        chatImageAdapter = new ChatImageAdapter(chatImageArrayList, this);
-        chatImageAdapter.setOnClickListener(this);
-        rv_chatImage.setAdapter(chatImageAdapter);
+        chatContentListAdapter = new ChatContentListAdapter(chatContentArrayList, this);
+        chatContentListAdapter.setOnClickListener(this);
+        rv_chatContent.setAdapter(chatContentListAdapter);
     }
 
-    //리사이클러뷰 이미지를 클릭했을 때 호출되는 메소드
+    //리사이클러뷰 컨텐츠를 클릭했을 때 호출되는 메소드
     @Override
-    public void onImageClicked(int position) {
-        //이미지 선택모드가 아닌 경우
+    public void onContentClicked(int position) {
+        //컨텐츠 선택모드가 아닌 경우
         if (isSelectMode == false) {
-            Intent intent = new Intent(ChatImageListActivity.this, ChatImageDetailActivity.class);
-            intent.putExtra("imageListCount", chatImageArrayList.size());//전체 이미지 개수
-            intent.putExtra("imageIndex", position);//선택한 이미지의 인덱스
-            for (int i = 0; i < chatImageArrayList.size(); i++) {
+            Intent intent = new Intent(ChatContentListActivity.this, ChatContentDetailActivity.class);
+            intent.putExtra("contentListCount", chatContentArrayList.size());//전체 이미지 개수
+            intent.putExtra("contentIndex", position);//선택한 이미지의 인덱스
+            for (int i = 0; i < chatContentArrayList.size(); i++) {
                 //이미지 데이터를 담는 json스트링을 이미지 수만큼 담아준다.
-                intent.putExtra("imageData" + i, chatImageArrayList.get(i).imageData);
+                intent.putExtra("contentData" + i, chatContentArrayList.get(i).contentData);
             }
             startActivity(intent);
         }
-        //이미지 선택 모드인 경우
+        //컨텐츠 선택 모드인 경우
         else {
-            //선택 상태인 상태면
-            if (chatImageArrayList.get(position).isSelected) {
-                chatImageArrayList.get(position).setSelected(false);//선택 취소로 전환
-                try {
-                    JSONObject imageData = new JSONObject(chatImageArrayList.get(position).imageData);
-                    String image = imageData.getString("image");//선택 취소한 이미지
-                    int index = selectedImageArrayList.indexOf(image);//이미지의 인덱스
-                    selectedImageArrayList.remove(index);//선택 취소한 이미지를 이미지 선택 리스트에서 삭제
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+            //선택 상태인 경우
+            if (chatContentArrayList.get(position).isSelected) {
+                chatContentArrayList.get(position).setSelected(false);//선택 취소로 전환
+                int index = selectedContentIndexList.indexOf(position);//컨텐츠의 인덱스
+                selectedContentIndexList.remove(index);//선택 취소한 컨텐츠 index를 리스트에서 삭제
             }
             //선택을 하지 않은 상태면
             else {
-                chatImageArrayList.get(position).setSelected(true);//선택 상태로 전환
-                try {
-                    JSONObject imageData = new JSONObject(chatImageArrayList.get(position).imageData);
-                    String image = imageData.getString("image");//선택한 이미지
-                    selectedImageArrayList.add(image);//선택한 이미지를 이미지 선택 리스트에 추가
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+                chatContentArrayList.get(position).setSelected(true);//선택 상태로 전환
+                selectedContentIndexList.add(position);//선택한 컨텐츠 index를 리스트에 추가
             }
-            chatImageAdapter.notifyItemChanged(position, "check");
+            chatContentListAdapter.notifyItemChanged(position, "check");
         }
     }
 
-    //리사이클러뷰 이미지를 길게 클릭했을 때 호출되는 메소드
+    //리사이클러뷰 컨텐츠를 길게 클릭했을 때 호출되는 메소드
     @Override
-    public void onImageLongClicked(int position) {
+    public void onContentLongClicked(int position) {
         //이미지 선택 모드가 아닌 상태에서만 동작
         if (isSelectMode == false) {
             isSelectMode = true;//선택모드 true
@@ -200,10 +192,10 @@ public class ChatImageListActivity extends AppCompatActivity implements ChatImag
             tv_cancel.setVisibility(View.VISIBLE);//취소 버튼 visible
             ib_download.setVisibility(View.VISIBLE);//다운로드 버튼 visible
             //모든 이미지를 선택 모드로 전환해준다.
-            for (int i = 0; i < chatImageArrayList.size(); i++) {
-                chatImageArrayList.get(i).setSelectMode(true);
+            for (int i = 0; i < chatContentArrayList.size(); i++) {
+                chatContentArrayList.get(i).setSelectMode(true);
             }
-            chatImageAdapter.notifyItemRangeChanged(0, chatImageAdapter.getItemCount(), "selectMode");
+            chatContentListAdapter.notifyItemRangeChanged(0, chatContentListAdapter.getItemCount(), "selectMode");
         }
     }
 
@@ -215,13 +207,13 @@ public class ChatImageListActivity extends AppCompatActivity implements ChatImag
             tv_cancel.setVisibility(View.GONE);//이미지 취소 버튼 GONE
             ib_download.setVisibility(View.GONE);//다운로드 버튼 GONE
             ib_check.setVisibility(View.VISIBLE);//이미지 선택 버튼 VISIBLE
-            selectedImageArrayList.clear();//선택된 이미지 리스트를 비워준다.
+            selectedContentIndexList.clear();//선택된 이미지 리스트를 비워준다.
             //모든 이미지의 선택 모드를 해제한다.
-            for (int i = 0; i < chatImageArrayList.size(); i++) {
-                chatImageArrayList.get(i).setSelectMode(false);//선택모드 해제
-                chatImageArrayList.get(i).setSelected(false);//모든 이미지를 미선택 상태로 전환
+            for (int i = 0; i < chatContentArrayList.size(); i++) {
+                chatContentArrayList.get(i).setSelectMode(false);//선택모드 해제
+                chatContentArrayList.get(i).setSelected(false);//모든 이미지를 미선택 상태로 전환
             }
-            chatImageAdapter.notifyItemRangeChanged(0, chatImageAdapter.getItemCount(), "cancel");
+            chatContentListAdapter.notifyItemRangeChanged(0, chatContentListAdapter.getItemCount(), "cancel");
         }
         //이미지 선택 모드가 아닌 경우에는 뒤로가기
         else {
@@ -229,26 +221,26 @@ public class ChatImageListActivity extends AppCompatActivity implements ChatImag
         }
     }
 
-    public class UrlImageToFile extends AsyncTask<ArrayList<String>, Void, String> implements ChatImageDownloadDialog.ChatImageDownloadDialogClickListener {
+    public class UrlContentToFile extends AsyncTask<ArrayList<Integer>, Void, String> implements ChatImageDownloadDialog.ChatImageDownloadDialogClickListener {
 
         String connectURL = null;
         String filename;
         String savefolder = "/Download";
         //다운로드 다이얼로그 객체 초기화
         ChatImageDownloadDialog downloadDialog;
-        ArrayList<String> selectedImageArrayList;
+        ArrayList<Integer> selectedContentIndexList;
 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            downloadDialog = new ChatImageDownloadDialog(ChatImageListActivity.this, this);
+            downloadDialog = new ChatImageDownloadDialog(ChatContentListActivity.this, this);
             downloadDialog.show();//다이얼로그 화면에 출력
         }
 
         @Override
-        protected String doInBackground(ArrayList<String>... params) {
-            selectedImageArrayList = params[0];
-            downloadDialog.setTotalCount(selectedImageArrayList.size());//다운로드할 이미지 수 셋
+        protected String doInBackground(ArrayList<Integer>... params) {
+            selectedContentIndexList = params[0];
+            downloadDialog.setTotalCount(selectedContentIndexList.size());//다운로드할 이미지 수 셋
             //저장 경로
             String savePath = Environment.getExternalStorageDirectory().toString() + savefolder;
             //저장 경로로 된 디렉토리 객체 생성
@@ -261,19 +253,25 @@ public class ChatImageListActivity extends AppCompatActivity implements ChatImag
 
             try {
                 //이미지의 수만큼 이미지를 다운받는 작업 수행
-                for (int i = 0; i < selectedImageArrayList.size(); i++) {
+                for (int i = 0; i < selectedContentIndexList.size(); i++) {
                     //파일 이름 설정
                     Date date = new Date();
                     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.KOREA);
                     filename = String.valueOf(simpleDateFormat.format(date));
-
-                    //이미지 파일의 경로 설정
-                    String filePath = savePath + "/" + filename + i + ".jpg";
-
-
-                    //이미지를 저장하고 있는 서버 주소
-                    connectURL = selectedImageArrayList.get(i);
-                    URL url = new URL("http://13.124.105.47/chatimage/" + connectURL);
+                    JSONObject contentData = new JSONObject(chatContentArrayList.get(selectedContentIndexList.get(i)).contentData);
+                    String type = contentData.getString("type");//컨텐츠 타입
+                    String content = contentData.getString("content");//컨텐츠 파일 명
+                    String filePath = null;//파일 경로
+                    if (type.equals("image")) {//이미지 컨텐츠
+                        filePath = savePath + "/" + filename + i + ".jpg";
+                        //이미지를 저장하고 있는 서버 주소
+                        connectURL = "http://13.124.105.47/chatimage/" + content;
+                    }else {//동영상 컨텐츠
+                        filePath = savePath + "/" + filename + i + ".mp4";
+                        //이미지를 저장하고 있는 서버 주소
+                        connectURL = "http://13.124.105.47/chatvideo/" + content;
+                    }
+                    URL url = new URL(connectURL);
                     httpURLConnection = (HttpURLConnection) url.openConnection();
                     httpURLConnection.setDoOutput(true);
                     httpURLConnection.setDoInput(true);
@@ -287,24 +285,24 @@ public class ChatImageListActivity extends AppCompatActivity implements ChatImag
 
                     byte[] tmpByte = new byte[length];
                     //입력 스트림 생성
-                    InputStream inputStream = httpURLConnection.getInputStream();
+                    BufferedInputStream bufferedInputStream = new BufferedInputStream(httpURLConnection.getInputStream());
                     File file = new File(filePath);
 
                     //파일 저장을 위한 스트림 생성
-                    FileOutputStream fileOutputStream = new FileOutputStream(file);
+                    BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(new FileOutputStream(file));
 
                     //write할 길이를 구하기 위한 구문
                     int read;
                     for (; ; ) {
                         //read함수의 param으로 byte어레이 객체를 넣어서 그 객체 안에 이미지 파일의 바이너리 코드를 넣겠다는 의미
-                        read = inputStream.read(tmpByte);
+                        read = bufferedInputStream.read(tmpByte);
                         if (read <= 0) {//더 이상 읽어들일 값이 없는 경우 -1을 출력하기 때문에 읽어들이는 반복문을 탈출한다.
                             break;
                         }
-                        fileOutputStream.write(tmpByte, 0, read);//파일에 값을 써준다.(read를 tmpByte에 1byte씩 추가해주는 것)
+                        bufferedOutputStream.write(tmpByte, 0, read);//파일에 값을 써준다.(read를 tmpByte에 1byte씩 추가해주는 것)
                     }
-                    inputStream.close();
-                    fileOutputStream.close();
+                    bufferedInputStream.close();
+                    bufferedOutputStream.close();
                     httpURLConnection.disconnect();
                     //갤러리를 브로드캐스트 리시버를 통해서 업데이트를 해줘야 다운로드된 파일이 갤러리에 뜨게 된다.
                     sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(file)));
@@ -346,13 +344,13 @@ public class ChatImageListActivity extends AppCompatActivity implements ChatImag
             tv_cancel.setVisibility(View.GONE);//이미지 취소 버튼 GONE
             ib_download.setVisibility(View.GONE);//다운로드 버튼 GONE
             ib_check.setVisibility(View.VISIBLE);//이미지 선택 버튼 VISIBLE
-            selectedImageArrayList.clear();//선택된 이미지 리스트를 비워준다.
+            selectedContentIndexList.clear();//선택된 이미지 리스트를 비워준다.
             //모든 이미지의 선택 모드를 해제한다.
-            for (int i = 0; i < chatImageArrayList.size(); i++) {
-                chatImageArrayList.get(i).setSelectMode(false);//선택모드 해제
-                chatImageArrayList.get(i).setSelected(false);//모든 이미지를 미선택 상태로 전환
+            for (int i = 0; i < chatContentArrayList.size(); i++) {
+                chatContentArrayList.get(i).setSelectMode(false);//선택모드 해제
+                chatContentArrayList.get(i).setSelected(false);//모든 이미지를 미선택 상태로 전환
             }
-            chatImageAdapter.notifyItemRangeChanged(0, chatImageAdapter.getItemCount(), "cancel");
+            chatContentListAdapter.notifyItemRangeChanged(0, chatContentListAdapter.getItemCount(), "cancel");
         }
     }
 

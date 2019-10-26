@@ -28,11 +28,9 @@
 
         <ImageView
             android:id="@+id/imageview_multiple"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_marginLeft="100dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:adjustViewBounds="true"
-            android:padding="5dp"
             android:scaleType="centerCrop"
             android:src="@drawable/multiple_image"
             app:layout_constraintEnd_toEndOf="parent"
@@ -44,9 +42,7 @@
             android:id="@+id/imageview_video"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_marginLeft="100dp"
             android:adjustViewBounds="true"
-            android:padding="5dp"
             android:scaleType="centerCrop"
             android:src="@drawable/video"
             app:layout_constraintEnd_toEndOf="parent"

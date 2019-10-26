@@ -5,7 +5,7 @@ import java.util.ArrayList;
 public class ChatContentItem {
 
     int id, roomNum;
-    String account, profile, nickname, message, time, unCheckedParticipant;
+    String account, profile, nickname, message, time, unCheckedParticipant, type;
 
 
     //자신이 보낸 채팅인지 다른 사람이 보낸 채팅인지 가리기 위한 boolean
@@ -14,6 +14,8 @@ public class ChatContentItem {
     boolean isSent;
     //이미지가 서버로부터 로드된 것인지 로컬에서 업로드된 것인지 가리기 위한 boolean
     boolean isImageFromServer;
+    //동영상이 서버로부터 로드된 것인지 로컬에서 업로드된 것인지 가리기 위한 boolean
+    boolean isVideoFromServer;
     //아이템이 시간 경계 아이템인지 가리기 위한 boolean
     boolean isTimeDivider;
     //특정 사용자가 나갔을 때 표시되는 아이템인지를 가리기 위한 boolean
@@ -22,6 +24,9 @@ public class ChatContentItem {
     boolean isAddedParticipantMessage;
 
     ArrayList<String> imageList = new ArrayList<>();
+    String video;
+
+
 
     public int getId() {
         return id;
@@ -39,6 +44,13 @@ public class ChatContentItem {
         this.roomNum = roomNum;
     }
 
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
 
     public String getTime() {
         return time;
@@ -70,6 +82,14 @@ public class ChatContentItem {
 
     public void setImageFromServer(boolean isImageFromServer) {
         this.isImageFromServer = isImageFromServer;
+    }
+
+    public boolean isVideoFromServer() {
+        return isVideoFromServer;
+    }
+
+    public void setVideoFromServer(boolean videoFromServer) {
+        isVideoFromServer = videoFromServer;
     }
 
     public String getAccount() {
@@ -142,5 +162,13 @@ public class ChatContentItem {
 
     public void setAddedParticipantMessage(boolean addedParticipantMessage) {
         isAddedParticipantMessage = addedParticipantMessage;
+    }
+
+    public String getVideo() {
+        return video;
+    }
+
+    public void setVideo(String video) {
+        this.video = video;
     }
 }

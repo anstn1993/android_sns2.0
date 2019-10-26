@@ -69,9 +69,7 @@ public class GridPostAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                 //게시물 이미지 설정(첫번째 이미지로 설정한다)
                 Glide.with(context).load("http://13.124.105.47/uploadimage/"+postItemArrayList.get(i).imageList.get(0))
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions()
-                                .centerCrop()
-                                .error(R.drawable.profile))
+                        .apply(new RequestOptions().centerCrop())
                         .into(((GridViewHolder)holder).iv_image);
 
                 ((GridViewHolder) holder).iv_video.setVisibility(View.GONE);//비디오 아이콘 gone
@@ -90,10 +88,7 @@ public class GridPostAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                 //동영상의 썸네일 설정
                 Glide.with(context).load("http://13.124.105.47/uploadvideo/"+postItemArrayList.get(i).video)
                         .thumbnail(0.1f)
-                        .apply(new RequestOptions()
-                                .centerCrop()
-                                .error(R.drawable.video)
-                                .frame(0))
+                        .apply(new RequestOptions().centerCrop().frame(0))
                         .into(((GridViewHolder)holder).iv_image);
 
                 ((GridViewHolder) holder).iv_multiple.setVisibility(View.GONE);//이미지 아이콘 gone

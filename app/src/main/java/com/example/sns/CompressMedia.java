@@ -114,7 +114,6 @@ public class CompressMedia {
         setCopyAudio();
         setCopyVideo();
         CompressThread.runThread(this);
-//        progressDialog.dismiss();
         return mOutputFile;
     }
 
@@ -124,7 +123,6 @@ public class CompressMedia {
     private static class CompressThread implements Runnable {
         private Throwable mThrowable;
         private CompressMedia compressMedia;
-        private ProgressDialog progressDialog;
 
         private CompressThread(CompressMedia test) {
             this.compressMedia = test;
@@ -132,8 +130,6 @@ public class CompressMedia {
 
         @Override
         public void run() {
-
-
             try {
                 compressMedia.compress();
             } catch (Throwable th) {

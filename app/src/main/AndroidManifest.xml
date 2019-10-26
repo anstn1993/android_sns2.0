@@ -18,9 +18,9 @@
         </activity>
         <activity android:name=".CallActivity" />
 
-        <activity android:name=".ChatImageListActivity" />
+        <activity android:name=".ChatContentListActivity" />
 
-        <activity android:name=".ChatImageDetailActivity" />
+        <activity android:name=".ChatContentDetailActivity" />
         <activity
             android:name=".CreateChatRoomActivity"
             android:windowSoftInputMode="stateAlwaysHidden" />

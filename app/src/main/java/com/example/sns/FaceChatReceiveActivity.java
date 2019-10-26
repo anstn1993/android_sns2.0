@@ -102,7 +102,6 @@ public class FaceChatReceiveActivity extends AppCompatActivity {
         //닉네임 설정
         tv_nickname.setText(nickname);
 
-        Toast.makeText(getApplicationContext(), roomName, Toast.LENGTH_LONG).show();
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);//영상통화 요청을 수신하면 화면이 꺼지지 않게 설정
 

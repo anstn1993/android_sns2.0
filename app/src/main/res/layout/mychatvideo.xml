@@ -16,7 +16,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
     <ProgressBar
-        android:id="@+id/progreddbar"
+        android:id="@+id/progressbar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintStart_toStartOf="@+id/imageview_image"
@@ -31,7 +31,7 @@
         app:layout_constraintStart_toStartOf="@+id/imageview_image"
         app:layout_constraintEnd_toEndOf="@+id/imageview_image"
         app:layout_constraintTop_toTopOf="@+id/imageview_image"
-        android:src="@drawable/video"
+        android:src="@drawable/play"
         app:layout_constraintBottom_toBottomOf="@+id/imageview_image" />
 
     <ImageView

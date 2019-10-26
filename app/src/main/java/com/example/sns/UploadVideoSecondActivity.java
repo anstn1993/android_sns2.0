@@ -81,6 +81,7 @@ public class UploadVideoSecondActivity extends AppCompatActivity {
     File compressedVideoFile;//압축된 동영상 파일 객체
 
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -285,10 +286,10 @@ public class UploadVideoSecondActivity extends AppCompatActivity {
         RequestBody postNumPart = RequestBody.create(MultipartBody.FORM, String.valueOf(0));
         RequestBody accountPart = RequestBody.create(MultipartBody.FORM, account);
         //초기화를 바로 해주지 않는 이유는 이 데이터들은 쓰일 수도 있고 안 쓰일 수도 있기 때문이다.
-        RequestBody articlePart;
-        RequestBody addressPart;
-        RequestBody latitudePart;
-        RequestBody longitudePart;
+        RequestBody articlePart = null;
+        RequestBody addressPart = null;
+        RequestBody latitudePart = null;
+        RequestBody longitudePart = null;
 
         //동영상
         RequestBody videoFile;
@@ -307,47 +308,22 @@ public class UploadVideoSecondActivity extends AppCompatActivity {
         body = MultipartBody.Part.createFormData("video", videoFileName, videoFile);
 
 
-        //게시글x 위치x
-        if (article == null && address == null) {
-
-            retrofitService = retrofit.create(RetrofitService.class);
-            //인터페이스의 uploadResponse 메소드 실행
-            call = retrofitService.uploadVideoResponse(postNumPart, accountPart, null, body, null, null, null);
-
-        }
-        //게시글o, 위치x
-        else if (article != null && address == null) {
-
+        //게시글o
+        if (article != null) {
             articlePart = RequestBody.create(MultipartBody.FORM, article);
-            retrofitService = retrofit.create(RetrofitService.class);
-            call = retrofitService.uploadVideoResponse(postNumPart, accountPart, articlePart, body, null, null, null);
-
         }
-        //게시글x, 위치o
-        else if (article == null && address != null) {
+
+        //위치o
+        if (address != null) {
             addressPart = RequestBody.create(MultipartBody.FORM, address);
             latitudePart = RequestBody.create(MultipartBody.FORM, String.valueOf(latitude));
             longitudePart = RequestBody.create(MultipartBody.FORM, String.valueOf(longitude));
-
-
-            retrofitService = retrofit.create(RetrofitService.class);
-            call = retrofitService.uploadVideoResponse(postNumPart, accountPart, null, body, addressPart, latitudePart, longitudePart);
-
-        }
-        //게시글o, 위치o
-        else {
-
-            articlePart = RequestBody.create(MultipartBody.FORM, article);
-            addressPart = RequestBody.create(MultipartBody.FORM, address);
-            latitudePart = RequestBody.create(MultipartBody.FORM, String.valueOf(latitude));
-            longitudePart = RequestBody.create(MultipartBody.FORM, String.valueOf(longitude));
-
-            retrofitService = retrofit.create(RetrofitService.class);
-            call = retrofitService.uploadVideoResponse(postNumPart, accountPart, articlePart, body, addressPart, latitudePart, longitudePart);
-
         }
 
 
+
+        retrofitService = retrofit.create(RetrofitService.class);
+        call = retrofitService.uploadVideoResponse(postNumPart, accountPart, articlePart, body, addressPart, latitudePart, longitudePart);
         call.enqueue(new Callback<UploadVideoResponse>() {
             @Override
             public void onResponse(Call<UploadVideoResponse> call, Response<UploadVideoResponse> response) {

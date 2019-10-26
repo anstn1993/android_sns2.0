@@ -294,8 +294,8 @@ public class ChatIntentService extends Service implements HttpRequest.OnHttpResp
                         if (".MainActivity".equals(currentActivity)) {
                             JSONObject messageData = new JSONObject(jsonString);
                             String type = messageData.getString("type");//메세지 타입
-                            //메세지 타입이 message, image, added, exit인 경우에만 메인 액티비티로 핸들러 메세지를 전송해줘서 메세지 수를 증가시킨다.
-                            if (type.equals("message") || type.equals("image") || type.equals("added") || type.equals("exit")) {
+                            //메세지 타입이 message, image, video, added, exit인 경우에만 메인 액티비티로 핸들러 메세지를 전송해줘서 메세지 수를 증가시킨다.
+                            if (type.equals("message") || type.equals("image") || type.equals("video") || type.equals("added") || type.equals("exit")) {
                                 Message message = PostActivity.handler.obtainMessage();
                                 message.obj = "newMessage";
                                 PostActivity.handler.sendMessage(message);
@@ -334,6 +334,13 @@ public class ChatIntentService extends Service implements HttpRequest.OnHttpResp
                             else if ("image".equals(type)) {
                                 Message message = ChatActivity.handler.obtainMessage();
                                 message.what = 2222;
+                                message.obj = jsonString;
+                                ChatActivity.handler.sendMessage(message);
+                            }
+                            //채팅 내용이 동영상인 경우
+                            else if("video".equals(type)) {
+                                Message message = ChatActivity.handler.obtainMessage();
+                                message.what = 8888;
                                 message.obj = jsonString;
                                 ChatActivity.handler.sendMessage(message);
                             }
@@ -398,6 +405,29 @@ public class ChatIntentService extends Service implements HttpRequest.OnHttpResp
                             else if ("image".equals(type)) {
                                 Message message = ChatRoomActivity.handler.obtainMessage();
                                 message.what = 2222;
+                                message.obj = jsonString;
+                                ChatRoomActivity.handler.sendMessage(message);
+                                //채팅방에 있는 경우에는 상대방이 보낸 문자를 받자마자 확인하게 되기 때문에 상대방에게 확인했다는 것을 알려서
+                                //상대방 메세지 옆에 확인하지 않은 사람의 수를 바로 줄여줘야 한다.
+                                String id = messageData.getString("id");
+                                String roomNum = messageData.getString("roomNum");
+                                String myAccount = LoginActivity.account;
+                                if (ChatRoomActivity.roomNum == Integer.parseInt(roomNum)) {
+                                    //확인 메세지 데이터를 json스트링으로 만든다.
+                                    JSONObject checkData = new JSONObject();
+                                    checkData.put("type", "check");
+                                    checkData.put("roomNum", Integer.parseInt(roomNum));
+                                    checkData.put("sender", account);
+                                    checkData.put("receiver", LoginActivity.account);
+
+                                    //서버에 채팅 내용을 확인했기때문에 chat 테이블의 unchecked_participant에 계정을 삭제해줘야 한다.
+                                    updateCheckMessage(id, myAccount, checkData);
+                                }
+                            }
+                            //채팅내용이 동영상인 경우
+                            else if("video".equals(type)) {
+                                Message message = ChatRoomActivity.handler.obtainMessage();
+                                message.what = 8888;
                                 message.obj = jsonString;
                                 ChatRoomActivity.handler.sendMessage(message);
                                 //채팅방에 있는 경우에는 상대방이 보낸 문자를 받자마자 확인하게 되기 때문에 상대방에게 확인했다는 것을 알려서
@@ -524,10 +554,10 @@ public class ChatIntentService extends Service implements HttpRequest.OnHttpResp
                                 intent.putExtra("receiver", messageData.getString("receiver"));
                                 intent.putExtra("screenOn", true);
                                 startActivity(intent);
-                            } else {
+                            } else {//채팅 수신인 경우
                                 int roomNum = messageData.getInt("roomNum");
-                                //메세지 타입이 message, image, added, exit인 경우에만 푸시알림을 보낸다.
-                                if (type.equals("message") || type.equals("image") || type.equals("added") || type.equals("exit")) {
+                                //메세지 타입이 message, image,video, added, exit인 경우에만 푸시알림을 보낸다.
+                                if (type.equals("message") || type.equals("image") || type.equals("video") || type.equals("added") || type.equals("exit")) {
                                     //채팅방의 참여자 목록과 미확인 메세지 수를 서버로부터 가져와서 넘어온 데이터에 붙여주고 알림을 보내는 스레드
                                     new Thread(new Runnable() {
                                         @Override
@@ -554,7 +584,7 @@ public class ChatIntentService extends Service implements HttpRequest.OnHttpResp
                             intent.putExtra("receiver", messageData.getString("receiver"));
                             intent.putExtra("screenOn", false);
                             startActivity(intent);
-                        } else {
+                        } else {//채팅 수신인 경우
                             int roomNum = messageData.getInt("roomNum");
                             //메세지 타입이 message, image, added, exit인 경우에만 푸시알림을 보낸다.
 //                        if (type.equals("message") || type.equals("image") || type.equals("added") || type.equals("exit")) {
@@ -601,7 +631,7 @@ public class ChatIntentService extends Service implements HttpRequest.OnHttpResp
     private void pushNotification(JSONObject messageData) {
         //넘어온 메세지 데이터를 통해서 필요한 데이터 추출
         try {
-            String type = messageData.getString("type");
+            String type = messageData.getString("type");//메세지 타입
             int roomNum = messageData.getInt("roomNum");//채팅방 번호
             String message = messageData.getString("message");//메세지
             String nickname = messageData.getString("nickname");
@@ -628,7 +658,7 @@ public class ChatIntentService extends Service implements HttpRequest.OnHttpResp
             String channelId = "chat";
 
             NotificationCompat.Builder notificationBuilder;
-            if ("message".equals(type)) {
+            if ("message".equals(type)) {//텍스트 메세지인 경우
                 notificationBuilder = new NotificationCompat.Builder(this, channelId)
                         //알림의 아이콘
                         .setSmallIcon(R.mipmap.ic_launcher_round)
@@ -646,7 +676,7 @@ public class ChatIntentService extends Service implements HttpRequest.OnHttpResp
                         .setLargeIcon(getBitmapFromUrl("http://13.124.105.47/profileimage/" + profile))
                         .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                         .setContentIntent(pendingIntent);
-            } else {
+            } else {//이미지 메세지인 경우
                 notificationBuilder = new NotificationCompat.Builder(this, channelId)
                         //알림의 아이콘
                         .setSmallIcon(R.mipmap.ic_launcher_round)
@@ -665,7 +695,6 @@ public class ChatIntentService extends Service implements HttpRequest.OnHttpResp
                         .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                         .setContentIntent(pendingIntent);
             }
-
 
             NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 

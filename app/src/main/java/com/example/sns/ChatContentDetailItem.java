@@ -1,8 +1,16 @@
 package com.example.sns;
 
-public class ChatImageDetailItem {
+public class ChatContentDetailItem {
 
-    String nickname, profile, image, time;
+    String nickname, profile, content, time, type;
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
 
     public String getNickname() {
         return nickname;
@@ -20,12 +28,12 @@ public class ChatImageDetailItem {
         this.profile = profile;
     }
 
-    public String getImage() {
-        return image;
+    public String getContent() {
+        return content;
     }
 
-    public void setImage(String image) {
-        this.image = image;
+    public void setContent(String content) {
+        this.content = content;
     }
 
     public String getTime() {

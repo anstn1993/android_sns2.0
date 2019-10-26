@@ -51,7 +51,6 @@ public class FaceChatResponseWaitingActivity extends AppCompatActivity {
             //닉네임 설정
             tv_nickname.setText(getIntent().getStringExtra("receiverNickname"));
 
-            Toast.makeText(getApplicationContext(), getIntent().getStringExtra("roomName"), Toast.LENGTH_LONG).show();
         }
 
         //통화 종료 버튼 클릭 리스너

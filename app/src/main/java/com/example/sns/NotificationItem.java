@@ -2,9 +2,17 @@ package com.example.sns;
 
 public class NotificationItem {
 
-    String profile, body, image, account,userAccount, nickname, category, time;
+    String profile, body, image, account,userAccount, nickname, category, time, type;
     int id, postNum, commentNum;
     boolean isFollowing, isChecked;
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
 
     public String getTime() {
         return time;
