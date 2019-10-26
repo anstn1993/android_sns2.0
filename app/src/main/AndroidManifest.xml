@@ -83,7 +83,7 @@
             android:windowSoftInputMode="stateAlwaysHidden"/>
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="writte your api-key" />
+            android:value="AIzaSyD7t_2m-6ZE8blxYMdkTdBm_BU5VgULe7k" />
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="@string/default_notification_channel_id" />
