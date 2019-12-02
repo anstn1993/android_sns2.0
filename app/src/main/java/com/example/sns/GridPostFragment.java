@@ -2,6 +2,7 @@ package com.example.sns;
 
 import android.os.Bundle;
 import android.os.Handler;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -9,6 +10,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,39 +24,38 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-import static com.example.sns.LoginActivity.account;
-
 
 public class GridPostFragment extends Fragment implements GridPostAdapter.GridPostRecyclerViewListener, HttpRequest.OnHttpResponseListener {
 
     private String TAG = "GridPostFragment";
 
     //리사이클러뷰
-   RecyclerView rv_gridpost;
+    private RecyclerView rv_gridpost;
     //리사이클러뷰 어댑터
-   GridPostAdapter gridpostAdapter;
+    private GridPostAdapter gridpostAdapter;
     //그리드뷰 레이아웃 매니저
-   GridLayoutManager gridLayoutManager;
+    private GridLayoutManager gridLayoutManager;
 
-   //리사이클러뷰 아이템 arraylist
-    ArrayList<PostItem> postItemArrayList;
+    //리사이클러뷰 아이템 arraylist
+    private ArrayList<PostItem> postItemArrayList;
 
     //프래그먼트 매니저
-    FragmentManager fragmentManager;
+    private FragmentManager fragmentManager;
 
     //현재 로드되어있는 게시물의 수
-    int currentPostCount;
+    private int currentPostCount;
 
-    boolean isFirstLoad = false;
+    private boolean isFirstLoad = false;
 
     //해당 페이지의 주인 account
-    String hostAccount;
+    private String hostAccount;
 
     //부모 액티비티
-    String parentActivity;
+    private String parentActivity;
 
     private boolean loadPossible = true;
 
+    private LoginUser loginUser;
 
 
     @Nullable
@@ -62,11 +63,11 @@ public class GridPostFragment extends Fragment implements GridPostAdapter.GridPo
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         Log.d("onCreateView", "호출");
 
-        ViewGroup rootView =(ViewGroup) inflater.inflate(R.layout.fragment_gridpost, container, false);
-
+        ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.fragment_gridpost, container, false);
+        loginUser = LoginUser.getInstance();
         currentPostCount = 0;
 
-        if(getArguments() != null){
+        if (getArguments() != null) {
             hostAccount = getArguments().getString("account");
             parentActivity = getArguments().getString("parentActivity");
         }
@@ -87,35 +88,35 @@ public class GridPostFragment extends Fragment implements GridPostAdapter.GridPo
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
                 //현재 화면에서 보이는 첫번째 아이템의 index
-                int firstVisibleItemPosition = ((LinearLayoutManager)recyclerView.getLayoutManager()).findFirstVisibleItemPosition();
+                int firstVisibleItemPosition = ((LinearLayoutManager) recyclerView.getLayoutManager()).findFirstVisibleItemPosition();
                 Log.d("현재 화면의 첫번째 index", String.valueOf(firstVisibleItemPosition));
 
                 //현재 화면에서 완전하게 보이는 첫번째 아이템의 index
-                int firstCompletelyVisibleItemPosition = ((LinearLayoutManager)recyclerView.getLayoutManager()).findFirstCompletelyVisibleItemPosition();
+                int firstCompletelyVisibleItemPosition = ((LinearLayoutManager) recyclerView.getLayoutManager()).findFirstCompletelyVisibleItemPosition();
                 Log.d("완전하게 보이는 첫번째 index", String.valueOf(firstCompletelyVisibleItemPosition));
 
                 //findLastVisibleItemPosition은 현재 화면에 보이는 뷰 중 가장 마지막 뷰의 position을 리턴해준다.
                 //즉 이 변수는 현재 화면에 보이는 아이템 중 가장 마지막 아이템의 index를 담는다
-                int lastVisibleItemPosition = ((LinearLayoutManager)recyclerView.getLayoutManager()).findLastVisibleItemPosition();
+                int lastVisibleItemPosition = ((LinearLayoutManager) recyclerView.getLayoutManager()).findLastVisibleItemPosition();
                 Log.d("현재 화면의 마지막 index", String.valueOf(lastVisibleItemPosition));
 
                 //현재 화면에서 완전하게 보이는 마지막 아이템의 index
-                int lastCompletelyVisibleItemPosition = ((LinearLayoutManager)recyclerView.getLayoutManager()).findLastCompletelyVisibleItemPosition();
+                int lastCompletelyVisibleItemPosition = ((LinearLayoutManager) recyclerView.getLayoutManager()).findLastCompletelyVisibleItemPosition();
                 Log.d("완전하게 보이는 마지막 index", String.valueOf(lastCompletelyVisibleItemPosition));
                 //이 변수는 전체 리사이클러뷰의 아이템 개수를 담는다.
                 int totalCount = recyclerView.getAdapter().getItemCount();
-                Log.d("전체 아이템 개수",String.valueOf(totalCount));
+                Log.d("전체 아이템 개수", String.valueOf(totalCount));
                 //이 변수는 현재 화면에 보이는 아이템의 개수를 담는다.(내 경우에는 1~2를 왔다갔다 함)
                 int visibleItemCount = recyclerView.getChildCount();
                 Log.d("화면에 보여지는 아이템 개수", String.valueOf(visibleItemCount));
 
                 //마지막으로 보이는 아이템의 index가 전체 아이템 수에서 1을 뺀 값과 같고 현재 화면에 보이는 아이템 수가 12개이며 마지막으로 완전히 보이는 아이템의 index가
                 //전체 아이템 수에서 1을 뺀 값과 같을 때만 페이징을 실행한다.
-                if(postItemArrayList.size()>=15 && lastCompletelyVisibleItemPosition == totalCount - 1 && loadPossible == true){
-                    Log.d("페이징 조건","부합");
+                if (postItemArrayList.size() >= 15 && lastCompletelyVisibleItemPosition == totalCount - 1 && loadPossible == true) {
+                    Log.d("페이징 조건", "부합");
                     //다음 페이지를 로드한다.
                     //param:현재 로드되어있는 데이터의 수(다음 페이지에 로드되어야 할 첫번째 게시물의 index)
-                    loadNextPage(LoginActivity.account, hostAccount, postItemArrayList.get(postItemArrayList.size()-1).postNum, 15);
+                    loadNextPage(loginUser.getAccount(), hostAccount, postItemArrayList.get(postItemArrayList.size() - 1).postNum, 15);
                 }
 
 
@@ -123,12 +124,10 @@ public class GridPostFragment extends Fragment implements GridPostAdapter.GridPo
         });
 
 
-
-
         return rootView;
     }
 
-    private void setRecyclerView(){
+    private void setRecyclerView() {
 
         //아이템 arraylist를 초기화해준다.
         postItemArrayList = new ArrayList<>();
@@ -150,10 +149,9 @@ public class GridPostFragment extends Fragment implements GridPostAdapter.GridPo
 
                 int viewType = gridpostAdapter.getItemViewType(position);
 
-                if(viewType == gridpostAdapter.VIEW_PROGRESS){
+                if (viewType == gridpostAdapter.VIEW_PROGRESS) {
                     return 3;
-                }
-                else {
+                } else {
                     return 1;
                 }
 
@@ -162,11 +160,10 @@ public class GridPostFragment extends Fragment implements GridPostAdapter.GridPo
         rv_gridpost.setLayoutManager(gridLayoutManager);
 
 
-
     }
 
     //게시물 리스트의 최하단으로 이동하면 페이징 처리를 위해서 실행될 메소드
-    public void loadNextPage(String account, String hostAccount, int lastId, int listSize){
+    public void loadNextPage(String account, String hostAccount, int lastId, int listSize) {
         loadPossible = false;
         //null을 넣어서 뷰타입이 프로그래스 아이템이 추가되게 한다.
         postItemArrayList.add(null);
@@ -234,11 +231,11 @@ public class GridPostFragment extends Fragment implements GridPostAdapter.GridPo
                         //현재 로르되어있는 게시물 +1
                         currentPostCount += 1;
                     }
-                }else if(requestType.equals("loadNextPage")){ //페이징 처리를 위한 통신
+                } else if (requestType.equals("loadNextPage")) { //페이징 처리를 위한 통신
 
                     JSONArray jsonArray = responseBody.getJSONArray("post");
 
-                    if(jsonArray.length() != 0){
+                    if (jsonArray.length() != 0) {
 
                         boolean isSubstituted = true;
 
@@ -270,8 +267,7 @@ public class GridPostFragment extends Fragment implements GridPostAdapter.GridPo
                             currentPostCount += 1;
 
                         }
-                    }
-                    else {//더이상 불러올 게시물이 없는 경우 그냥 프로그래스 바만 지워준다.
+                    } else {//더이상 불러올 게시물이 없는 경우 그냥 프로그래스 바만 지워준다.
                         postItemArrayList.remove(postItemArrayList.size() - 1);
                         gridpostAdapter.notifyItemRemoved(postItemArrayList.size());
                     }
@@ -286,8 +282,6 @@ public class GridPostFragment extends Fragment implements GridPostAdapter.GridPo
     }
 
 
-
-
     @Override
     public void onResume() {
         Log.d(TAG, "onResume 호출");
@@ -297,7 +291,7 @@ public class GridPostFragment extends Fragment implements GridPostAdapter.GridPo
         if (!postItemArrayList.isEmpty()) {//게시물이 처음 로드되어서 하나도 없는 경우
             listSize = postItemArrayList.size();
         }
-        getPost(account, hostAccount, 0, listSize);
+        getPost(loginUser.getAccount(), hostAccount, 0, listSize);
 
     }
 
@@ -310,7 +304,7 @@ public class GridPostFragment extends Fragment implements GridPostAdapter.GridPo
             if (!postItemArrayList.isEmpty()) {//게시물이 처음 로드되어서 하나도 없는 경우
                 listSize = postItemArrayList.size();
             }
-            getPost(account, hostAccount, 0, listSize);
+            getPost(loginUser.getAccount(), hostAccount, 0, listSize);
         }
     }
 
@@ -318,7 +312,7 @@ public class GridPostFragment extends Fragment implements GridPostAdapter.GridPo
     @Override
     public void onGridPictureClicked(int position) {
 
-        if(parentActivity.equals("PostActivity")){
+        if (parentActivity.equals("PostActivity")) {
             //그리드 이미지를 누르면 보여줄 프레그먼트 선언
             PostDetailFragment postDetailFragment = new PostDetailFragment();
 
@@ -326,15 +320,14 @@ public class GridPostFragment extends Fragment implements GridPostAdapter.GridPo
             //서버에서 데이터를 조회해서 가져오기 위해 필요한 게시물 번호를 번들에 담아서 넘겨준다.
             Bundle bundle = new Bundle();
             bundle.putInt("postNum", postItemArrayList.get(position).getPostNum());
-            bundle.putString("parentActivity",parentActivity);
+            bundle.putString("parentActivity", parentActivity);
             postDetailFragment.setArguments(bundle);
 
 
             //프래그먼트를 프래임 레이아웃에 붙여준다.
             PostActivity.fragmentManager.beginTransaction().setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_right, R.anim.enter_from_right, R.anim.exit_to_right).add(R.id.frame_parent_container, postDetailFragment).addToBackStack(null).commit();
             PostActivity.fragmentManager.beginTransaction().show(postDetailFragment).commit();
-        }
-        else if(parentActivity.equals("SearchActivity")){
+        } else if (parentActivity.equals("SearchActivity")) {
             //그리드 이미지를 누르면 보여줄 프레그먼트 선언
             PostDetailFragment postDetailFragment = new PostDetailFragment();
 
@@ -342,40 +335,36 @@ public class GridPostFragment extends Fragment implements GridPostAdapter.GridPo
             //서버에서 데이터를 조회해서 가져오기 위해 필요한 게시물 번호를 번들에 담아서 넘겨준다.
             Bundle bundle = new Bundle();
             bundle.putInt("postNum", postItemArrayList.get(position).getPostNum());
-            bundle.putString("parentActivity",parentActivity);
+            bundle.putString("parentActivity", parentActivity);
             postDetailFragment.setArguments(bundle);
 //        changeFragment(FRAGMENT_POSTDETAIL);
 
             //프래그먼트를 프래임 레이아웃에 붙여준다.
             SearchActivity.fragmentManager.beginTransaction().setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_right, R.anim.enter_from_right, R.anim.exit_to_right).add(R.id.frame_parent_container, postDetailFragment).addToBackStack(null).commit();
             SearchActivity.fragmentManager.beginTransaction().show(postDetailFragment).commit();
-        }
-        else if (parentActivity.equals("NotificationActivity")) {
+        } else if (parentActivity.equals("NotificationActivity")) {
             //그리드 이미지를 누르면 보여줄 프레그먼트 선언
             PostDetailFragment postDetailFragment = new PostDetailFragment();
-
 
 
             //서버에서 데이터를 조회해서 가져오기 위해 필요한 게시물 번호를 번들에 담아서 넘겨준다.
             Bundle bundle = new Bundle();
             bundle.putInt("postNum", postItemArrayList.get(position).getPostNum());
-            bundle.putString("parentActivity",parentActivity);
+            bundle.putString("parentActivity", parentActivity);
             postDetailFragment.setArguments(bundle);
 
             //프래그먼트를 프래임 레이아웃에 붙여준다.
             NotificationActivity.fragmentManager.beginTransaction().setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_right, R.anim.enter_from_right, R.anim.exit_to_right).add(R.id.frame_parent_container, postDetailFragment).addToBackStack(null).commit();
             NotificationActivity.fragmentManager.beginTransaction().show(postDetailFragment).commit();
-        }
-        else {
+        } else {
             //그리드 이미지를 누르면 보여줄 프레그먼트 선언
             PostDetailFragment postDetailFragment = new PostDetailFragment();
-
 
 
             //서버에서 데이터를 조회해서 가져오기 위해 필요한 게시물 번호를 번들에 담아서 넘겨준다.
             Bundle bundle = new Bundle();
             bundle.putInt("postNum", postItemArrayList.get(position).getPostNum());
-            bundle.putString("parentActivity",parentActivity);
+            bundle.putString("parentActivity", parentActivity);
             postDetailFragment.setArguments(bundle);
 
             //프래그먼트를 프래임 레이아웃에 붙여준다.

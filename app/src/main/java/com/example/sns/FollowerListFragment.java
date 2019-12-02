@@ -32,40 +32,42 @@ import java.util.ArrayList;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 import static com.example.sns.JoinActivity.IP_ADDRESS;
-import static com.example.sns.LoginActivity.account;
 
 public class FollowerListFragment extends Fragment implements FollowAdapter.FollowListRecyclerViewListener, HttpRequest.OnHttpResponseListener {
     private String TAG = "FollowerListFragment";
-    SearchView sv;
-    TextView tv_hint;
-    ImageButton ib_back;
+    private SearchView sv;
+    private TextView tv_hint;
+    private ImageButton ib_back;
 
     //사용자의 계정
-    String hostAccount;
+    private String hostAccount;
     //부모 액티비티
-    String parentActivity;
+    private String parentActivity;
 
     //리사이클러뷰
-    RecyclerView rv_follower;
+    private RecyclerView rv_follower;
     //리사이클러뷰 메니저
-    LinearLayoutManager linearLayoutManager;
+    private LinearLayoutManager linearLayoutManager;
     //리사이클러뷰 어댑터
-    FollowAdapter followAdapter;
+    private FollowAdapter followAdapter;
 
     //팔로잉 아이템 arraylist
-    ArrayList<FollowListItem> followListItemArrayList;
+    private ArrayList<FollowListItem> followListItemArrayList;
 
     //현재 로드된 아이템의 마지막 index
-    int currentLastId;
+    private int currentLastId;
 
     //검색어
-    String searchText;
+    private String searchText;
+
+    private LoginUser loginUser;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         Log.d("팔로잉 프래그먼트 onCreateView", "호출");
         View rootView = inflater.inflate(R.layout.fragment_followerlist, container, false);
+        loginUser = LoginUser.getInstance();
         sv = rootView.findViewById(R.id.searchview_search);
         tv_hint = rootView.findViewById(R.id.textview_hint);
         rv_follower = rootView.findViewById(R.id.recyclerview_follower);
@@ -107,13 +109,13 @@ public class FollowerListFragment extends Fragment implements FollowAdapter.Foll
                 if (newText.length() == 0) {
                     Log.d("검색", "값 없음");
                     searchText = newText;
-                    getFollower("getFollower", hostAccount, LoginActivity.account, false, searchText, 0);
+                    getFollower("getFollower", hostAccount, loginUser.getAccount(), false, searchText, 0);
                 }
                 //검색어가 존재하는 경우
                 else {
                     Log.d("검색", newText);
                     searchText = newText;
-                    getFollower("getFollower", hostAccount, LoginActivity.account, true, searchText, 0);
+                    getFollower("getFollower", hostAccount, loginUser.getAccount(), true, searchText, 0);
                 }
 
                 return true;
@@ -277,7 +279,7 @@ public class FollowerListFragment extends Fragment implements FollowAdapter.Foll
     @Override
     public void onListClicked(int position) {
 
-        if (followListItemArrayList.get(position).getAccount() != account) {
+        if (followListItemArrayList.get(position).getAccount() != loginUser.getAccount()) {
 
             //부모 액티비티가 MyPageActivity인 경우
             if (parentActivity.equals("MyPageActivity")) {
@@ -291,7 +293,7 @@ public class FollowerListFragment extends Fragment implements FollowAdapter.Foll
                 bundle.putString("account", followListItemArrayList.get(position).getAccount());
                 bundle.putString("parentActivity", parentActivity);
                 //좋아요 리스트의 계정이 로그인한 사용자의 계정과 같으면
-                if (account.equals(followListItemArrayList.get(position).getAccount())) {
+                if (loginUser.getAccount().equals(followListItemArrayList.get(position).getAccount())) {
                     //나의 게시물을 true
                     bundle.putBoolean("isMyPost", true);
                 }
@@ -318,7 +320,7 @@ public class FollowerListFragment extends Fragment implements FollowAdapter.Foll
                 bundle.putString("account", followListItemArrayList.get(position).getAccount());
                 bundle.putString("parentActivity", "PostActivity");
                 //좋아요 리스트의 계정이 로그인한 사용자의 계정과 같으면
-                if (account.equals(followListItemArrayList.get(position).getAccount())) {
+                if (loginUser.getAccount().equals(followListItemArrayList.get(position).getAccount())) {
                     //나의 게시물을 true
                     bundle.putBoolean("isMyPost", true);
                 }
@@ -345,7 +347,7 @@ public class FollowerListFragment extends Fragment implements FollowAdapter.Foll
                 bundle.putString("account", followListItemArrayList.get(position).getAccount());
                 bundle.putString("parentActivity", parentActivity);
                 //좋아요 리스트의 계정이 로그인한 사용자의 계정과 같으면
-                if (account.equals(followListItemArrayList.get(position).getAccount())) {
+                if (loginUser.getAccount().equals(followListItemArrayList.get(position).getAccount())) {
                     //나의 게시물을 true
                     bundle.putBoolean("isMyPost", true);
                 }
@@ -370,7 +372,7 @@ public class FollowerListFragment extends Fragment implements FollowAdapter.Foll
                 bundle.putString("account", followListItemArrayList.get(position).getAccount());
                 bundle.putString("parentActivity", parentActivity);
                 //좋아요 리스트의 계정이 로그인한 사용자의 계정과 같으면
-                if (account.equals(followListItemArrayList.get(position).getAccount())) {
+                if (loginUser.getAccount().equals(followListItemArrayList.get(position).getAccount())) {
                     //나의 게시물을 true
                     bundle.putBoolean("isMyPost", true);
                 }
@@ -403,7 +405,7 @@ public class FollowerListFragment extends Fragment implements FollowAdapter.Foll
         if (followListItemArrayList.get(position).isFollowing == false) {
 
             //팔로잉 상태로 전환
-            processFollow(true, followedAccount, followedNickname, LoginActivity.account, position);
+            processFollow(true, followedAccount, followedNickname, loginUser.getAccount(), position);
         }
         //팔로우를 했던 상태에서 팔로우를 취소하려는 경우
         else {
@@ -453,7 +455,7 @@ public class FollowerListFragment extends Fragment implements FollowAdapter.Foll
                 public void onClick(View v) {
                     dialog.dismiss();
                     //언팔로우 상태로 전환
-                    processFollow(false, followedAccount, followedNickname, LoginActivity.account, position);
+                    processFollow(false, followedAccount, followedNickname, loginUser.getAccount(), position);
                 }
             });
 
@@ -506,10 +508,10 @@ public class FollowerListFragment extends Fragment implements FollowAdapter.Foll
                         //팔로우를 당한 사용자 단말에 push알림을 보내준다.
                         String receiver = followListItemArrayList.get(position).account;
                         String title = "SNS";
-                        String body = LoginActivity.nickname + "님이 회원님을 팔로우하기 시작했습니다.";
+                        String body = loginUser.getNickname() + "님이 회원님을 팔로우하기 시작했습니다.";
                         String click_action = "AccountPageFragment";
                         String category = "follow";
-                        String sender = LoginActivity.account;
+                        String sender = loginUser.getAccount();
                         pushNotification(receiver, title, body, click_action, category, sender);
 
                     }
@@ -540,12 +542,12 @@ public class FollowerListFragment extends Fragment implements FollowAdapter.Foll
         //검색어가 없는 경우에는 전체 데이터를 가져오고
         if (searchText == null) {
             //여기에 팔로잉 전체 데이터를 가져와서 셋해주는 코딩
-            getFollower("getFollower", hostAccount, LoginActivity.account, false, searchText, 0);
+            getFollower("getFollower", hostAccount, loginUser.getAccount(), false, searchText, 0);
         }
         //검색어가 입력되어있던 상태였으면 검색어에 맞는 데이터를 가져온다.
         else {
             //여기에 팔로잉 전체 데이터를 가져와서 셋해주는 코딩
-            getFollower("getFollower", hostAccount, LoginActivity.account, true, searchText, 0);
+            getFollower("getFollower", hostAccount, loginUser.getAccount(), true, searchText, 0);
         }
 
     }

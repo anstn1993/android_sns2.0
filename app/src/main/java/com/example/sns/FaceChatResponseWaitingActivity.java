@@ -61,7 +61,7 @@ public class FaceChatResponseWaitingActivity extends AppCompatActivity {
                 JSONObject responseData = new JSONObject();
                 try {
                     responseData.put("type", "cancelFaceChat");
-                    responseData.put("sender", LoginActivity.account);//발신자 계정(자신)
+                    responseData.put("sender", LoginUser.getInstance().getAccount());//발신자 계정(자신)
                     responseData.put("receiver", getIntent().getStringExtra("receiverAccount"));//수신자 계정
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -90,7 +90,7 @@ public class FaceChatResponseWaitingActivity extends AppCompatActivity {
                         intent.putExtra("roomName", getIntent().getStringExtra("roomName"));
                         intent.putExtra("screenOn", true);
                         intent.putExtra("receiver", getIntent().getStringExtra("receiverAccount"));
-                        intent.putExtra("sender", LoginActivity.account);
+                        intent.putExtra("sender", LoginUser.getInstance().getAccount());
                         startActivity(intent);
                         finish();
                     }else {//declineFaceChat(수신자가 영상통화를 거절한 경우)
@@ -132,7 +132,7 @@ public class FaceChatResponseWaitingActivity extends AppCompatActivity {
             JSONObject responseData = new JSONObject();
             try {
                 responseData.put("type", "cancelFaceChat");
-                responseData.put("sender", LoginActivity.account);//발신자 계정(자신)
+                responseData.put("sender", LoginUser.getInstance().getAccount());//발신자 계정(자신)
                 responseData.put("receiver", getIntent().getStringExtra("receiverAccount"));//수신자 계정
             } catch (JSONException e) {
                 e.printStackTrace();

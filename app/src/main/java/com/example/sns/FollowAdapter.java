@@ -20,7 +20,6 @@ import java.util.List;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
-import static com.example.sns.LoginActivity.account;
 
 public class FollowAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
@@ -74,7 +73,7 @@ public class FollowAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         ((FollowViewHolder)holder).tv_nickname.setText(followListItemArrayList.get(position).nickname);
 
         //현재 로그인 아이디와 팔로우리스트 계정이 일치하는 경우
-        if(followListItemArrayList.get(position).account.equals(account)){
+        if(followListItemArrayList.get(position).account.equals(LoginUser.getInstance().getAccount())){
             //팔로우 버튼을 없앤다.
             ((FollowViewHolder)holder).btn_follow.setVisibility(View.GONE);
         }

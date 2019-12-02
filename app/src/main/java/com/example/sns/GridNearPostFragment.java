@@ -4,6 +4,7 @@ import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -11,6 +12,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -33,7 +35,6 @@ import java.net.URL;
 import java.util.ArrayList;
 
 import static com.example.sns.JoinActivity.IP_ADDRESS;
-import static com.example.sns.LoginActivity.account;
 import static com.example.sns.LoginActivity.httpURLConnection;
 import static com.example.sns.SearchedPlaceListFragment.setDistance;
 
@@ -41,37 +42,39 @@ import static com.example.sns.SearchedPlaceListFragment.setDistance;
 public class GridNearPostFragment extends Fragment implements GridPostAdapter.GridPostRecyclerViewListener, HttpRequest.OnHttpResponseListener {
     private String TAG = "GridNearPostFragment";
     //리사이클러뷰
-   RecyclerView rv_gridpost;
+    private RecyclerView rv_gridpost;
     //리사이클러뷰 어댑터
-   GridPostAdapter gridpostAdapter;
+    private GridPostAdapter gridpostAdapter;
     //그리드뷰 레이아웃 매니저
-   GridLayoutManager gridLayoutManager;
+    private GridLayoutManager gridLayoutManager;
 
-   //리사이클러뷰 아이템 arraylist
-    ArrayList<PostItem> postItemArrayList;
+    //리사이클러뷰 아이템 arraylist
+    private ArrayList<PostItem> postItemArrayList;
 
     //프래그먼트 매니저
-    FragmentManager fragmentManager;
+    private FragmentManager fragmentManager;
 
-    boolean isFirstLoad = false;
+    private boolean isFirstLoad = false;
 
 
     //부모 액티비티
-    String parentActivity;
+    private String parentActivity;
 
     //직전에 로드된 게시물의 수
-    int listSize;
+    private int listSize;
 
     //현재 로드된 게시물의 수
-    int currentCount;
+    private int currentCount;
 
     //검색된 장소의 위치
-    Location searchedLocation;
+    private Location searchedLocation;
 
     //검색된 장소 명
-    String searchedAddress;
+    private String searchedAddress;
     //검색된 장소의 위도와 경도
-    double latitude, longitude;
+    private double latitude, longitude;
+
+    private LoginUser loginUser;
 
 
     @Nullable
@@ -79,11 +82,11 @@ public class GridNearPostFragment extends Fragment implements GridPostAdapter.Gr
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         Log.d("onCreateView", "호출");
 
-        ViewGroup rootView =(ViewGroup) inflater.inflate(R.layout.fragment_gridpost, container, false);
-
+        ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.fragment_gridpost, container, false);
+        loginUser = LoginUser.getInstance();
         listSize = 15;
 
-        if(getArguments() != null){
+        if (getArguments() != null) {
 
             parentActivity = getArguments().getString("parentActivity");
             searchedAddress = getArguments().getString("address");
@@ -112,32 +115,32 @@ public class GridNearPostFragment extends Fragment implements GridPostAdapter.Gr
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
                 //현재 화면에서 보이는 첫번째 아이템의 index
-                int firstVisibleItemPosition = ((LinearLayoutManager)recyclerView.getLayoutManager()).findFirstVisibleItemPosition();
+                int firstVisibleItemPosition = ((LinearLayoutManager) recyclerView.getLayoutManager()).findFirstVisibleItemPosition();
                 Log.d("현재 화면의 첫번째 index", String.valueOf(firstVisibleItemPosition));
 
                 //현재 화면에서 완전하게 보이는 첫번째 아이템의 index
-                int firstCompletelyVisibleItemPosition = ((LinearLayoutManager)recyclerView.getLayoutManager()).findFirstCompletelyVisibleItemPosition();
+                int firstCompletelyVisibleItemPosition = ((LinearLayoutManager) recyclerView.getLayoutManager()).findFirstCompletelyVisibleItemPosition();
                 Log.d("완전하게 보이는 첫번째 index", String.valueOf(firstCompletelyVisibleItemPosition));
 
                 //findLastVisibleItemPosition은 현재 화면에 보이는 뷰 중 가장 마지막 뷰의 position을 리턴해준다.
                 //즉 이 변수는 현재 화면에 보이는 아이템 중 가장 마지막 아이템의 index를 담는다
-                int lastVisibleItemPosition = ((LinearLayoutManager)recyclerView.getLayoutManager()).findLastVisibleItemPosition();
+                int lastVisibleItemPosition = ((LinearLayoutManager) recyclerView.getLayoutManager()).findLastVisibleItemPosition();
                 Log.d("현재 화면의 마지막 index", String.valueOf(lastVisibleItemPosition));
 
                 //현재 화면에서 완전하게 보이는 마지막 아이템의 index
-                int lastCompletelyVisibleItemPosition = ((LinearLayoutManager)recyclerView.getLayoutManager()).findLastCompletelyVisibleItemPosition();
+                int lastCompletelyVisibleItemPosition = ((LinearLayoutManager) recyclerView.getLayoutManager()).findLastCompletelyVisibleItemPosition();
                 Log.d("완전하게 보이는 마지막 index", String.valueOf(lastCompletelyVisibleItemPosition));
                 //이 변수는 전체 리사이클러뷰의 아이템 개수를 담는다.
                 int totalCount = recyclerView.getAdapter().getItemCount();
-                Log.d("전체 아이템 개수",String.valueOf(totalCount));
+                Log.d("전체 아이템 개수", String.valueOf(totalCount));
                 //이 변수는 현재 화면에 보이는 아이템의 개수를 담는다.(내 경우에는 1~2를 왔다갔다 함)
                 int visibleItemCount = recyclerView.getChildCount();
                 Log.d("화면에 보여지는 아이템 개수", String.valueOf(visibleItemCount));
 
                 //마지막으로 보이는 아이템의 index가 전체 아이템 수에서 1을 뺀 값과 같고 현재 화면에 보이는 아이템 수가 12개이며 마지막으로 완전히 보이는 아이템의 index가
                 //전체 아이템 수에서 1을 뺀 값과 같을 때만 페이징을 실행한다.
-                if((lastVisibleItemPosition == totalCount-1) && visibleItemCount == 12 && lastCompletelyVisibleItemPosition == totalCount-1){
-                    Log.d("페이징 조건","부합");
+                if ((lastVisibleItemPosition == totalCount - 1) && visibleItemCount == 12 && lastCompletelyVisibleItemPosition == totalCount - 1) {
+                    Log.d("페이징 조건", "부합");
                     //다음 페이지를 로드한다.
                     //param:현재 로드되어있는 데이터의 수(다음 페이지에 로드되어야 할 첫번째 게시물의 index)
 //                    loadNextPage();
@@ -147,7 +150,7 @@ public class GridNearPostFragment extends Fragment implements GridPostAdapter.Gr
         return rootView;
     }
 
-    private void setRecyclerView(){
+    private void setRecyclerView() {
 
         //아이템 arraylist를 초기화해준다.
         postItemArrayList = new ArrayList<>();
@@ -169,10 +172,9 @@ public class GridNearPostFragment extends Fragment implements GridPostAdapter.Gr
 
                 int viewType = gridpostAdapter.getItemViewType(position);
 
-                if(viewType == gridpostAdapter.VIEW_PROGRESS){
+                if (viewType == gridpostAdapter.VIEW_PROGRESS) {
                     return 3;
-                }
-                else {
+                } else {
                     return 1;
                 }
 
@@ -198,34 +200,35 @@ public class GridNearPostFragment extends Fragment implements GridPostAdapter.Gr
 
 
     //게시물 리스트의 최하단으로 이동하면 페이징 처리를 위해서 실행될 메소드
-    public void loadNextPage(){
+    public void loadNextPage() {
         //null을 넣어서 뷰타입이 프로그래스 아이템이 추가되게 한다.
         postItemArrayList.add(null);
-        gridpostAdapter.notifyItemInserted(postItemArrayList.size()-1);
+        gridpostAdapter.notifyItemInserted(postItemArrayList.size() - 1);
         //핸들러를 통해서 2초 뒤에 해당 기능을 실행한다.
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
 
                 LoadNextPage loadNextPage = new LoadNextPage();
-                loadNextPage.execute(String.valueOf(currentCount), account, String.valueOf(15));
+                loadNextPage.execute(String.valueOf(currentCount), loginUser.getAccount(), String.valueOf(15));
 
 
             }
         }, 1500);
 
     }
+
     //서버와 통신에 성공했을 때 호출되는 콜백 메소드(HttpRequest클래스(AsyncTask클래스 상속)의 onPostExecute()메소드에서 호출)
     //모든 통신에 대한 결과는 이 콜백 메소드에서 처리해준다.
     @Override
     public void onHttpResponse(String result) {
         Log.d(TAG, "통신 성공");
         Log.d(TAG, "서버에서 넘어온 json데이터- " + result);
-        if(result != null) {
+        if (result != null) {
             try {
                 JSONObject responseBody = new JSONObject(result);
                 String requestType = responseBody.getString("requestType");
-                if(requestType.equals("getPost")) {
+                if (requestType.equals("getPost")) {
                     postItemArrayList.clear();
                     currentCount = 0;
                     //jsonarray를 선언해서
@@ -233,7 +236,7 @@ public class GridNearPostFragment extends Fragment implements GridPostAdapter.Gr
                     Log.d("게시물 수", String.valueOf(jsonArray.length()));
 
                     //반복문을 돌려서 계속 arraylist에 넣어주고 어댑터에 notify
-                    for(int i=0; i<jsonArray.length(); i++){
+                    for (int i = 0; i < jsonArray.length(); i++) {
                         JSONObject data = jsonArray.getJSONObject(i);
                         PostItem postItem = new Gson().fromJson(data.toString(), PostItem.class);
                         //서버로부터 넘어온 게시물의 위치 객체(검색된 게시물의 위치와 거리 계산을 위해서 선언했다.)
@@ -245,11 +248,11 @@ public class GridNearPostFragment extends Fragment implements GridPostAdapter.Gr
                         double distance = searchedLocation.distanceTo(compareLocation);
                         Log.d("검색된 게시물과의 거리", String.valueOf(distance));
 
-                        if(distance > 0 && distance <= setDistance && !searchedAddress.equals(postItem.address)){
+                        if (distance > 0 && distance <= setDistance && !searchedAddress.equals(postItem.address)) {
                             //모든 데이터를 다 담았으면 이제 그 객체를 리사이클러뷰 어레이리스트에 추가해준다.
                             postItemArrayList.add(postItem);
                             //현재 로르되어있는 게시물 +1
-                            currentCount+=1;
+                            currentCount += 1;
                         }
                     }
 
@@ -259,18 +262,17 @@ public class GridNearPostFragment extends Fragment implements GridPostAdapter.Gr
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-        }
-        else {
+        } else {
             Toast.makeText(getContext(), "문제가 생겼습니다", Toast.LENGTH_SHORT).show();
         }
     }//end of onHttpResponse
 
     //다음 페이지 게시물 데이터를 서버에서 가져온 후 리사이클러뷰 화면에 뿌려주는 async클래스
-    public class LoadNextPage extends AsyncTask<String, Void, String>{
+    public class LoadNextPage extends AsyncTask<String, Void, String> {
         boolean isSubstituted = true;
 
-        String connectURL = "http://"+IP_ADDRESS+"/getnearpost.php";
-        String postParameters=null;
+        String connectURL = "http://" + IP_ADDRESS + "/getnearpost.php";
+        String postParameters = null;
 
 
         @Override
@@ -281,16 +283,16 @@ public class GridNearPostFragment extends Fragment implements GridPostAdapter.Gr
 
 
         @Override
-        protected String doInBackground(String...params) {
+        protected String doInBackground(String... params) {
 
 
-            postParameters = "currentLastId="+params[0]+"&account="+params[2]+"&listSize="+params[3];
+            postParameters = "currentLastId=" + params[0] + "&account=" + params[2] + "&listSize=" + params[3];
 
 
             try {
                 URL url = new URL(connectURL);
                 //http통신 세팅
-                httpURLConnection = (HttpURLConnection)url.openConnection();
+                httpURLConnection = (HttpURLConnection) url.openConnection();
                 httpURLConnection.setReadTimeout(0);
                 httpURLConnection.setConnectTimeout(0);
                 httpURLConnection.setRequestMethod("POST");
@@ -316,10 +318,10 @@ public class GridNearPostFragment extends Fragment implements GridPostAdapter.Gr
                 int responseStatusCode = httpURLConnection.getResponseCode();
 
                 //통신이 잘 된 경우
-                if(responseStatusCode == httpURLConnection.HTTP_OK){
+                if (responseStatusCode == httpURLConnection.HTTP_OK) {
                     inputStream = httpURLConnection.getInputStream();
 
-                }else {
+                } else {
                     inputStream = httpURLConnection.getErrorStream();
                 }
 
@@ -331,7 +333,7 @@ public class GridNearPostFragment extends Fragment implements GridPostAdapter.Gr
                 String line = null;
 
                 //데이터를 sb객체에 계속 넣어준다.
-                while((line = bufferedReader.readLine()) != null){
+                while ((line = bufferedReader.readLine()) != null) {
                     sb.append(line);
                 }
 
@@ -348,15 +350,14 @@ public class GridNearPostFragment extends Fragment implements GridPostAdapter.Gr
         }
 
 
-
         @Override
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
 
             //서버로부터 값이 넘어온 경우
-            if(result != null){
+            if (result != null) {
                 Log.d("서버로부터 넘어온 데이터", result);
-                try{
+                try {
                     //json오브잭트를 선언하고
                     JSONObject jsonObject = new JSONObject(result);
                     //jsonarray를 선언해서
@@ -364,19 +365,19 @@ public class GridNearPostFragment extends Fragment implements GridPostAdapter.Gr
                     Log.d("게시물 수", String.valueOf(jsonArray.length()));
 
                     //반복문을 돌려서 계속 arraylist에 넣어주고 어댑터에 notify
-                    for(int i=0; i<jsonArray.length(); i++){
+                    for (int i = 0; i < jsonArray.length(); i++) {
                         JSONObject data = jsonArray.getJSONObject(i);
                         //서버로부터 넘어온 데이터를 변수에 정의
                         PostItem postItem = new Gson().fromJson(data.toString(), PostItem.class);
 
                         //로딩바를 다음 페이지의 첫번째 게시물로 교체하기 위한 작업
-                        if(isSubstituted){
+                        if (isSubstituted) {
                             //프로그래스바 아이템을 게시물 아이템으로 교체해준다.
-                            postItemArrayList.set(postItemArrayList.size()-1, postItem);
+                            postItemArrayList.set(postItemArrayList.size() - 1, postItem);
 
 
                             //어댑터 notify
-                            gridpostAdapter.notifyItemChanged(postItemArrayList.size()-1);
+                            gridpostAdapter.notifyItemChanged(postItemArrayList.size() - 1);
                             Log.d("게시물 사이즈:", String.valueOf(postItemArrayList.size()));
 
                             isSubstituted = false;
@@ -384,7 +385,7 @@ public class GridNearPostFragment extends Fragment implements GridPostAdapter.Gr
                         //최초에 로딩바와 게시물이 교체가 끝났으면 그 뒤로는 게시물 추가만 해준다.
                         else {
                             postItemArrayList.add(postItem);
-                            gridpostAdapter.notifyItemInserted(postItemArrayList.size()-1);
+                            gridpostAdapter.notifyItemInserted(postItemArrayList.size() - 1);
                         }
 
                         //현재 로드되어있는 게시물 수 +1
@@ -394,9 +395,9 @@ public class GridNearPostFragment extends Fragment implements GridPostAdapter.Gr
                     }
 
 
-                }catch (Exception e){
+                } catch (Exception e) {
                     Log.d("데이터 셋 오류", e.getMessage());
-                    postItemArrayList.remove(postItemArrayList.size()-1);
+                    postItemArrayList.remove(postItemArrayList.size() - 1);
                     gridpostAdapter.notifyItemRemoved(postItemArrayList.size());
                 }
             }
@@ -411,7 +412,7 @@ public class GridNearPostFragment extends Fragment implements GridPostAdapter.Gr
     @Override
     public void onResume() {
         super.onResume();
-        getPost(account, 0, listSize);
+        getPost(loginUser.getAccount(), 0, listSize);
     }
 
     //그리드 이미지 클릭 콜백 매소드
@@ -423,7 +424,6 @@ public class GridNearPostFragment extends Fragment implements GridPostAdapter.Gr
             PostDetailFragment postDetailFragment = new PostDetailFragment();
 
             Fragment fragment = PostActivity.fragmentManager.findFragmentById(R.id.frame_parent_container);
-
 
 
             //서버에서 데이터를 조회해서 가져오기 위해 필요한 게시물 번호를 번들에 담아서 넘겨준다.
@@ -443,7 +443,6 @@ public class GridNearPostFragment extends Fragment implements GridPostAdapter.Gr
             Fragment fragment = SearchActivity.fragmentManager.findFragmentById(R.id.frame_parent_container);
 
 
-
             //서버에서 데이터를 조회해서 가져오기 위해 필요한 게시물 번호를 번들에 담아서 넘겨준다.
             Bundle bundle = new Bundle();
             bundle.putInt("postNum", postItemArrayList.get(position).getPostNum());
@@ -460,7 +459,6 @@ public class GridNearPostFragment extends Fragment implements GridPostAdapter.Gr
             Fragment fragment = NotificationActivity.fragmentManager.findFragmentById(R.id.frame_parent_container);
 
 
-
             //서버에서 데이터를 조회해서 가져오기 위해 필요한 게시물 번호를 번들에 담아서 넘겨준다.
             Bundle bundle = new Bundle();
             bundle.putInt("postNum", postItemArrayList.get(position).getPostNum());
@@ -475,7 +473,6 @@ public class GridNearPostFragment extends Fragment implements GridPostAdapter.Gr
             PostDetailFragment postDetailFragment = new PostDetailFragment();
 
             Fragment fragment = NotificationActivity.fragmentManager.findFragmentById(R.id.frame_parent_container);
-
 
 
             //서버에서 데이터를 조회해서 가져오기 위해 필요한 게시물 번호를 번들에 담아서 넘겨준다.

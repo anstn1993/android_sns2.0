@@ -62,10 +62,6 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-import static com.example.sns.LoginActivity.account;
-import static com.example.sns.LoginActivity.nickname;
-import static com.example.sns.LoginActivity.profile;
-
 public class ChatRoomActivity extends AppCompatActivity implements ChatContentAdapter.ChatContentRecyclerViewListener, ParticipantListAdapter.ParticipantListRecyclerViewListener, HttpRequest.OnHttpResponseListener {
     private String TAG = "ChatRoomActivity";
     private EditText et_chat;//댓글 입력 창
@@ -78,9 +74,9 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
     //채팅방 번호
     public static int roomNum;
     //미확인 메세지 수
-    int newMessageCount;
+    private int newMessageCount;
     //최초 로드 시에 가져올 채팅 아이템의 수
-    int listSize;
+    private int listSize;
 
     public static Handler handler;
 
@@ -110,11 +106,15 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
 
     private boolean isNewRoom;//새로운 채팅방 여부
 
+    private LoginUser loginUser;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d("채팅방 화면 onCreate", "호출");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat_room);
+
+        loginUser = LoginUser.getInstance();
 
         //와이파이 상태를 체크할 때 context정보가 필요하다
         context = this;
@@ -842,17 +842,17 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                             JSONObject messageData = new JSONObject();
                             messageData.put("type", "message");
                             messageData.put("roomNum", roomNum);
-                            messageData.put("account", LoginActivity.account);
-                            messageData.put("nickname", LoginActivity.nickname);
-                            messageData.put("profile", LoginActivity.profile);
+                            messageData.put("account", loginUser.getAccount());
+                            messageData.put("nickname", loginUser.getNickname());
+                            messageData.put("profile", loginUser.getProfile());
                             messageData.put("message", chat);
 
                             ChatContentItem chatContentItem = new ChatContentItem();
                             chatContentItem.setRoomNum(roomNum);
                             chatContentItem.setType("message");
-                            chatContentItem.setAccount(LoginActivity.account);
-                            chatContentItem.setNickname(LoginActivity.nickname);
-                            chatContentItem.setProfile(LoginActivity.profile);
+                            chatContentItem.setAccount(loginUser.getAccount());
+                            chatContentItem.setNickname(loginUser.getNickname());
+                            chatContentItem.setProfile(loginUser.getProfile());
                             chatContentItem.setMessage(chat);
                             chatContentItem.setImageList(imageArrayList);
                             chatContentItem.setMyContent(true);
@@ -877,7 +877,7 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                                 }
                             }
                             receiverString = stringBuilder.toString();
-                            addChat(String.valueOf(roomNum), LoginActivity.account, receiverString, chat, "message", messageData.toString(), imageArrayList, null, null, null);
+                            addChat(String.valueOf(roomNum), loginUser.getAccount(), receiverString, chat, "message", messageData.toString(), imageArrayList, null, null, null);
                             et_chat.setText("");
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -936,10 +936,10 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                                             JSONObject imageData = new JSONObject();
                                             imageData.put("type", "image");
                                             imageData.put("roomNum", roomNum);
-                                            imageData.put("account", LoginActivity.account);
-                                            imageData.put("nickname", LoginActivity.nickname);
-                                            imageData.put("profile", LoginActivity.profile);
-                                            imageData.put("message", LoginActivity.nickname + "님이 사진을 보냈습니다.");
+                                            imageData.put("account", loginUser.getAccount());
+                                            imageData.put("nickname", loginUser.getNickname());
+                                            imageData.put("profile", loginUser.getProfile());
+                                            imageData.put("message", loginUser.getNickname()+ "님이 사진을 보냈습니다.");
 
                                             JSONArray imageList = new JSONArray();
                                             //선택한 이미지 경로를 json 어레이에 넣어준다.
@@ -947,7 +947,7 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                                                 imageArrayList.add(uriList.get(i).toString());
                                                 //이미지 파일의 이름 설정
                                                 String timeStamp = new SimpleDateFormat("HHmmss").format(new Date());
-                                                String imageFileName = account + timeStamp + (i + 1) + ".jpg";
+                                                String imageFileName = loginUser.getAccount() + timeStamp + (i + 1) + ".jpg";
                                                 imageNameForServerList.add(imageFileName);
                                                 Log.d("이미지 파일명", imageNameForServerList.get(i));
                                                 imageList.put(imageNameForServerList.get(i));
@@ -956,10 +956,10 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                                             ChatContentItem chatContentItem = new ChatContentItem();
                                             chatContentItem.setRoomNum(roomNum);
                                             chatContentItem.setType("image");
-                                            chatContentItem.setAccount(LoginActivity.account);
-                                            chatContentItem.setNickname(LoginActivity.nickname);
-                                            chatContentItem.setProfile(LoginActivity.profile);
-                                            chatContentItem.setMessage(LoginActivity.nickname + "님이 사진을 보냈습니다.");
+                                            chatContentItem.setAccount(loginUser.getAccount());
+                                            chatContentItem.setNickname(loginUser.getNickname());
+                                            chatContentItem.setProfile(loginUser.getProfile());
+                                            chatContentItem.setMessage(loginUser.getNickname() + "님이 사진을 보냈습니다.");
                                             for (int j = 0; j < imageArrayList.size(); j++) {
                                                 chatContentItem.imageList.add(imageArrayList.get(j));
                                             }
@@ -988,7 +988,7 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                                             }
                                             receiverString = stringBuilder.toString();
                                             Log.d("이미지 메세지 데이터", imageData.toString());
-                                            addChat(String.valueOf(roomNum), LoginActivity.account, receiverString, LoginActivity.nickname + "님이 사진을 보냈습니다.", "image", imageData.toString(), imageArrayList, null, null, null);
+                                            addChat(String.valueOf(roomNum), loginUser.getAccount(), receiverString, loginUser.getNickname() + "님이 사진을 보냈습니다.", "image", imageData.toString(), imageArrayList, null, null, null);
 
 
                                         } catch (JSONException e) {
@@ -1041,16 +1041,16 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                                         //비디오 데이터의 해상도를 구한다.
                                         dialog.dismiss();
                                         String timeStamp = new SimpleDateFormat("HHmmss").format(new Date());
-                                        String videoFileName = account + timeStamp + ".mp4";//서버로 업로드할 비디오 파일 명
+                                        String videoFileName = loginUser.getAccount() + timeStamp + ".mp4";//서버로 업로드할 비디오 파일 명
                                         //소켓 서버로 전달할 json스트링
                                         JSONObject videoData = new JSONObject();
                                         try {
                                             videoData.put("type", "video");
                                             videoData.put("roomNum", roomNum);
-                                            videoData.put("account", LoginActivity.account);
-                                            videoData.put("nickname", LoginActivity.nickname);
-                                            videoData.put("profile", LoginActivity.profile);
-                                            videoData.put("message", LoginActivity.nickname + "님이 동영상을 보냈습니다.");
+                                            videoData.put("account", loginUser.getAccount());
+                                            videoData.put("nickname", loginUser.getNickname());
+                                            videoData.put("profile", loginUser.getProfile());
+                                            videoData.put("message", loginUser.getNickname() + "님이 동영상을 보냈습니다.");
                                             videoData.put("video", videoFileName);
 
                                         } catch (JSONException e) {
@@ -1060,10 +1060,10 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                                         ChatContentItem chatContentItem = new ChatContentItem();
                                         chatContentItem.setRoomNum(roomNum);
                                         chatContentItem.setType("video");
-                                        chatContentItem.setAccount(LoginActivity.account);
-                                        chatContentItem.setNickname(LoginActivity.nickname);
-                                        chatContentItem.setProfile(LoginActivity.profile);
-                                        chatContentItem.setMessage(LoginActivity.nickname + "님이 동영상을 보냈습니다.");
+                                        chatContentItem.setAccount(loginUser.getAccount());
+                                        chatContentItem.setNickname(loginUser.getNickname());
+                                        chatContentItem.setProfile(loginUser.getProfile());
+                                        chatContentItem.setMessage(loginUser.getNickname() + "님이 동영상을 보냈습니다.");
                                         chatContentItem.setVideo(uriList.get(0).getPath());//아직 서버에 업로드하기 전이기 때문에 local uri에서 썸네일 추출
                                         chatContentItem.setMyContent(true);
                                         chatContentItem.setSent(false);
@@ -1094,7 +1094,7 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                                                 new Runnable() {
                                                     @Override
                                                     public void run() {
-                                                        addChat(String.valueOf(roomNum), LoginActivity.account, finalReceiverString, LoginActivity.nickname + "님이 동영상을 보냈습니다.", "video", videoData.toString(), imageArrayList, uriList.get(0), videoFileName, videoSize);
+                                                        addChat(String.valueOf(roomNum), loginUser.getAccount(), finalReceiverString, loginUser.getNickname() + "님이 동영상을 보냈습니다.", "video", videoData.toString(), imageArrayList, uriList.get(0), videoFileName, videoSize);
                                                     }
                                                 }
                                         ).start();
@@ -1309,7 +1309,7 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
             JSONObject requestBody = new JSONObject();
             requestBody.put("requestType", "loadNextChat");
             requestBody.put("roomNum", roomNum);
-            requestBody.put("account", account);
+            requestBody.put("account", loginUser.getAccount());
             requestBody.put("lastId", chatContentItemArrayList.get(0).id);
             requestBody.put("listSize", listSize);
             requestBody.put("isFirstLoad", false);
@@ -1367,10 +1367,10 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
         try {
             requestBody.put("type", "exit");
             requestBody.put("roomNum", roomNum);
-            requestBody.put("account", LoginActivity.account);
-            requestBody.put("nickname", LoginActivity.nickname);
-            requestBody.put("profile", LoginActivity.profile);
-            requestBody.put("message", LoginActivity.nickname + "님이 채팅방을 나가셨습니다.");
+            requestBody.put("account", loginUser.getAccount());
+            requestBody.put("nickname", loginUser.getNickname());
+            requestBody.put("profile", loginUser.getProfile());
+            requestBody.put("message", loginUser.getNickname() + "님이 채팅방을 나가셨습니다.");
             requestBody.put("position", 0);//리사이클러뷰 상에서 나간 채팅방의 index
             //chat테이블에 저장할 수신자 목록을 jsonArray에 넣어준다.
             JSONArray receiverList = new JSONArray();
@@ -1472,15 +1472,15 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                                 JSONObject enterData = new JSONObject();
                                 enterData.put("type", "enter");
                                 enterData.put("roomNum", roomNum);
-                                enterData.put("account", LoginActivity.account);
-                                enterData.put("nickname", LoginActivity.nickname);
-                                enterData.put("profile", LoginActivity.profile);
+                                enterData.put("account", loginUser.getAccount());
+                                enterData.put("nickname", loginUser.getNickname());
+                                enterData.put("profile", loginUser.getProfile());
                                 message.what = 4444;
                                 message.obj = enterData.toString();
                                 ChatIntentService.handler.sendMessage(message);
 
                                 //서버에 업데이트 해준다.
-                                updateCheckMessage(roomNum, LoginActivity.account);
+                                updateCheckMessage(roomNum, loginUser.getAccount());
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
@@ -1573,10 +1573,10 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                     messageData.put("type", "added");
                     messageData.put("roomNum", roomNum);
                     //사용자를 초대한 사용자
-                    messageData.put("account", LoginActivity.account);
-                    messageData.put("nickname", LoginActivity.nickname);
-                    messageData.put("profile", LoginActivity.profile);
-                    messageData.put("message", LoginActivity.nickname + "님이 " + sb.toString() + "님을 초대하셨습니다.");
+                    messageData.put("account", loginUser.getAccount());
+                    messageData.put("nickname", loginUser.getNickname());
+                    messageData.put("profile", loginUser.getProfile());
+                    messageData.put("message", loginUser.getNickname()+ "님이 " + sb.toString() + "님을 초대하셨습니다.");
                     //수신자를 담을 json어레이
                     JSONArray receiverList = new JSONArray();
                     for (int i = 0; i < chatParticipantItemArrayList.size(); i++) {
@@ -1749,9 +1749,9 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                             for (int i = 0; i < imageList.length; i++) {
                                 JSONObject contentData = new JSONObject();
                                 contentData.put("type", "image");
-                                contentData.put("account", LoginActivity.account);
-                                contentData.put("nickname", LoginActivity.nickname);
-                                contentData.put("profile", LoginActivity.profile);
+                                contentData.put("account", loginUser.getAccount());
+                                contentData.put("nickname", loginUser.getNickname());
+                                contentData.put("profile", loginUser.getProfile());
                                 contentData.put("time", time);
                                 contentData.put("content", imageList[i]);
                                 totalContentArrayList.add(contentData.toString());
@@ -1766,9 +1766,9 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                             for (int i = 0; i < imageList.length; i++) {
                                 JSONObject contentData = new JSONObject();
                                 contentData.put("type", "image");
-                                contentData.put("account", LoginActivity.account);
-                                contentData.put("nickname", LoginActivity.nickname);
-                                contentData.put("profile", LoginActivity.profile);
+                                contentData.put("account", loginUser.getAccount());
+                                contentData.put("nickname", loginUser.getNickname());
+                                contentData.put("profile", loginUser.getProfile());
                                 contentData.put("time", time);
                                 contentData.put("content", imageList[i]);
                                 totalContentArrayList.add(contentData.toString());
@@ -1783,9 +1783,9 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                             for (int i = 0; i < imageList.length; i++) {
                                 JSONObject contentData = new JSONObject();
                                 contentData.put("type", "image");
-                                contentData.put("account", LoginActivity.account);
-                                contentData.put("nickname", LoginActivity.nickname);
-                                contentData.put("profile", LoginActivity.profile);
+                                contentData.put("account", loginUser.getAccount());
+                                contentData.put("nickname", loginUser.getNickname());
+                                contentData.put("profile", loginUser.getProfile());
                                 contentData.put("time", time);
                                 contentData.put("content", imageList[i]);
                                 totalContentArrayList.add(contentData.toString());
@@ -1801,9 +1801,9 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                             for (int i = 0; i < imageList.length; i++) {
                                 JSONObject contentData = new JSONObject();
                                 contentData.put("type", "image");
-                                contentData.put("account", LoginActivity.account);
-                                contentData.put("nickname", LoginActivity.nickname);
-                                contentData.put("profile", LoginActivity.profile);
+                                contentData.put("account", loginUser.getAccount());
+                                contentData.put("nickname", loginUser.getNickname());
+                                contentData.put("profile", loginUser.getProfile());
                                 contentData.put("time", time);
                                 contentData.put("content", imageList[i]);
                                 totalContentArrayList.add(contentData.toString());
@@ -1820,9 +1820,9 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                             for (int i = 0; i < imageList.length; i++) {
                                 JSONObject contentData = new JSONObject();
                                 contentData.put("type", "image");
-                                contentData.put("account", LoginActivity.account);
-                                contentData.put("nickname", LoginActivity.nickname);
-                                contentData.put("profile", LoginActivity.profile);
+                                contentData.put("account", loginUser.getAccount());
+                                contentData.put("nickname", loginUser.getNickname());
+                                contentData.put("profile", loginUser.getProfile());
                                 contentData.put("time", time);
                                 contentData.put("content", imageList[i]);
                                 totalContentArrayList.add(contentData.toString());
@@ -1840,9 +1840,9 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                             for (int i = 0; i < imageList.length; i++) {
                                 JSONObject contentData = new JSONObject();
                                 contentData.put("type", "image");
-                                contentData.put("account", LoginActivity.account);
-                                contentData.put("nickname", LoginActivity.nickname);
-                                contentData.put("profile", LoginActivity.profile);
+                                contentData.put("account", loginUser.getAccount());
+                                contentData.put("nickname", loginUser.getNickname());
+                                contentData.put("profile", loginUser.getProfile());
                                 contentData.put("time", time);
                                 contentData.put("content", imageList[i]);
                                 totalContentArrayList.add(contentData.toString());
@@ -1866,9 +1866,9 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                     JSONObject contentData = new JSONObject();
                     try {
                         contentData.put("type", "video");
-                        contentData.put("account", LoginActivity.account);
-                        contentData.put("nickname", LoginActivity.nickname);
-                        contentData.put("profile", LoginActivity.profile);
+                        contentData.put("account", loginUser.getAccount());
+                        contentData.put("nickname", loginUser.getNickname());
+                        contentData.put("profile", loginUser.getProfile());
                         contentData.put("time", time);
                         contentData.put("content", video);
                     } catch (JSONException e) {
@@ -1970,9 +1970,9 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
         super.onResume();
         //채팅 내용을 서버로부터 가져오는 asynctask
         if (totalContentArrayList.isEmpty()) {//전체 이미지 리스트에 값이 없으면 최초 로드로 간주해서 서버에서 전체 이미지 데이터를 가져온다.
-            getChatContent(roomNum, LoginActivity.account, 0, listSize, true);
+            getChatContent(roomNum, loginUser.getAccount(), 0, listSize, true);
         } else {
-            getChatContent(roomNum, LoginActivity.account, 0, listSize, false);
+            getChatContent(roomNum, loginUser.getAccount(), 0, listSize, false);
         }
     }
 
@@ -2069,10 +2069,10 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                                 try {
                                     JSONObject jsonObject = new JSONObject();
                                     jsonObject.put("type", "requestFaceChat");
-                                    jsonObject.put("roomName", account + chatContentItemArrayList.get(position).account);//영상통화의 방 이름을 보내준다. 이때 방은 두 peer의 계정을 합쳐서 구성한다.
-                                    jsonObject.put("account", account);//발신자 계정
-                                    jsonObject.put("nickname", nickname);//발신자 닉네임
-                                    jsonObject.put("profile", profile);//발신자 프로필 사진
+                                    jsonObject.put("roomName", loginUser.getAccount() + chatContentItemArrayList.get(position).account);//영상통화의 방 이름을 보내준다. 이때 방은 두 peer의 계정을 합쳐서 구성한다.
+                                    jsonObject.put("account", loginUser.getAccount());//발신자 계정
+                                    jsonObject.put("nickname", loginUser.getNickname());//발신자 닉네임
+                                    jsonObject.put("profile", loginUser.getProfile());//발신자 프로필 사진
                                     jsonObject.put("receiver", chatContentItemArrayList.get(position).account);//수신자 계정
                                     //소켓 서버로 영상통화 토큰을 날려준다.
                                     Message message = ChatIntentService.handler.obtainMessage();
@@ -2202,10 +2202,10 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatContentAd
                                     try {
                                         JSONObject jsonObject = new JSONObject();
                                         jsonObject.put("type", "requestFaceChat");
-                                        jsonObject.put("roomName", account + chatParticipantItemArrayList.get(position - 1).account);//영상통화의 방 이름을 보내준다. 이때 방은 두 peer의 계정을 합쳐서 구성한다.
-                                        jsonObject.put("account", account);//발신자 계정
-                                        jsonObject.put("nickname", nickname);//발신자 닉네임
-                                        jsonObject.put("profile", profile);//발신자 프로필 사진
+                                        jsonObject.put("roomName", loginUser.getAccount() + chatParticipantItemArrayList.get(position - 1).account);//영상통화의 방 이름을 보내준다. 이때 방은 두 peer의 계정을 합쳐서 구성한다.
+                                        jsonObject.put("account", loginUser.getAccount());//발신자 계정
+                                        jsonObject.put("nickname", loginUser.getNickname());//발신자 닉네임
+                                        jsonObject.put("profile", loginUser.getProfile());//발신자 프로필 사진
                                         jsonObject.put("receiver", chatParticipantItemArrayList.get(position - 1).account);//수신자 계정
                                         //소켓 서버로 영상통화 토큰을 날려준다.
                                         Message message = ChatIntentService.handler.obtainMessage();

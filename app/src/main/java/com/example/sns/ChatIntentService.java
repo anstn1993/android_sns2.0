@@ -7,8 +7,8 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.app.TaskStackBuilder;
-import android.content.Intent;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -19,7 +19,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.PowerManager;
-import androidx.core.app.NotificationCompat;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -35,8 +34,9 @@ import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
+
+import androidx.core.app.NotificationCompat;
 
 import static com.example.sns.LoginActivity.httpURLConnection;
 
@@ -48,26 +48,24 @@ import static com.example.sns.LoginActivity.httpURLConnection;
  * helper methods.
  */
 public class ChatIntentService extends Service implements HttpRequest.OnHttpResponseListener {
-    private String TAG = "ChatIntentService";
+    private final String TAG = "ChatIntentService";
     //클라이언트 소켓
-    Socket userSocket = null;
+    private Socket userSocket = null;
     //접속할 서버의 주소
-    public String IP_ADDRESS = "13.124.105.47";
+    private String IP_ADDRESS = "13.124.105.47";
     //접근할 서버의 포트
-    public int PORT = 8888;
+    private int PORT = 8888;
     //서버로 데이터를 전송하는 스트림
-    public DataOutputStream dataOutputStream;
+    private DataOutputStream dataOutputStream;
     //서버에서 데이터를 받는 스트림
-    public DataInputStream dataInputStream;
+    private DataInputStream dataInputStream;
     //
-    public ArrayList<String> myRoomList = new ArrayList();
-
     //소켓 서버에서 메세지를 받는 스레드
-    ReceiveMessage receiveMessage;
+    private ReceiveMessage receiveMessage;
 
     public static Handler handler;
-    //사용자의 계정, 닉네임, 프로필 사진
-    String account, nickname, profile;
+
+    private LoginUser loginUser;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -87,10 +85,14 @@ public class ChatIntentService extends Service implements HttpRequest.OnHttpResp
                     //서버와의 데이터 송수신을 위한 스트림 객체 선언
                     dataOutputStream = new DataOutputStream(userSocket.getOutputStream());
                     //사용자의 정보를 소켓서버로 보내서 데이터 생성
-                    SharedPreferences sharedPreferences = getSharedPreferences("sessionCookie", MODE_PRIVATE);
-                    account = sharedPreferences.getString("userAccount", null);
-                    nickname = sharedPreferences.getString("userNickname", null);
-                    profile = sharedPreferences.getString("userProfile", null);
+                    SharedPreferences sharedPreferences = getSharedPreferences("loginUser", MODE_PRIVATE);
+                    String account = sharedPreferences.getString("account", null);
+                    String nickname = sharedPreferences.getString("nickname", null);
+                    String profile = sharedPreferences.getString("profile", null);
+                    if(LoginUser.getInstance() == null) {
+                        LoginUser.initInstance(account, nickname, profile);
+                    }
+                    loginUser = LoginUser.getInstance();
                     //사용자 정보를 json객체로 생성
                     JSONObject jsonObject = new JSONObject();
                     try {
@@ -386,15 +388,15 @@ public class ChatIntentService extends Service implements HttpRequest.OnHttpResp
                                 //상대방 메세지 옆에 확인하지 않은 사람의 수를 바로 줄여줘야 한다.
                                 String id = messageData.getString("id");
                                 String roomNum = messageData.getString("roomNum");
-                                String myAccount = LoginActivity.account;
+                                String myAccount = loginUser.getAccount();
                                 //현재 채팅방 번호가 수신된 메세지의 채팅방 번호와 같을 때만 확인 처리
                                 if (ChatRoomActivity.roomNum == Integer.parseInt(roomNum)) {
                                     //확인 메세지 데이터를 json스트링으로 만든다.
                                     JSONObject checkData = new JSONObject();
                                     checkData.put("type", "check");
                                     checkData.put("roomNum", Integer.parseInt(roomNum));
-                                    checkData.put("sender", account);
-                                    checkData.put("receiver", LoginActivity.account);
+                                    checkData.put("sender", loginUser.getAccount());
+                                    checkData.put("receiver", loginUser.getAccount());
 
                                     //서버에 채팅 내용을 확인했기때문에 chat 테이블의 unchecked_participant에 계정을 삭제해줘야 한다.
                                     updateCheckMessage(id, myAccount, checkData);
@@ -411,14 +413,14 @@ public class ChatIntentService extends Service implements HttpRequest.OnHttpResp
                                 //상대방 메세지 옆에 확인하지 않은 사람의 수를 바로 줄여줘야 한다.
                                 String id = messageData.getString("id");
                                 String roomNum = messageData.getString("roomNum");
-                                String myAccount = LoginActivity.account;
+                                String myAccount = loginUser.getAccount();
                                 if (ChatRoomActivity.roomNum == Integer.parseInt(roomNum)) {
                                     //확인 메세지 데이터를 json스트링으로 만든다.
                                     JSONObject checkData = new JSONObject();
                                     checkData.put("type", "check");
                                     checkData.put("roomNum", Integer.parseInt(roomNum));
-                                    checkData.put("sender", account);
-                                    checkData.put("receiver", LoginActivity.account);
+                                    checkData.put("sender", loginUser.getAccount());
+                                    checkData.put("receiver", loginUser.getAccount());
 
                                     //서버에 채팅 내용을 확인했기때문에 chat 테이블의 unchecked_participant에 계정을 삭제해줘야 한다.
                                     updateCheckMessage(id, myAccount, checkData);
@@ -434,14 +436,14 @@ public class ChatIntentService extends Service implements HttpRequest.OnHttpResp
                                 //상대방 메세지 옆에 확인하지 않은 사람의 수를 바로 줄여줘야 한다.
                                 String id = messageData.getString("id");
                                 String roomNum = messageData.getString("roomNum");
-                                String myAccount = LoginActivity.account;
+                                String myAccount = loginUser.getAccount();
                                 if (ChatRoomActivity.roomNum == Integer.parseInt(roomNum)) {
                                     //확인 메세지 데이터를 json스트링으로 만든다.
                                     JSONObject checkData = new JSONObject();
                                     checkData.put("type", "check");
                                     checkData.put("roomNum", Integer.parseInt(roomNum));
-                                    checkData.put("sender", account);
-                                    checkData.put("receiver", LoginActivity.account);
+                                    checkData.put("sender", loginUser.getAccount());
+                                    checkData.put("receiver", loginUser.getAccount());
 
                                     //서버에 채팅 내용을 확인했기때문에 chat 테이블의 unchecked_participant에 계정을 삭제해줘야 한다.
                                     updateCheckMessage(id, myAccount, checkData);
@@ -477,7 +479,7 @@ public class ChatIntentService extends Service implements HttpRequest.OnHttpResp
                                     checkData.put("type", "check");
                                     checkData.put("roomNum", Integer.parseInt(roomNum));
                                     checkData.put("sender", account);
-                                    checkData.put("receiver", LoginActivity.account);
+                                    checkData.put("receiver", loginUser.getAccount());
                                     //사용자가 나갔기 때문에 chat 테이블의 unchecked_participant에 계정을 삭제해줘야 한다.
                                     updateCheckMessage(id, account, checkData);
                                 }
@@ -498,7 +500,7 @@ public class ChatIntentService extends Service implements HttpRequest.OnHttpResp
                                     checkData.put("type", "check");
                                     checkData.put("roomNum", Integer.parseInt(roomNum));
                                     checkData.put("sender", account);
-                                    checkData.put("receiver", LoginActivity.account);
+                                    checkData.put("receiver", loginUser.getAccount());
                                     //사용자가 나갔기 때문에 chat 테이블의 unchecked_participant에 계정을 삭제해줘야 한다.
                                     updateCheckMessage(id, account, checkData);
                                 }
@@ -562,7 +564,7 @@ public class ChatIntentService extends Service implements HttpRequest.OnHttpResp
                                     new Thread(new Runnable() {
                                         @Override
                                         public void run() {
-                                            getChatDataForNotification(roomNum, LoginActivity.account, messageData);
+                                            getChatDataForNotification(roomNum, loginUser.getAccount(), messageData);
                                         }
                                     }).start();
                                 }
@@ -592,7 +594,7 @@ public class ChatIntentService extends Service implements HttpRequest.OnHttpResp
                             new Thread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    getChatDataForNotification(roomNum, LoginActivity.account, messageData);
+                                    getChatDataForNotification(roomNum, loginUser.getAccount(), messageData);
                                 }
                             }).start();
                         }
@@ -609,9 +611,9 @@ public class ChatIntentService extends Service implements HttpRequest.OnHttpResp
                         try {
                             JSONObject closeData = new JSONObject();
                             closeData.put("type", "close");
-                            closeData.put("account", LoginActivity.account);
-                            closeData.put("nickname", LoginActivity.nickname);
-                            closeData.put("profile", LoginActivity.profile);
+                            closeData.put("account", loginUser.getAccount());
+                            closeData.put("nickname", loginUser.getNickname());
+                            closeData.put("profile", loginUser.getProfile());
                             dataOutputStream.writeUTF(closeData.toString());
                             dataOutputStream.flush();
                             dataOutputStream.close();

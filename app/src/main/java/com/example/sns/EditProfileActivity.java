@@ -60,55 +60,45 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 import static com.example.sns.ImageResizeUtils.exifOrientationToDegrees;
 import static com.example.sns.JoinActivity.IP_ADDRESS;
-import static com.example.sns.LoginActivity.account;
 
 public class EditProfileActivity extends AppCompatActivity {
-    CircleImageView btn_editphoto;
-    Button btn_cancel, btn_apply;
-    ImageButton btn_delete_name, btn_delete_nickname, btn_delete_email, btn_delete_introduce;
-    EditText et_name, et_nickname, et_email, et_introduce;
-    TextView tv_editphoto, tv_account, tv_email, tv_nameresult, tv_nicknameresult, tv_length;
+    private CircleImageView btn_editphoto;
+    private Button btn_cancel, btn_apply;
+    private ImageButton btn_delete_name, btn_delete_nickname, btn_delete_email, btn_delete_introduce;
+    private EditText et_name, et_nickname, et_email, et_introduce;
+    private TextView tv_editphoto, tv_account, tv_email, tv_nameresult, tv_nicknameresult, tv_length;
 
     //변경한 닉네임이 기존의 닉네임과 같을 때는 중복검사를 할 필요가 없기 때문에 그 경우를 캐치하기 위해서 원래 닉네임을 선언
-    String org_nickname;
+    private String org_nickname;
 
-    ScrollView scrollView;
+    private ScrollView scrollView;
 
-    //세션 쿠키
-    String cookie;
-
-    //프로필 수정을 했는지 하지 않았는지를 참조하기 위한 boolean
-    static boolean isEdit_mypage = false;
-    static boolean isEdit_general = false;
-    static boolean isEdit_post = false;
-    static boolean isEditProfile_vertical = false;
-    static boolean isEditProfile_vertical_general = false;
-    static String edittedProfile;
-    static boolean isNotEditProfile_vertical = false;
-    static boolean isNotEditProfile_vertical_general = false;
+    private String edittedProfile;//수정된 프로필 사진
 
     //프로필 이미지를 담을 비트맵
-    Bitmap profileBitmap = null;
+    private Bitmap profileBitmap;
 
     //사진의 회전값을 얻기 위한 이미지의 경로
-    int rotationDegree = 0;
+    private int rotationDegree = 0;
 
-    String imagePath = null;//이미지 경로
-    String imageUri = null;//이미지 uri
+    private String imagePath = null;//이미지 경로
+    private String imageUri = null;//이미지 uri
 
     //실제로 서버로 전송될 이미지의 경로
-    String profileImagePath = null;
+    private String profileImagePath = null;
 
-    //프사가 사전에 설정되어있는지 아닌지 가리기 위한 string값
-    public static String isSelected = "no";
+    //프사가 사전에 설정되어있는지 아닌지 가리기 위한 boolean
+    private boolean isSelected;
 
-    String Image;
+    private String Image;
+
+    private LoginUser loginUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_profile);
-
+        loginUser = LoginUser.getInstance();
         //스크롤뷰
         scrollView = findViewById(R.id.scrollview);
 
@@ -145,11 +135,7 @@ public class EditProfileActivity extends AppCompatActivity {
         //취소 버튼
         btn_cancel = findViewById(R.id.button_cancel);
 
-        //서버에서 사용자 정보를 가져온 후 화면에 사용자 정보를 입력해주는 서브 스레드
-//        SetUserInfo setUserInfo = new SetUserInfo();
-//        setUserInfo.execute(account);
-
-        setProfile(account);
+        setProfile(loginUser.getAccount());
 
 
         //프로필 사진 클릭 리스너
@@ -228,7 +214,7 @@ public class EditProfileActivity extends AppCompatActivity {
                                 .into(btn_editphoto);
                         profileBitmap = null;
                         Image = null;
-                        isSelected = "no";
+                        isSelected = false;
                         dialog.dismiss();
                     }
                 });
@@ -614,9 +600,9 @@ public class EditProfileActivity extends AppCompatActivity {
                             .into(btn_editphoto);
 
                     Image = image;
-                    isSelected = "yes";
+                    isSelected = true;
                 } else {
-                    isSelected = "no";
+                    isSelected = false;
                 }
 
                 progressDialog.dismiss();
@@ -756,11 +742,18 @@ public class EditProfileActivity extends AppCompatActivity {
                 .build();
 
         //서버로 보내줄 param설정
-        RequestBody accountPart = RequestBody.create(MultipartBody.FORM, account);
+        RequestBody accountPart = RequestBody.create(MultipartBody.FORM, loginUser.getAccount());
         RequestBody namePart = RequestBody.create(MultipartBody.FORM, name);
         RequestBody nicknamePart = RequestBody.create(MultipartBody.FORM, nickname);
         RequestBody introducePart = RequestBody.create(MultipartBody.FORM, introduce);
-        RequestBody isselectedPart = RequestBody.create(MultipartBody.FORM, isSelected);
+        RequestBody isselectedPart;
+        if(isSelected){
+            isselectedPart = RequestBody.create(MultipartBody.FORM, "yes");
+        }
+        else {
+            isselectedPart = RequestBody.create(MultipartBody.FORM, "no");
+        }
+
         RequestBody imageFile;
 
         //프로필 이미지를 설정했을 때
@@ -768,7 +761,7 @@ public class EditProfileActivity extends AppCompatActivity {
 
             //이미지 파일의 이름(사용자계정+시간)
             String timeStamp = new SimpleDateFormat("HHmmss").format(new Date());
-            String imageFileName = account + timeStamp + ".jpg";
+            String imageFileName = loginUser.getAccount() + timeStamp + ".jpg";
 
             //jpeg파일로 변환해서 임시 파일에 이미지를 넣어주고 경로를 불러오는 메소드를 실행해서 프로필 사진의 경로를 넣어준다.
             profileImagePath = saveBitmaptoJpeg(getApplicationContext(), profileBitmap, imageFileName);
@@ -777,7 +770,6 @@ public class EditProfileActivity extends AppCompatActivity {
 
             ProcessImage processImage = new ProcessImage(EditProfileActivity.this);//이미지 처리 객체 초기화
 
-//            File file = new File(imagePath);
             File file = processImage.createFileFromBitmap(processImage.getBitmapFromUri(imageUri), imageUri);
             imageFile = RequestBody.create(MediaType.parse("multipart/form-data"), file);
 
@@ -795,20 +787,19 @@ public class EditProfileActivity extends AppCompatActivity {
                     Log.d("닉네임", profileResponse.getNickname());
                     Log.d("소개", profileResponse.getIntroduce());
                     Log.d("이미지", profileResponse.getImage());
-                    //수정을 했다는 것을 마이페이지 프래그먼트에서 공유해서 수정된 데이터를 다시 조회하게 해야 함.
-                    isEdit_mypage = true;
-                    isEdit_general = true;
-                    isEdit_post = true;
-                    isEditProfile_vertical = true;
-                    isEditProfile_vertical_general = true;
+
                     edittedProfile = profileResponse.getImage();
 
                     //변경된 닉네임과 프로필 사진의 데이터를 로컬에 업데이트 해준다.
-                    SharedPreferences sharedPreferences = getSharedPreferences("sessionCookie", MODE_PRIVATE);
+                    SharedPreferences sharedPreferences = getSharedPreferences("loginUser", MODE_PRIVATE);
                     SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putString("userNickname", profileResponse.getNickname());
-                    editor.putString("userProfile", profileResponse.getImage());
+                    editor.putString("nickname", profileResponse.getNickname());
+                    editor.putString("profile", profileResponse.getImage());
                     editor.apply();
+
+                    //현재 로그인 사용자 정보 변경
+                    LoginUser.getInstance().setNickname(profileResponse.getNickname());
+                    LoginUser.getInstance().setProfile(profileResponse.getImage());
 
                     //프로그래스 다이얼로그 종료
                     progressDialog.dismiss();
@@ -847,12 +838,7 @@ public class EditProfileActivity extends AppCompatActivity {
                     Log.d("통신", "성공");
                     //프로그래스 다이얼로그 종료
                     progressDialog.dismiss();
-                    //수정을 했다는 것을 마이페이지 프래그먼트에서 공유해서 수정된 데이터를 다시 조회하게 해야 함.
-                    isEdit_mypage = true;
-                    isEdit_post = true;
-                    isEdit_post = true;
-                    isNotEditProfile_vertical = true;
-                    isNotEditProfile_vertical_general = true;
+
                     if (Image != null) {
                         edittedProfile = Image;
                     } else {

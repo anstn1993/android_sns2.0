@@ -45,7 +45,6 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-import static com.example.sns.LoginActivity.account;
 import static com.example.sns.PostActivity.isUploaded;
 
 public class UploadVideoSecondActivity extends AppCompatActivity {
@@ -252,10 +251,10 @@ public class UploadVideoSecondActivity extends AppCompatActivity {
             }
         });
 
-
+        LoginUser loginUser = LoginUser.getInstance();
         //동영상 파일의 이름
         String timeStamp = new SimpleDateFormat("HHmmss").format(new Date());
-        String videoFileName = account + timeStamp + ".mp4";
+        String videoFileName = loginUser.getAccount() + timeStamp + ".mp4";
 
         //동영상을 압축해주는 객체 선언(압축 사이즈 1280X720 or 720X1280 or 720X720)
         CompressMedia compressMedia = new CompressMedia(
@@ -279,12 +278,11 @@ public class UploadVideoSecondActivity extends AppCompatActivity {
                 .baseUrl("http://13.124.105.47/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
-        Log.d("아이디", account);
 
 
         //서버로 보내줄 데이터 param 설정
         RequestBody postNumPart = RequestBody.create(MultipartBody.FORM, String.valueOf(0));
-        RequestBody accountPart = RequestBody.create(MultipartBody.FORM, account);
+        RequestBody accountPart = RequestBody.create(MultipartBody.FORM, loginUser.getAccount());
         //초기화를 바로 해주지 않는 이유는 이 데이터들은 쓰일 수도 있고 안 쓰일 수도 있기 때문이다.
         RequestBody articlePart = null;
         RequestBody addressPart = null;

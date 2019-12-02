@@ -49,9 +49,6 @@ import java.util.Date;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
-import static com.example.sns.LoginActivity.account;
-
-
 class PostData {
     //데이터 변수들
     String type;
@@ -75,31 +72,33 @@ class PostData {
 
 public class PostDetailFragment extends Fragment implements HttpRequest.OnHttpResponseListener {
     private String TAG = PostDetailFragment.class.getSimpleName();
-    CircleImageView cv_profile;
-    TextView tv_nickname, tv_place, tv_article, tv_likeCount, tv_commentCount, tv_uploadTime, tv_readmore;
-    ImageButton ib_more, ib_comment, ib_like, ib_back, ib_mute;
-    ViewPager viewPager;
-    TabLayout tabLayout;
-    SwipeRefreshLayout swipeRefreshLayout;
+    private CircleImageView cv_profile;
+    private TextView tv_nickname, tv_place, tv_article, tv_likeCount, tv_commentCount, tv_uploadTime, tv_readmore;
+    private ImageButton ib_more, ib_comment, ib_like, ib_back, ib_mute;
+    private ViewPager viewPager;
+    private TabLayout tabLayout;
+    private SwipeRefreshLayout swipeRefreshLayout;
 
-    PlayerView playerView;
-    SimpleExoPlayer player;
+    private PlayerView playerView;
+    private SimpleExoPlayer player;
 
     //게시물 번호
     private int postNum;
     //부모 액티비티
-    String parentActivity;
+    private String parentActivity;
 
     //프래그먼트 매니저
-    FragmentManager fragmentManager;
+    private FragmentManager fragmentManager;
 
     //해시태그 라이브러리
-    HashTagHelper hashTagHelper;
+    private HashTagHelper hashTagHelper;
 
     //댓글(대댓글) 알림으로 인해서 진입한 프래그먼트인지를 가려내는 boolean
     private boolean isCommentNotification = false;
 
-    PostData postData = new PostData();
+    private PostData postData = new PostData();
+
+    private LoginUser loginUser;
 
     @Nullable
     @Override
@@ -107,7 +106,7 @@ public class PostDetailFragment extends Fragment implements HttpRequest.OnHttpRe
         Log.d(TAG, "onCreateView 호출");
         //프레그먼트 레이아웃 설정
         View rootView = (ViewGroup) inflater.inflate(R.layout.fragment_postdetail, container, false);
-
+        loginUser = LoginUser.getInstance();
         //번들로 넘어온 데이터를 받는다.
         if (getArguments() != null) {
             //번들로 넘어온 게시물 번호를 설정
@@ -554,7 +553,7 @@ public class PostDetailFragment extends Fragment implements HttpRequest.OnHttpRe
             } else {
                 requestBody.put("likeState", false);
             }
-            requestBody.put("account", account);
+            requestBody.put("account", loginUser.getAccount());
             requestBody.put("postNum", postNum);
             requestBody.put("position", position);
             HttpRequest httpRequest = new HttpRequest("POST", requestBody.toString(), "processlike.php", this);
@@ -861,16 +860,16 @@ public class PostDetailFragment extends Fragment implements HttpRequest.OnHttpRe
                     tv_likeCount.setText("좋아요 " + postData.likeCount + "개");
 
                     //내가 내 게시물에 좋아요를 누른 경우에는 따로 알림을 보내지 않는다.
-                    if (!LoginActivity.account.equals(postData.account)) {
+                    if (!loginUser.getAccount().equals(postData.account)) {
                         //좋아요를 당한 사용자 단말에 push알림을 보내준다.
 
                         pushNotification(
                                 postData.account,
                                 "SNS",
-                                LoginActivity.nickname + "님이 회원님의 게시물에 좋아요를 눌렀습니다.",
+                                loginUser.getNickname() + "님이 회원님의 게시물에 좋아요를 눌렀습니다.",
                                 "PostDetailFragment",
                                 "like",
-                                LoginActivity.account,
+                                loginUser.getAccount(),
                                 postNum);
                     }
 

@@ -97,8 +97,7 @@ public class MypageActivity extends AppCompatActivity implements HttpRequest.OnH
         hashTagPostListFragment = new HashTagPostListFragment();
         searchedPlaceListFragment = new SearchedPlaceListFragment();
 
-        //shared에 저장되어 있는 사용자 정보를 가져온다.
-        account = getSharedPreferences("sessionCookie", MODE_PRIVATE).getString("userAccount", null);
+        account = LoginUser.getInstance().getAccount();
 
         //프로필 사진
         img_profile = findViewById(R.id.img_profile);
@@ -279,7 +278,7 @@ public class MypageActivity extends AppCompatActivity implements HttpRequest.OnH
 
 
                                     //sharedpreference에 저장된 쿠키도 삭제해준다.
-                                    SharedPreferences sharedPreferences = getSharedPreferences("sessionCookie", MODE_PRIVATE);
+                                    SharedPreferences sharedPreferences = getSharedPreferences("loginUser", MODE_PRIVATE);
                                     SharedPreferences.Editor cookieEditor = sharedPreferences.edit();
                                     cookieEditor.clear();
                                     cookieEditor.apply();

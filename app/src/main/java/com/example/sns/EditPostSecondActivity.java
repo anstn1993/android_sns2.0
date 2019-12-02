@@ -44,7 +44,6 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 import static com.example.sns.EditPostFirstActivity.postNum;
-import static com.example.sns.LoginActivity.account;
 import static com.example.sns.LoginActivity.httpURLConnection;
 import static com.example.sns.EditPostFirstActivity.imageArrayList;
 
@@ -69,18 +68,20 @@ public class EditPostSecondActivity extends AppCompatActivity {
     private double longitude;
 
     //서버로 전송시킬 이미지 파일 객체 선언
-    File file1, file2, file3, file4, file5, file6 = null;
+    private File file1, file2, file3, file4, file5, file6 = null;
 
     //서버로 전송시킬 이미지 파일 객체 선언
     private ArrayList<File> imageFileArrayList;
 
-    //이미지 파일의 경로를 담는 파일
-    String imagePath = null;
+    private LoginUser loginUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_post_second);
+
+        loginUser = LoginUser.getInstance();
+
         btn_edit = findViewById(R.id.btn_edit);
         btn_back = findViewById(R.id.btn_back);
         et_article = findViewById(R.id.et_article);
@@ -221,12 +222,12 @@ public class EditPostSecondActivity extends AppCompatActivity {
                 .baseUrl("http://13.124.105.47/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
-        Log.d("아이디", account);
+        Log.d("아이디", loginUser.getAccount());
 
 
         //서버로 보내줄 데이터 param 설정
         RequestBody postNumPart = RequestBody.create(MultipartBody.FORM, String.valueOf(postNum));
-        RequestBody accountPart = RequestBody.create(MultipartBody.FORM, account);
+        RequestBody accountPart = RequestBody.create(MultipartBody.FORM, loginUser.getAccount());
         //초기화를 바로 해주지 않는 이유는 이 데이터들은 쓰일 수도 있고 안 쓰일 수도 있기 때문이다.
         RequestBody articlePart = null;
         RequestBody addressPart = null;
@@ -303,7 +304,7 @@ public class EditPostSecondActivity extends AppCompatActivity {
 
         for (int i = 0; i < imageArrayList.size(); i++) {
             String timeStamp = new SimpleDateFormat("HHmmss").format(new Date());
-            String imageFileName = account + timeStamp + (i + 1) + ".jpg";//서버의 이미지 파일 명
+            String imageFileName = loginUser.getAccount() + timeStamp + (i + 1) + ".jpg";//서버의 이미지 파일 명
             RequestBody requestBody = RequestBody.create(MediaType.parse("multipart/form-data"), imageFileArrayList.get(i));//리퀘스트 body
             MultipartBody.Part multipartBody = MultipartBody.Part.createFormData("image" + (i + 1), imageFileName, requestBody);
             imageMultipartBodyList.add(multipartBody);//리스트에 추가

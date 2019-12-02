@@ -34,7 +34,7 @@ import static com.example.sns.MainActivity.iv_notificationDot;
 
 public class NotificationActivity extends AppCompatActivity implements NotificationAdapter.NotificationRecyclerViewListener, HttpRequest.OnHttpResponseListener, NotificationReceiver.OnPushNotificationListener {
 
-    private String TAG = "NotificationActivity";
+    private final String TAG = "NotificationActivity";
     //프래그먼트 메니저
     public static FragmentManager fragmentManager;
 
@@ -54,7 +54,7 @@ public class NotificationActivity extends AppCompatActivity implements Notificat
     private ArrayList<NotificationItem> notificationItemArrayList;
 
     //직전에 로드된 알림의 개수
-    protected int listSize;
+    public int listSize;
 
     public static NotificationActivity notificationActivity;
 
@@ -65,11 +65,15 @@ public class NotificationActivity extends AppCompatActivity implements Notificat
     private boolean isFromPush = false;//푸시알림으로 인해서 이 액티비티로 진입한 경우
     private Intent intentFromPush;//푸시알림으로 전달된 intent데이터를 담을 객체
 
+    private LoginUser loginUser;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate 호출");
         setContentView(R.layout.activity_notification);
+
+        loginUser = LoginUser.getInstance();
 
         swipeRefreshLayout = findViewById(R.id.refresh_layout);
         listSize = 20;
@@ -140,7 +144,7 @@ public class NotificationActivity extends AppCompatActivity implements Notificat
             public void onRefresh() {
 
                 listSize = 20;//가져올 아이템 수 초기화
-                getNotificationData("getNotification", LoginActivity.account, 0, listSize);//알림 목록 데이터 가져오기
+                getNotificationData("getNotification", loginUser.getAccount(), 0, listSize);//알림 목록 데이터 가져오기
                 swipeRefreshLayout.setRefreshing(false);
             }
         });
@@ -205,7 +209,7 @@ public class NotificationActivity extends AppCompatActivity implements Notificat
                 try {
                     JSONObject requestBody = new JSONObject();
                     requestBody.put("requestType", "loadNextNotification");
-                    requestBody.put("account", LoginActivity.account);
+                    requestBody.put("account", loginUser.getAccount());
                     requestBody.put("lastId", notificationItemArrayList.get(notificationItemArrayList.size() - 2).id);
                     requestBody.put("listSize", 20);
                     HttpRequest httpRequest = new HttpRequest("GET", requestBody.toString(), "getnotification.php", NotificationActivity.this::onHttpResponse);
@@ -425,10 +429,10 @@ public class NotificationActivity extends AppCompatActivity implements Notificat
                         //팔로우를 당한 사용자 단말에 push알림을 보내준다.
                         String receiver = notificationItemArrayList.get(position).userAccount;
                         String title = "SNS";
-                        String body = LoginActivity.nickname + "님이 회원님을 팔로우하기 시작했습니다.";
+                        String body = loginUser.getNickname() + "님이 회원님을 팔로우하기 시작했습니다.";
                         String click_action = "AccountPageFragment";
                         String category = "follow";
-                        String sender = LoginActivity.account;
+                        String sender = loginUser.getAccount();
                         pushNotification(receiver, title, body, click_action, category, sender);
 
                     }
@@ -470,7 +474,7 @@ public class NotificationActivity extends AppCompatActivity implements Notificat
         super.onResume();
         Log.d(TAG, "onResume 호출");
         iv_notificationDot.setVisibility(View.INVISIBLE);//알림 표시 점을 없애준다.
-        getNotificationData("getNotification", LoginActivity.account, 0, listSize);//알림 목록 데이터 가져오기
+        getNotificationData("getNotification", loginUser.getAccount(), 0, listSize);//알림 목록 데이터 가져오기
     }
 
 
@@ -624,7 +628,7 @@ public class NotificationActivity extends AppCompatActivity implements Notificat
         if (notificationItemArrayList.get(position).isFollowing == false) {
 
             //팔로잉 상태로 전환
-            processFollow(true, followedAccount, followedNickname, LoginActivity.account, position);
+            processFollow(true, followedAccount, followedNickname, loginUser.getAccount(), position);
         }
         //팔로우를 했던 상태에서 팔로우를 취소하려는 경우
         else {
@@ -674,7 +678,7 @@ public class NotificationActivity extends AppCompatActivity implements Notificat
                 public void onClick(View v) {
                     dialog.dismiss();
                     //언팔로우 상태로 전환
-                    processFollow(false, followedAccount, followedNickname, LoginActivity.account, position);
+                    processFollow(false, followedAccount, followedNickname, loginUser.getAccount(), position);
                 }
             });
 

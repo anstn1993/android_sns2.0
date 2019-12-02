@@ -26,8 +26,6 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-import static com.example.sns.LoginActivity.account;
-import static com.example.sns.LoginActivity.nickname;
 
 
 public class PostFragment extends Fragment implements PostAdapter.PostRecyclerViewListener, HttpRequest.OnHttpResponseListener {
@@ -43,10 +41,10 @@ public class PostFragment extends Fragment implements PostAdapter.PostRecyclerVi
     private ArrayList<PostItem> postItemArrayList;
 
     //현재 로드되어있는 게시물의 수
-    int currentPostCount;
+    private int currentPostCount;
 
     //프래그먼트 매니저
-    FragmentManager fragmentManager;
+    private FragmentManager fragmentManager;
 
     //댓글 창으로 넘어가는 경우를 캐치하기 위한 boolean
     public boolean fromComment = false;
@@ -57,13 +55,15 @@ public class PostFragment extends Fragment implements PostAdapter.PostRecyclerVi
     //수정하는 게시물 인덱스
     private int edittedPosition;
 
-    boolean isFirstLoaded = false;
+    private boolean isFirstLoaded = false;
 
-    String hostAccount;
+    private String hostAccount;
 
-    String parentActivity;
+    private String parentActivity;
 
-    boolean loadPossible = true;
+    private boolean loadPossible = true;
+
+    private LoginUser loginUser;
 
     @Nullable
     @Override
@@ -71,7 +71,7 @@ public class PostFragment extends Fragment implements PostAdapter.PostRecyclerVi
         Log.d("onCreateView", "호출");
 
         ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.fragment_post, container, false);
-
+        loginUser = LoginUser.getInstance();
         currentPostCount = 0;
 
         //프래그먼트 매니저 초기화
@@ -226,7 +226,7 @@ public class PostFragment extends Fragment implements PostAdapter.PostRecyclerVi
                     Log.d("페이징 조건", "부합");
                     //다음 페이지를 로드한다.
                     //param:현재 로드되어있는 데이터의 수(다음 페이지에 로드되어야 할 첫번째 게시물의 index)
-                    loadNextPage(LoginActivity.account, hostAccount, postItemArrayList.get(postItemArrayList.size() - 1).postNum, 10);
+                    loadNextPage(loginUser.getAccount(), hostAccount, postItemArrayList.get(postItemArrayList.size() - 1).postNum, 10);
                 }
 
 
@@ -319,7 +319,7 @@ public class PostFragment extends Fragment implements PostAdapter.PostRecyclerVi
             } else {
                 requestBody.put("likeState", false);
             }
-            requestBody.put("account", account);
+            requestBody.put("account", loginUser.getAccount());
             requestBody.put("postNum", postNum);
             requestBody.put("position", position);
             HttpRequest httpRequest = new HttpRequest("POST", requestBody.toString(), "processlike.php", this);
@@ -336,10 +336,10 @@ public class PostFragment extends Fragment implements PostAdapter.PostRecyclerVi
             JSONObject requestBody = new JSONObject();
             requestBody.put("account", postItemArrayList.get(position).account);//알림의 대상이 되는 사람
             requestBody.put("title", "SNS");//알림의 제목
-            requestBody.put("body", nickname + "님이 회원님의 게시물에 좋아요를 눌렀습니다.");//알림의 내용
+            requestBody.put("body", loginUser.getNickname() + "님이 회원님의 게시물에 좋아요를 눌렀습니다.");//알림의 내용
             requestBody.put("click_action", "PostDetailFragment");//푸시알림을 눌렀을 때 이동할 액티비티 혹은 프래그먼트
             requestBody.put("category", "like");//알림의 카테고리
-            requestBody.put("userAccount", account);//좋아요를 누른 사람
+            requestBody.put("userAccount", loginUser.getAccount());//좋아요를 누른 사람
             requestBody.put("postNum", postItemArrayList.get(position).postNum);
             HttpRequest httpRequest = new HttpRequest("POST", requestBody.toString(), "pushnotification.php", this);
             httpRequest.execute();
@@ -447,7 +447,7 @@ public class PostFragment extends Fragment implements PostAdapter.PostRecyclerVi
                     postAdapter.notifyItemChanged(position, "true");
 
                     //내가 내 게시물에 좋아요를 누른 경우에는 따로 알림을 보내지 않는다.
-                    if (!account.equals(postItemArrayList.get(position).account)) {
+                    if (!loginUser.getAccount().equals(postItemArrayList.get(position).account)) {
                         //좋아요를 당한 사용자 단말에 push알림을 보내준다.
                         pushNotification(position);
                     }
@@ -830,7 +830,7 @@ public class PostFragment extends Fragment implements PostAdapter.PostRecyclerVi
         if (!postItemArrayList.isEmpty()) {//게시물이 처음 로드되어서 하나도 없는 경우
             listSize = postItemArrayList.size();
         }
-        getPost(account, hostAccount, 0, listSize);
+        getPost(loginUser.getAccount(), hostAccount, 0, listSize);
     }
 
     @Override
@@ -849,7 +849,7 @@ public class PostFragment extends Fragment implements PostAdapter.PostRecyclerVi
             if (!postItemArrayList.isEmpty()) {//게시물이 처음 로드되어서 하나도 없는 경우
                 listSize = postItemArrayList.size();
             }
-            getPost(account, hostAccount, 0, listSize);
+            getPost(loginUser.getAccount(), hostAccount, 0, listSize);
         }
 
         if(hidden) {//화면에서 가려질 때 동영상을 release.

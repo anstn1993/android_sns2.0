@@ -35,47 +35,45 @@ import java.util.ArrayList;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
-import static com.example.sns.LoginActivity.account;
-
 public class CommentActivity extends AppCompatActivity implements CommentAdapter.CommentRecyclerViewListener, ChildCommentAdapter.ChildCommentRecyclerViewListener, HttpRequest.OnHttpResponseListener {
 
-    String TAG = "CommentActivity";
+    private final String TAG = "CommentActivity";
     //뒤로가기 버튼
-    ImageButton im_back;
+    private ImageButton im_back;
 
     //댓글 다는 사람의 프로필 사진
-    CircleImageView cv_profile;
+    private CircleImageView cv_profile;
 
     //댓글 입력 창
-    EditText et_comment;
+    private EditText et_comment;
 
     //댓글 게시 버튼, 최상단의 댓글 버튼(누르면 리사이클러뷰 최상단으로)
-    TextView tv_upload, tv_comment;
+    private TextView tv_upload, tv_comment;
 
     //최상단으로 버튼
-    Button bt_tothetop;
+    private Button bt_tothetop;
 
     //새로고침 레이아웃
-    SwipeRefreshLayout swipeRefreshLayout;
+    private SwipeRefreshLayout swipeRefreshLayout;
 
     //댓글 리사이클러뷰
-    RecyclerView rv_comment;
+    private RecyclerView rv_comment;
     //리사이클러뷰 레이아웃 매니저
-    LinearLayoutManager linearLayoutManager;
+    private LinearLayoutManager linearLayoutManager;
     //리사이클러뷰 어댑터
-    CommentAdapter commentAdapter;
+    private CommentAdapter commentAdapter;
 
 
     //리사이클러뷰 데이터 arraylist
-    ArrayList<CommentItem> commentItemArrayList;
+    private ArrayList<CommentItem> commentItemArrayList;
 
     //댓글 리사이클러뷰의 헤더 데이터
-    int postNum;
-    String postProfile = null;
-    String postAccount = null;
-    String postArticle = null;
-    String postNickname = null;
-    String postTime = null;
+    private int postNum;
+    private String postProfile = null;
+    private String postAccount = null;
+    private String postArticle = null;
+    private String postNickname = null;
+    private String postTime = null;
 
     //댓글 수정 상태 캐치를 위한 boolean
     private boolean isEditting = false;
@@ -102,36 +100,39 @@ public class CommentActivity extends AppCompatActivity implements CommentAdapter
     private int edittedChildCommentPosition;
 
     //키보드 제어를 위한 객체
-    SoftKeyboard softKeyboard;
+    private SoftKeyboard softKeyboard;
 
-    ConstraintLayout constraintLayout;
+    private ConstraintLayout constraintLayout;
 
 
     //현재 로드된 댓글의 개수
-    public int currentCommentCount = 0;
+    private int currentCommentCount = 0;
 
     //전체 댓글의 수
-    public int totalCommentCount;
+    private int totalCommentCount;
 
     //댓글이 달린 후의 전체 댓글 수
-    public int currentTotalCommentCount;
+    private int currentTotalCommentCount;
 
     //댓글을 지운 후에 페이징이 가능하게 하기 위해서 댓글의 삭제 여부를 판단하는 변수
-    public boolean isRemoved = false;
+    private boolean isRemoved = false;
 
     //완전히 댓글 로드가 끝났을 때를 체크하기 위한 boolean
-    public boolean isCompletelyLoaded = false;
+    private boolean isCompletelyLoaded = false;
 
-    public boolean loadPossible = true;
+    private boolean loadPossible = true;
 
     //업로드한 댓글의 아이디를 저장할 arraylist
-    public ArrayList<Integer> uploadedCommentNum;
+    private ArrayList<Integer> uploadedCommentNum;
 
+    private LoginUser loginUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_comment);
+
+        loginUser = LoginUser.getInstance();
 
         //액티비티의 가장 부모 레이아웃 객체
         constraintLayout = findViewById(R.id.constraintlayout_comment);
@@ -251,7 +252,7 @@ public class CommentActivity extends AppCompatActivity implements CommentAdapter
                         int commentNum = commentItemArrayList.get(addedChildCommentPosition).getId();
                         String childComment = et_comment.getText().toString();
 
-                        addChildComment(account, postNum, commentNum, childComment);//대댓글 추가 메소드
+                        addChildComment(loginUser.getAccount(), postNum, commentNum, childComment);//대댓글 추가 메소드
 
 
                     }
@@ -415,7 +416,7 @@ public class CommentActivity extends AppCompatActivity implements CommentAdapter
 
 
         //사용자 프로필 사진 설정
-        Glide.with(getApplicationContext()).load("http://13.124.105.47/profileimage/" + LoginActivity.profile)
+        Glide.with(getApplicationContext()).load("http://13.124.105.47/profileimage/" + loginUser.getProfile())
                 .thumbnail(0.1f)
                 .apply(new RequestOptions().centerCrop().placeholder(R.drawable.profile).error(R.drawable.profile))
                 .into(cv_profile);
@@ -475,7 +476,7 @@ public class CommentActivity extends AppCompatActivity implements CommentAdapter
             requestBody.put("requestType", "getComment");
             requestBody.put("lastCommentId", 0);
             requestBody.put("postNum", postNum);
-            requestBody.put("account", account);
+            requestBody.put("account", loginUser.getAccount());
             HttpRequest httpRequest = new HttpRequest("GET", requestBody.toString(), "getcomment.php", this);
             httpRequest.execute();
         } catch (JSONException e) {
@@ -500,7 +501,7 @@ public class CommentActivity extends AppCompatActivity implements CommentAdapter
                     requestBody.put("requestType", "loadNextPage");
                     requestBody.put("lastCommentId", lastCommentId);
                     requestBody.put("postNum", postNum);
-                    requestBody.put("account", account);
+                    requestBody.put("account", loginUser.getAccount());
                     HttpRequest httpRequest = new HttpRequest("GET", requestBody.toString(), "getcomment.php", CommentActivity.this);
                     httpRequest.execute();
                 } catch (JSONException e) {
@@ -518,7 +519,7 @@ public class CommentActivity extends AppCompatActivity implements CommentAdapter
         try {
             JSONObject requestBody = new JSONObject();
             requestBody.put("postNum", postNum);
-            requestBody.put("account", account);
+            requestBody.put("account", loginUser.getAccount());
             requestBody.put("comment", comment);
             HttpRequest httpRequest = new HttpRequest("POST", requestBody.toString(), "addcomment.php", this);
             httpRequest.execute();
@@ -697,13 +698,13 @@ public class CommentActivity extends AppCompatActivity implements CommentAdapter
                     softKeyboard.closeSoftKeyboard();
 
                     //자신의 게시물에 댓글을 다는 경우는 알림이 가지 않는다.
-                    if (!postAccount.equals(LoginActivity.account)) {
+                    if (!postAccount.equals(loginUser.getAccount())) {
                         String receiver = postAccount;
                         String title = "SNS";
-                        String body = LoginActivity.nickname + "님이 회원님의 게시물에 댓글을 남겼습니다:" + "\"" + commentItemArrayList.get(commentItemArrayList.size() - 1).comment + "\"";
+                        String body = loginUser.getNickname() + "님이 회원님의 게시물에 댓글을 남겼습니다:" + "\"" + commentItemArrayList.get(commentItemArrayList.size() - 1).comment + "\"";
                         String click_action = "CommentActivity";
                         String category = "comment";
-                        String sender = LoginActivity.account;
+                        String sender = loginUser.getAccount();
                         pushNotification(receiver, title, body, click_action, category, sender, postNum, commentItemArrayList.get(commentItemArrayList.size() - 1).getId());
                     }
 
@@ -860,12 +861,12 @@ public class CommentActivity extends AppCompatActivity implements CommentAdapter
                         commentAdapter.notifyItemChanged(addedChildCommentPosition + 1);
 
                         //댓글이 달린 사용자 단말에 push알림을 보내준다.
-                        String receiver = LoginActivity.account;
+                        String receiver = loginUser.getAccount();
                         String title = "SNS";
-                        String body = LoginActivity.nickname + "님이 회원님의 댓글에 답글을 남겼습니다:" + "\"" + commentItemArrayList.get(addedChildCommentPosition).childCommentList.get(commentItemArrayList.get(addedChildCommentPosition).childCommentList.size() - 1).comment + "\"";
+                        String body = loginUser.getNickname() + "님이 회원님의 댓글에 답글을 남겼습니다:" + "\"" + commentItemArrayList.get(addedChildCommentPosition).childCommentList.get(commentItemArrayList.get(addedChildCommentPosition).childCommentList.size() - 1).comment + "\"";
                         String click_action = "CommentActivity";
                         String category = "childcomment";
-                        String sender = LoginActivity.account;
+                        String sender = loginUser.getAccount();
 
                         pushNotification(receiver, title, body, click_action, category, sender, postNum, commentItemArrayList.get(addedChildCommentPosition).getId());//푸시알림 전송
                     }
@@ -886,17 +887,17 @@ public class CommentActivity extends AppCompatActivity implements CommentAdapter
                         StringBuilder stringBuilder = new StringBuilder();
 
                         //다른 사람의 댓글에 대댓글을 다는 경우
-                        if (!commentItemArrayList.get(addedChildCommentPosition).account.equals(LoginActivity.account)) {
+                        if (!commentItemArrayList.get(addedChildCommentPosition).account.equals(loginUser.getAccount())) {
                             stringBuilder.append(commentItemArrayList.get(addedChildCommentPosition).account + "/");
                         }
 
                         //댓글이 달린 사용자 단말에 push알림을 보내준다.
-                        String receiver = LoginActivity.account;
+                        String receiver = loginUser.getAccount();
                         String title = "SNS";
-                        String body = LoginActivity.nickname + "님이 회원님의 댓글에 답글을 남겼습니다:" + "\"" + commentItemArrayList.get(addedChildCommentPosition).childCommentList.get(0).comment + "\"";
+                        String body = loginUser.getNickname() + "님이 회원님의 댓글에 답글을 남겼습니다:" + "\"" + commentItemArrayList.get(addedChildCommentPosition).childCommentList.get(0).comment + "\"";
                         String click_action = "CommentActivity";
                         String category = "childcomment";
-                        String sender = LoginActivity.account;
+                        String sender = loginUser.getAccount();
 
                         pushNotification(receiver, title, body, click_action, category, sender, postNum, commentItemArrayList.get(addedChildCommentPosition).getId());//푸시알림 전송
 
@@ -1227,7 +1228,7 @@ public class CommentActivity extends AppCompatActivity implements CommentAdapter
         int commentNum = commentItemArrayList.get(parentPosition - 1).id;
         Log.d("댓글 번호", String.valueOf(commentNum));
 
-        loadNextChildComment(account, lastChildCommentId, postNum, commentNum, parentPosition);
+        loadNextChildComment(loginUser.getAccount(), lastChildCommentId, postNum, commentNum, parentPosition);
     }
 
     //키보드 콜백 메소드 제거

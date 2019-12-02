@@ -34,41 +34,42 @@ import java.util.ArrayList;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 import static com.example.sns.JoinActivity.IP_ADDRESS;
-import static com.example.sns.LoginActivity.account;
 import static com.example.sns.PostActivity.likeListFragment;
 
 
 public class LikeListFragment extends Fragment implements LikeListAdapter.LikeListRecyclerViewListener, HttpRequest.OnHttpResponseListener {
     private String TAG = "LikeListFragment";
-    TextView tv_like;
-    ImageButton im_back;
-    Button bt_tothetop;
-    ConstraintLayout container;
-    SwipeRefreshLayout swipeRefreshLayout;
+    private TextView tv_like;
+    private ImageButton im_back;
+    private Button bt_tothetop;
+    private ConstraintLayout container;
+    private SwipeRefreshLayout swipeRefreshLayout;
 
     //리사이클러뷰
-    RecyclerView rv_likelist;
+    private RecyclerView rv_likelist;
     //리사이클러뷰 레이아웃 매니저
-    LinearLayoutManager linearLayoutManager;
+    private LinearLayoutManager linearLayoutManager;
     //리사이클러뷰 어댑터
-    LikeListAdapter likeListAdapter;
+    private LikeListAdapter likeListAdapter;
     //리사이클러뷰 아이템 arraylist
-    ArrayList<LikeListItem> likeListItemArrayList;
+    private ArrayList<LikeListItem> likeListItemArrayList;
 
     //게시물 번호
-    int postNum;
+    private int postNum;
 
     //부모 액티비티;
-    String parentActivity;
+    private String parentActivity;
 
-    FragmentManager fragmentManager;
+    private FragmentManager fragmentManager;
+
+    private LoginUser loginUser;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         Log.d("좋아요 리스트 onCreateView", "호출");
         View rootView = (ViewGroup) inflater.inflate(R.layout.fragment_likelist, container, false);
-
+        loginUser = LoginUser.getInstance();
         tv_like = rootView.findViewById(R.id.textview_like);
         im_back = rootView.findViewById(R.id.imagebutton_back);
         bt_tothetop = rootView.findViewById(R.id.button_tothetop);
@@ -85,7 +86,7 @@ public class LikeListFragment extends Fragment implements LikeListAdapter.LikeLi
                 likeListItemArrayList.clear();
 
                 //서버에서 처음 데이터 겟
-                getLikeList(postNum, 0, account);
+                getLikeList(postNum, 0, loginUser.getAccount());
                 //새로 고침 종료
                 swipeRefreshLayout.setRefreshing(false);
             }
@@ -279,10 +280,10 @@ public class LikeListFragment extends Fragment implements LikeListAdapter.LikeLi
                         //팔로우를 당한 사용자 단말에 push알림을 보내준다.
                         String receiver = likeListItemArrayList.get(position).account;
                         String title = "SNS";
-                        String body = LoginActivity.nickname + "님이 회원님을 팔로우하기 시작했습니다.";
+                        String body = loginUser.getNickname() + "님이 회원님을 팔로우하기 시작했습니다.";
                         String click_action = "AccountPageFragment";
                         String category = "follow";
-                        String sender = LoginActivity.account;
+                        String sender = loginUser.getAccount();
                         pushNotification(receiver, title, body, click_action, category, sender);
                     }
                     //팔로우를 취소한 경우
@@ -314,7 +315,7 @@ public class LikeListFragment extends Fragment implements LikeListAdapter.LikeLi
             bundle.putString("account", likeListItemArrayList.get(position).getAccount());
             bundle.putString("parentActivity", parentActivity);
             //좋아요 리스트의 계정이 로그인한 사용자의 계정과 같으면
-            if (account.equals(likeListItemArrayList.get(position).getAccount())) {
+            if (loginUser.getAccount().equals(likeListItemArrayList.get(position).getAccount())) {
                 //나의 게시물을 true
                 bundle.putBoolean("isMyPost", true);
             }
@@ -339,7 +340,7 @@ public class LikeListFragment extends Fragment implements LikeListAdapter.LikeLi
             bundle.putString("account", likeListItemArrayList.get(position).getAccount());
             bundle.putString("parentActivity", parentActivity);
             //좋아요 리스트의 계정이 로그인한 사용자의 계정과 같으면
-            if (account.equals(likeListItemArrayList.get(position).getAccount())) {
+            if (loginUser.getAccount().equals(likeListItemArrayList.get(position).getAccount())) {
                 //나의 게시물을 true
                 bundle.putBoolean("isMyPost", true);
             }
@@ -364,7 +365,7 @@ public class LikeListFragment extends Fragment implements LikeListAdapter.LikeLi
             bundle.putString("account", likeListItemArrayList.get(position).getAccount());
             bundle.putString("parentActivity", parentActivity);
             //좋아요 리스트의 계정이 로그인한 사용자의 계정과 같으면
-            if (account.equals(likeListItemArrayList.get(position).getAccount())) {
+            if (loginUser.getAccount().equals(likeListItemArrayList.get(position).getAccount())) {
                 //나의 게시물을 true
                 bundle.putBoolean("isMyPost", true);
             }
@@ -389,7 +390,7 @@ public class LikeListFragment extends Fragment implements LikeListAdapter.LikeLi
             bundle.putString("account", likeListItemArrayList.get(position).getAccount());
             bundle.putString("parentActivity", parentActivity);
             //좋아요 리스트의 계정이 로그인한 사용자의 계정과 같으면
-            if (account.equals(likeListItemArrayList.get(position).getAccount())) {
+            if (loginUser.getAccount().equals(likeListItemArrayList.get(position).getAccount())) {
                 //나의 게시물을 true
                 bundle.putBoolean("isMyPost", true);
             }
@@ -418,7 +419,7 @@ public class LikeListFragment extends Fragment implements LikeListAdapter.LikeLi
         if (likeListItemArrayList.get(position).isFollowing == false) {
 
             //팔로잉 상태로 전환
-            processFollow(true, followedAccount, followedNickname, LoginActivity.account, position);
+            processFollow(true, followedAccount, followedNickname, loginUser.getAccount(), position);
         }
         //팔로우를 했던 상태에서 팔로우를 취소하려는 경우
         else {
@@ -468,7 +469,7 @@ public class LikeListFragment extends Fragment implements LikeListAdapter.LikeLi
                 public void onClick(View v) {
                     dialog.dismiss();
                     //언팔로우 상태로 전환
-                    processFollow(false, followedAccount, followedNickname, LoginActivity.account, position);
+                    processFollow(false, followedAccount, followedNickname, loginUser.getAccount(), position);
                 }
             });
 
@@ -483,6 +484,6 @@ public class LikeListFragment extends Fragment implements LikeListAdapter.LikeLi
         Log.d("좋아요 리스트 onResume", "호출");
         likeListItemArrayList.clear();
         //서버에서 데이터 겟
-        getLikeList(postNum, 0, account);
+        getLikeList(postNum, 0, loginUser.getAccount());
     }
 }

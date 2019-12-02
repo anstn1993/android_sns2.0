@@ -21,7 +21,6 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-import static com.example.sns.LoginActivity.account;
 
 public class SearchedPeopleFragment extends Fragment implements SearchedPeopleAdapter.SearchedPeopleRecyclerViewListener, SearchActivity.SearchedPeopleListener, HttpRequest.OnHttpResponseListener {
     private String TAG = "SearchedPeopleFragment";
@@ -147,9 +146,10 @@ public class SearchedPeopleFragment extends Fragment implements SearchedPeopleAd
             @Override
             public void run() {
                 try {
+                    LoginUser loginUser = LoginUser.getInstance();
                     JSONObject requestBody = new JSONObject();
                     requestBody.put("requestType", "loadNextUser");//요청타입 페이징
-                    requestBody.put("account", account);
+                    requestBody.put("account", loginUser.getAccount());
                     requestBody.put("searchText", searchText);//검색어
                     requestBody.put("lastId", searchedPeopleItemArrayList.get(searchedPeopleItemArrayList.size()-2).id);//현재 로드된 사용자 리스트의 마지막 id
                     requestBody.put("listSize", 20);//가져올 데이터 개수
@@ -174,14 +174,15 @@ public class SearchedPeopleFragment extends Fragment implements SearchedPeopleAd
     public void isSearched(String searchText) {
         Log.d("사람 검색 isSearched", "호출");
         Log.d("검색어", searchText);
+        LoginUser loginUser = LoginUser.getInstance();
         if (searchText.length() == 0) {
             Log.d("검색어", "없음");
             this.searchText = searchText;
-            getSearchedPeople(account, searchText, false, 0, listSize);
+            getSearchedPeople(loginUser.getAccount(), searchText, false, 0, listSize);
         } else {
             Log.d("검색어", searchText);
             this.searchText = searchText;
-            getSearchedPeople(account, searchText, true, 0, listSize);
+            getSearchedPeople(loginUser.getAccount(), searchText, true, 0, listSize);
         }
 
     }
@@ -257,17 +258,18 @@ public class SearchedPeopleFragment extends Fragment implements SearchedPeopleAd
     public void onResume() {
         super.onResume();
         Log.d("사람검색 프래그먼트 onResume", "호출");
+        LoginUser loginUser = LoginUser.getInstance();
         //데이터 변경을 계속 반영해주기 위해서 프래그먼트가 화면에 나타나면 반드시 타게 되어있는 onResume단계에 데이터를 계속 새롭게 가져오는
         //비동기 클래스를 넣어준다.
         //검색어가 없는 경우에는 전체 데이터를 가져오고
         if (searchText == null) {
-            //여기에 팔로잉 전체 데이터를 가져와서 셋해주는 코딩
-            getSearchedPeople(account, searchText, false, 0, listSize);
+            //여기에 팔로잉 전체 데이터를 가져와서 셋
+            getSearchedPeople(loginUser.getAccount(), searchText, false, 0, listSize);
         }
         //검색어가 입력되어있던 상태였으면 검색어에 맞는 데이터를 가져온다.
         else {
-            //여기에 팔로잉 전체 데이터를 가져와서 셋해주는 코딩
-            getSearchedPeople(account, searchText, true, 0, listSize);
+            //여기에 팔로잉 전체 데이터를 가져와서 셋
+            getSearchedPeople(loginUser.getAccount(), searchText, true, 0, listSize);
         }
     }
 
@@ -278,7 +280,8 @@ public class SearchedPeopleFragment extends Fragment implements SearchedPeopleAd
         Bundle bundle = new Bundle();
         bundle.putString("account", searchedPeopleItemArrayList.get(position).getAccount());
         bundle.putString("parentActivity", "SearchActivity");
-        if (account.equals(searchedPeopleItemArrayList.get(position).getAccount())) {
+        LoginUser loginUser = LoginUser.getInstance();
+        if (loginUser.equals(searchedPeopleItemArrayList.get(position).getAccount())) {
             //나의 게시물을 true
             bundle.putBoolean("isMyPost", true);
         }

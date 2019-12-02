@@ -4,12 +4,16 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.Message;
+
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.os.Bundle;
+
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.ItemTouchHelper;
+
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
@@ -26,27 +30,29 @@ import java.util.Collections;
 
 public class ChatActivity extends AppCompatActivity implements ChatRoomAdapter.ChatRoomRecyclerViewListener, HttpRequest.OnHttpResponseListener {
 
-    private String TAG = "ChatActivity";
+    private final String TAG = "ChatActivity";
 
-    ImageButton btn_createChatRoom, btn_cancel;
+    private ImageButton btn_createChatRoom, btn_cancel;
 
-    RecyclerView rv_chat;
-    LinearLayoutManager linearLayoutManager;
-    ChatRoomAdapter chatRoomAdapter;
-    ArrayList<ChatRoomItem> chatRoomItemArrayList;
-    ItemTouchHelper mItemTouchHelper;
+    private RecyclerView rv_chat;
+    private LinearLayoutManager linearLayoutManager;
+    private ChatRoomAdapter chatRoomAdapter;
+    private ArrayList<ChatRoomItem> chatRoomItemArrayList;
 
     //채팅 메세지를 받을 핸들러
     public static Handler handler;
 
     private boolean isFromChatRoom = false;//채팅방 안에서 특정 사용자와 1:1채팅을 하기 위해서 chatActivity로 접근하는 경우 true
 
+    private LoginUser loginUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
         Log.d(TAG, "onCreate 호출");
+
+        loginUser = LoginUser.getInstance();
 
         btn_createChatRoom = findViewById(R.id.imagebutton_createchatroom);
         btn_cancel = findViewById(R.id.btn_cancel);
@@ -109,7 +115,7 @@ public class ChatActivity extends AppCompatActivity implements ChatRoomAdapter.C
                         //새로운 채팅방의 메세지인 경우
                         else {
                             //새로운 채팅방 생성
-                            createNewChatRoom(LoginActivity.account, roomNum, message, time);
+                            createNewChatRoom(loginUser.getAccount(), roomNum, message, time);
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -149,7 +155,7 @@ public class ChatActivity extends AppCompatActivity implements ChatRoomAdapter.C
                         //새로운 채팅방의 메세지인 경우
                         else {
                             //새로운 채팅방 생성
-                            createNewChatRoom(LoginActivity.account, roomNum, message, time);
+                            createNewChatRoom(loginUser.getAccount(), roomNum, message, time);
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -214,7 +220,7 @@ public class ChatActivity extends AppCompatActivity implements ChatRoomAdapter.C
                     }
                 }
                 //메세지가 동영상인 경우
-                else if(msg.what == 8888) {
+                else if (msg.what == 8888) {
                     String messageData = msg.obj.toString();
                     try {
                         JSONObject jsonObject = new JSONObject(messageData);
@@ -247,7 +253,7 @@ public class ChatActivity extends AppCompatActivity implements ChatRoomAdapter.C
                         //새로운 채팅방의 메세지인 경우
                         else {
                             //새로운 채팅방 생성
-                            createNewChatRoom(LoginActivity.account, roomNum, message, time);
+                            createNewChatRoom(loginUser.getAccount(), roomNum, message, time);
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -394,9 +400,9 @@ public class ChatActivity extends AppCompatActivity implements ChatRoomAdapter.C
     //param: 채팅방 리사이클러뷰의 채팅방 목록 index
     private void exitChatRoom(int position) {
         int roomNum = chatRoomItemArrayList.get(position).roomNum;//나가는 채팅방 번호
-        String account = LoginActivity.account;//사용자 계정
-        String nickname = LoginActivity.nickname;//사용자 닉네임
-        String profile = LoginActivity.profile;//사용자 프로필
+        String account = loginUser.getAccount();//사용자 계정
+        String nickname = loginUser.getNickname();//사용자 닉네임
+        String profile = loginUser.getProfile();//사용자 프로필
 
         //소켓에 전달할 데이터 json
         JSONObject requestBody = new JSONObject();
@@ -508,8 +514,8 @@ public class ChatActivity extends AppCompatActivity implements ChatRoomAdapter.C
 
 
                         }
-                        String participantString = LoginActivity.account + "/" + selectedUserAccount;
-                        addChatRoom(participantString, LoginActivity.account);
+                        String participantString = loginUser.getAccount() + "/" + selectedUserAccount;
+                        addChatRoom(participantString, loginUser.getAccount());
                     }
 
                 } else if (requestType.equals("createNewChatRoom")) {//다른 사람이 만든 채팅방에서 최초의 메세지가 날아올때 채팅방이 생기도록 하는 통신
@@ -544,9 +550,9 @@ public class ChatActivity extends AppCompatActivity implements ChatRoomAdapter.C
                     }
                     //마지막에는 자신의 정보를 추가로 넣어준다.
                     JSONObject userDataJSON = new JSONObject();
-                    userDataJSON.put("account", LoginActivity.account);
-                    userDataJSON.put("nickname", LoginActivity.nickname);
-                    userDataJSON.put("profile", LoginActivity.profile);
+                    userDataJSON.put("account", loginUser.getAccount());
+                    userDataJSON.put("nickname", loginUser.getNickname());
+                    userDataJSON.put("profile", loginUser.getProfile());
                     participantList.put(userDataJSON);
                     //사용자 정보들을 담는 json배열을 채팅방의 전체 데이터를 담는 json객체에 넣어준다.
                     createdRoomData.put("participantList", participantList);
@@ -607,7 +613,7 @@ public class ChatActivity extends AppCompatActivity implements ChatRoomAdapter.C
                 Log.d("선택한 상대방 계정", selectedUserAccount);
                 //채팅방이 하나도 없던 상태에서 만드는 경우
                 if (chatRoomItemArrayList.size() == 0) {
-                    addChatRoom(participantString, LoginActivity.account);
+                    addChatRoom(participantString, loginUser.getAccount());
                 }
                 //채팅방이 존재하는 상태에서 만드는 경우
                 else {
@@ -640,13 +646,13 @@ public class ChatActivity extends AppCompatActivity implements ChatRoomAdapter.C
                         }
                     }
                     //존재하는 채팅방이 1:N채팅방인 경우
-                    addChatRoom(participantString, LoginActivity.account);
+                    addChatRoom(participantString, loginUser.getAccount());
                 }
             }
             //대화상대를 두명 이상 선택했을 때는 같은 조합의 구성원으로 된 방의 존재 유무과 무관하게 새롭게 방을 생성한다.
             else {
                 Log.d("대화 상대", "복수");
-                addChatRoom(participantString, LoginActivity.account);
+                addChatRoom(participantString, loginUser.getAccount());
             }
         }
     }//end of onActicityResult
@@ -748,7 +754,7 @@ public class ChatActivity extends AppCompatActivity implements ChatRoomAdapter.C
         if (getIntent() != null) {
             isFromChatRoom = getIntent().getBooleanExtra("isFromChatRoom", false);
         }
-        getChatRoom(LoginActivity.account);//채팅방을 가져온다.
+        getChatRoom(loginUser.getAccount());//채팅방을 가져온다.
     }
 
     private class NotifyRoomAddedToChatServer extends Thread {

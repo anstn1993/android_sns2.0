@@ -140,7 +140,7 @@ public class FirebaseMessagingService extends com.google.firebase.messaging.Fire
                         @Override
                         public void run() {
                             //알림 액티비티의 생명주기 중 onResume을 호출해서 알림리스트를 서버에서 새롭게 가져오도록 한다.
-                            notificationActivity.getNotificationData("getNotification", LoginActivity.account, 0, notificationActivity.listSize);//알림 목록 데이터 가져오기;
+                            notificationActivity.getNotificationData("getNotification", LoginUser.getInstance().getAccount(), 0, notificationActivity.listSize);//알림 목록 데이터 가져오기;
                         }
                     });
 

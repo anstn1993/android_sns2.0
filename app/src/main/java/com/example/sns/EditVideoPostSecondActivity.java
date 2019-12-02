@@ -43,19 +43,17 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-import static com.example.sns.LoginActivity.account;
-
 public class EditVideoPostSecondActivity extends AppCompatActivity {
 
     private final String TAG = EditVideoPostSecondActivity.class.getSimpleName();
-    Button btn_back, btn_edit;
-    EditText et_article;
+    private Button btn_back, btn_edit;
+    private EditText et_article;
     //해시태그 라이브러리 클래스
-    HashTagHelper hashTagHelper;
-    TextView tv_location;
-    int postNum;//게시물 번호
+    private HashTagHelper hashTagHelper;
+    private TextView tv_location;
+    private int postNum;//게시물 번호
     //게시글 담는 변수
-    String article = null;
+    private String article = null;
 
     //위치 추가로 가져온 장소의 주소
     private String address = null;
@@ -71,15 +69,15 @@ public class EditVideoPostSecondActivity extends AppCompatActivity {
     private String videoUri;//영상의 uri
     private int videoWidth;//영상의 가로 사이즈
     private int videoHeight;//영상의 세로 사이즈
-    File compressedVideoFile;//압축된 동영상 파일 객체
+    private File compressedVideoFile;//압축된 동영상 파일 객체
 
-
+    private LoginUser loginUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_video_post_second);
-
+        loginUser = LoginUser.getInstance();
         btn_edit = findViewById(R.id.btn_edit);
         btn_back = findViewById(R.id.btn_back);
 
@@ -255,12 +253,11 @@ public class EditVideoPostSecondActivity extends AppCompatActivity {
                 .baseUrl("http://13.124.105.47/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
-        Log.d("아이디", account);
 
 
         //서버로 보내줄 데이터 param 설정
         RequestBody postNumPart = RequestBody.create(MultipartBody.FORM, String.valueOf(postNum));
-        RequestBody accountPart = RequestBody.create(MultipartBody.FORM, account);
+        RequestBody accountPart = RequestBody.create(MultipartBody.FORM, loginUser.getAccount());
         //초기화를 바로 해주지 않는 이유는 이 데이터들은 쓰일 수도 있고 안 쓰일 수도 있기 때문이다.
         RequestBody articlePart = null;
         RequestBody addressPart = null;
@@ -279,7 +276,7 @@ public class EditVideoPostSecondActivity extends AppCompatActivity {
         if(!isFromServer) {//로컬에 있는 동영상을 서버로 올릴 때만 동영상 압축을 해서 압축된 파일을 만든다.
             //동영상 파일의 이름
             String timeStamp = new SimpleDateFormat("HHmmss").format(new Date());
-            String videoFileName = account + timeStamp + ".mp4";
+            String videoFileName = loginUser.getAccount() + timeStamp + ".mp4";
 
             //동영상을 압축해주는 객체 선언(압축 사이즈 1280X720 or 720X1280 or 720X720)
             CompressMedia compressMedia = new CompressMedia(

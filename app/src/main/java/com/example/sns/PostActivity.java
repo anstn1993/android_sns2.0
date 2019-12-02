@@ -31,28 +31,25 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-import static com.example.sns.LoginActivity.account;
-import static com.example.sns.LoginActivity.nickname;
-
 
 public class PostActivity extends AppCompatActivity implements PostAdapter.PostRecyclerViewListener, HttpRequest.OnHttpResponseListener {
-    String TAG = "PostActivity";
+    private final String TAG = "PostActivity";
 
-    ImageButton btn_chat, btn_streaming;
-    TextView tv_title, tv_article, tv_messageCount;
+    private ImageButton btn_chat, btn_streaming;
+    private TextView tv_title, tv_article, tv_messageCount;
 
-    Button btn_tothetop;
+    private Button btn_tothetop;
 
     //새로고침 레이아웃
-    SwipeRefreshLayout swipeRefreshLayout;
+    private SwipeRefreshLayout swipeRefreshLayout;
 
-    RecyclerView rv_post;
-    LinearLayoutManager layoutManager;
-    PostAdapter postAdapter;
-    public ArrayList<PostItem> postItemArrayList;
+    private RecyclerView rv_post;
+    private LinearLayoutManager layoutManager;
+    private PostAdapter postAdapter;
+    private ArrayList<PostItem> postItemArrayList;
 
     //자신에게 온 총 메세지 수
-    int unCheckedMessageCount = 0;
+    private int unCheckedMessageCount = 0;
 
 
     //게시물을 업로드 한 경우를 캐치하기 위한 static boolean(메인 액티비티에서 사용)
@@ -80,13 +77,15 @@ public class PostActivity extends AppCompatActivity implements PostAdapter.PostR
     //동영상 게시물의 비디오 활성화 여부
     private boolean isMuted = true;
 
+    private LoginUser loginUser;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_post);
         Log.d("게시물 액티비티 onCreate", "호출");
-
+        loginUser = LoginUser.getInstance();
         //프래그먼트 객체 선언
         likeListFragment = new LikeListFragment();
         accountPageFragment = new AccountPageFragment();
@@ -351,7 +350,7 @@ public class PostActivity extends AppCompatActivity implements PostAdapter.PostR
         //전체 채팅 메세지 수를 가져오는 스레드 실행
         JSONObject messageCountRequestBody = new JSONObject();
         try {
-            messageCountRequestBody.put("account", LoginActivity.account);
+            messageCountRequestBody.put("account", loginUser.getAccount());
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -373,7 +372,7 @@ public class PostActivity extends AppCompatActivity implements PostAdapter.PostR
             } else {//이미 게시물 데이터가 있는 상태에서 다시 onResume을 타는 경우
                 postRequestBody.put("postCount", postItemArrayList.size());//로드할 게시물 수
             }
-            postRequestBody.put("account", LoginActivity.account);
+            postRequestBody.put("account", loginUser.getAccount());
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -397,7 +396,7 @@ public class PostActivity extends AppCompatActivity implements PostAdapter.PostR
                     requestBody.put("requestType", "loadNextPage");
                     requestBody.put("lastPostNum", postItemArrayList.get(postItemArrayList.size() - 2).postNum);//가장 마지막 게시물 id
                     requestBody.put("postCount", 10);//로드할 게시물 수
-                    requestBody.put("account", LoginActivity.account);
+                    requestBody.put("account", loginUser.getAccount());
                     HttpRequest httpRequest = new HttpRequest("GET", requestBody.toString(), "getpost.php", PostActivity.this);
                     httpRequest.execute();
                 } catch (JSONException e) {
@@ -432,7 +431,7 @@ public class PostActivity extends AppCompatActivity implements PostAdapter.PostR
             } else {
                 requestBody.put("likeState", false);
             }
-            requestBody.put("account", account);
+            requestBody.put("account", loginUser.getAccount());
             requestBody.put("postNum", postNum);
             requestBody.put("position", position);
             HttpRequest httpRequest = new HttpRequest("POST", requestBody.toString(), "processlike.php", this);
@@ -449,10 +448,10 @@ public class PostActivity extends AppCompatActivity implements PostAdapter.PostR
             JSONObject requestBody = new JSONObject();
             requestBody.put("account", postItemArrayList.get(position).account);//알림의 대상이 되는 사람
             requestBody.put("title", "SNS");//알림의 제목
-            requestBody.put("body", nickname + "님이 회원님의 게시물에 좋아요를 눌렀습니다.");//알림의 내용
+            requestBody.put("body", loginUser.getNickname() + "님이 회원님의 게시물에 좋아요를 눌렀습니다.");//알림의 내용
             requestBody.put("click_action", "PostDetailFragment");//푸시알림을 눌렀을 때 이동할 액티비티 혹은 프래그먼트
             requestBody.put("category", "like");//알림의 카테고리
-            requestBody.put("userAccount", account);//좋아요를 누른 사람
+            requestBody.put("userAccount", loginUser.getAccount());//좋아요를 누른 사람
             requestBody.put("postNum", postItemArrayList.get(position).postNum);
             HttpRequest httpRequest = new HttpRequest("POST", requestBody.toString(), "pushnotification.php", this);
             httpRequest.execute();
@@ -1072,7 +1071,7 @@ public class PostActivity extends AppCompatActivity implements PostAdapter.PostR
                 postAdapter.notifyItemChanged(position, "true");
 
                 //내가 내 게시물에 좋아요를 누른 경우에는 따로 알림을 보내지 않는다.
-                if (!account.equals(postItemArrayList.get(position).account)) {
+                if (!loginUser.getAccount().equals(postItemArrayList.get(position).account)) {
                     //좋아요를 당한 사용자 단말에 push알림을 보내준다.
                     pushNotification(position);
                 }

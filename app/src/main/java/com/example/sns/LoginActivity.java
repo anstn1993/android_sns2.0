@@ -24,16 +24,14 @@ import java.net.HttpURLConnection;
 import java.util.List;
 
 public class LoginActivity extends AppCompatActivity implements HttpRequest.OnHttpResponseListener {
+
     String TAG = "LoginActivity";
     private EditText et_account, et_password;
     private Button btn_login, btn_join;
 
     //서버와 http통신을 계속해서 하는데 세션id
     public static HttpURLConnection httpURLConnection;
-    //사용자 계정
-    public static String account;
-    public static String nickname;
-    public static String profile;
+
 
 
     @Override
@@ -76,10 +74,12 @@ public class LoginActivity extends AppCompatActivity implements HttpRequest.OnHt
             }
         });
 
+
         //회원가입 버튼 클릭 리스너
         btn_join.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 Intent intent = new Intent(getApplicationContext(), JoinActivity.class);
                 startActivity(intent);
             }
@@ -92,13 +92,11 @@ public class LoginActivity extends AppCompatActivity implements HttpRequest.OnHt
     //자동로그인 메소드
     private void autoLogin() {
 
-        //shared에 저장된 세션 쿠키값을 불러온다.
-        SharedPreferences sharedPreferences = getSharedPreferences("sessionCookie", MODE_PRIVATE);
+        //shared에 저장된 로그인된 사용자 정보 호출
+        SharedPreferences sharedPreferences = getSharedPreferences("loginUser", MODE_PRIVATE);
 
-        //자동 로그인을 위해서 쿠키 값이 있는지 없는지 확인해서 없으면 아직 로그인을 안 했다는 것이고, 있으면 로그인을 과거에 했다는 것이기 때문에 자동으로 메인 액티비티로 연결시켜준다.
-        account = sharedPreferences.getString("userAccount", null);
-        nickname = sharedPreferences.getString("userNickname", null);
-        profile = sharedPreferences.getString("userProfile", null);
+        //로그인 유저 정보가 존재하면 자동으로 메인 액티비티로 연결시켜준다.
+        String account = sharedPreferences.getString("account", null);
         if (account != null) {
             JSONObject requestBody = new JSONObject();//requestBody생성
             try {
@@ -131,15 +129,7 @@ public class LoginActivity extends AppCompatActivity implements HttpRequest.OnHt
                     String nickname = responseBody.getString("nickname");
                     String profile = responseBody.getString("profile");
 
-                    //사용자 정보를 sharedpreference에 저장시킨다.
-                    SharedPreferences sharedPreferences = getSharedPreferences("sessionCookie", MODE_PRIVATE);
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-
-                    editor.putString("userAccount", account);
-                    editor.putString("userNickname", nickname);
-                    editor.putString("userProfile", profile);
-
-                    editor.apply();
+                    LoginUser.initInstance(account, nickname, profile);//사용자 정보 초기화
 
                     //메인화면 접근
                     Intent intent = new Intent(getApplicationContext(), MainActivity.class);
@@ -167,17 +157,15 @@ public class LoginActivity extends AppCompatActivity implements HttpRequest.OnHt
                         String account = responseBody.getString("account");
                         String nickname = responseBody.getString("nickname");
                         String profile = responseBody.getString("profile");
-                        LoginActivity.account = account;
-                        LoginActivity.nickname = nickname;
-                        LoginActivity.profile = profile;
+                        LoginUser.initInstance(account, nickname, profile);//사용자 정보 초기화
 
                         //사용자 정보 로컬에 저장
-                        SharedPreferences sharedPreferences = getSharedPreferences("sessionCookie", MODE_PRIVATE);
+                        SharedPreferences sharedPreferences = getSharedPreferences("loginUser", MODE_PRIVATE);
                         SharedPreferences.Editor editor = sharedPreferences.edit();
 
-                        editor.putString("userAccount", account);
-                        editor.putString("userNickname", nickname);
-                        editor.putString("userProfile", profile);
+                        editor.putString("account", account);
+                        editor.putString("nickname", nickname);
+                        editor.putString("profile", profile);
 
                         editor.apply();
 

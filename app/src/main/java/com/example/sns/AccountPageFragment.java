@@ -47,60 +47,63 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 import static com.example.sns.JoinActivity.IP_ADDRESS;
-import static com.example.sns.LoginActivity.account;
 
 
 
 public class AccountPageFragment extends Fragment implements HttpRequest.OnHttpResponseListener {
-    private String TAG = "AccountPageFragment";
-    ImageButton btn_more, ib_grid, ib_vertical;
-    TextView tv_name, tv_nickname, tv_introduce, tv_postcount, tv_post, tv_followercount, tv_follower, tv_followingcount, tv_following;
-    LinearLayout follower, following, button_container;
+    private final String TAG = "AccountPageFragment";
+    private ImageButton btn_more, ib_grid, ib_vertical;
+    private TextView tv_name, tv_nickname, tv_introduce, tv_postcount, tv_post, tv_followercount, tv_follower, tv_followingcount, tv_following;
+    private LinearLayout follower, following, button_container;
 
 
     //사용자 계정
-    String hostAccount;
-    CircleImageView img_profile;
-    Button btn_follow, btn_message, btn_faceChat;
+    private String hostAccount;
+    private CircleImageView img_profile;
+    private Button btn_follow, btn_message, btn_faceChat;
 
 
     //그리드 리사이클러뷰를 담는 프레그먼스
-    Fragment gridPostFragment;
+    private Fragment gridPostFragment;
 
     //수직 리사이클러뷰를 담는 프레그먼트
-    Fragment postFragment;
+    private Fragment postFragment;
 
     //프레그먼트 매니저
-    FragmentManager fragmentManager;
+    private FragmentManager fragmentManager;
 
-    FragmentManager childFragmentManager;
+    private FragmentManager childFragmentManager;
 
     //새로고침
-    SwipeRefreshLayout swipeRefreshLayout;
+    private SwipeRefreshLayout swipeRefreshLayout;
 
     //현재 화면에 보이는 프래그먼트
-    String currentFragment = "grid";
+    private String currentFragment = "grid";
 
-    boolean isMyPost;
+    private boolean isMyPost;
 
-    boolean isFollowing;
+    private boolean isFollowing;
 
     //사용자 닉네임
-    String nickname;
+    private String nickname;
     //사용자 프로필 이미지
-    String image;
+    private String image;
 
     //부모 액티비티
-    String parentActivity;
+    private String parentActivity;
 
-    int followingCount;
-    int followerCount;
+    private int followingCount;
+    private int followerCount;
+
+    private LoginUser loginUser;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         Log.d(TAG, "onCreateView 호출");
         View rootView = inflater.inflate(R.layout.fragment_accountpage, container, false);
+
+        loginUser = LoginUser.getInstance();
 
         img_profile = rootView.findViewById(R.id.img_profile);
 
@@ -222,7 +225,7 @@ public class AccountPageFragment extends Fragment implements HttpRequest.OnHttpR
             @Override
             public void onRefresh() {
 
-                setData(hostAccount, account);
+                setData(hostAccount, loginUser.getAccount());
                 //두 프래그먼트를 제거하고
                 childFragmentManager.beginTransaction().detach(gridPostFragment).commit();
                 childFragmentManager.beginTransaction().detach(postFragment).commit();
@@ -299,10 +302,10 @@ public class AccountPageFragment extends Fragment implements HttpRequest.OnHttpR
                                     //세션을 지우기 위한 서브 스레드
 //                                    Logout logout = new Logout();
 //                                    logout.execute("http://" + IP_ADDRESS + "/logout.php");
-                                    logOut(LoginActivity.account);//로그아웃
+                                    logOut(loginUser.getAccount());//로그아웃
 
                                     //sharedpreference에 저장된 쿠키도 삭제해준다.
-                                    SharedPreferences sharedPreferences = getContext().getSharedPreferences("sessionCookie", Context.MODE_PRIVATE);
+                                    SharedPreferences sharedPreferences = getContext().getSharedPreferences("loginUser", Context.MODE_PRIVATE);
                                     SharedPreferences.Editor cookieEditor = sharedPreferences.edit();
                                     cookieEditor.clear();
                                     cookieEditor.apply();
@@ -333,7 +336,7 @@ public class AccountPageFragment extends Fragment implements HttpRequest.OnHttpR
                 //팔로우를 하지 않은 상태에서 팔로우를 하려는 경우
                 if (isFollowing == false) {
                     //팔로잉 상태로 전환
-                    processFollow(true, hostAccount, nickname, LoginActivity.account, 0);
+                    processFollow(true, hostAccount, nickname, loginUser.getAccount(), 0);
                 }
                 //팔로우를 했던 상태에서 팔로우를 취소하려는 경우
                 else {
@@ -379,7 +382,7 @@ public class AccountPageFragment extends Fragment implements HttpRequest.OnHttpR
                         public void onClick(View v) {
                             dialog.dismiss();
                             //언팔로우 상태로 전환
-                            processFollow(false, hostAccount, nickname, LoginActivity.account, 0);
+                            processFollow(false, hostAccount, nickname, loginUser.getAccount(), 0);
                         }
                     });
 
@@ -551,10 +554,10 @@ public class AccountPageFragment extends Fragment implements HttpRequest.OnHttpR
                                 try {
                                     JSONObject jsonObject = new JSONObject();
                                     jsonObject.put("type", "requestFaceChat");
-                                    jsonObject.put("roomName", LoginActivity.account + hostAccount);//영상통화의 방 이름을 보내준다. 이때 방은 두 peer의 계정을 합쳐서 구성한다.
-                                    jsonObject.put("account", LoginActivity.account);//발신자 계정
-                                    jsonObject.put("nickname", LoginActivity.nickname);//발신자 닉네임
-                                    jsonObject.put("profile", LoginActivity.profile);//발신자 프로필 사진
+                                    jsonObject.put("roomName", loginUser.getAccount() + hostAccount);//영상통화의 방 이름을 보내준다. 이때 방은 두 peer의 계정을 합쳐서 구성한다.
+                                    jsonObject.put("account", loginUser.getAccount());//발신자 계정
+                                    jsonObject.put("nickname", loginUser.getNickname());//발신자 닉네임
+                                    jsonObject.put("profile", loginUser.getProfile());//발신자 프로필 사진
                                     jsonObject.put("receiver", hostAccount);//수신자 계정
                                     //소켓 서버로 영상통화 토큰을 날려준다.
                                     Message message = ChatIntentService.handler.obtainMessage();
@@ -587,7 +590,7 @@ public class AccountPageFragment extends Fragment implements HttpRequest.OnHttpR
         Log.d(TAG, "onResume 호출");
         super.onResume();
         //데이터를 가져온다.
-        setData(hostAccount, account);
+        setData(hostAccount, loginUser.getAccount());
     }
 
     //마이페이지에서 자신의 데이터를 서버에서 가져와서 화면에 보이게 하는 메소드
@@ -744,10 +747,10 @@ public class AccountPageFragment extends Fragment implements HttpRequest.OnHttpR
                         //팔로우를 당한 사용자 단말에 push알림을 보내준다.
                         String receiver = hostAccount;
                         String title = "SNS";
-                        String body = LoginActivity.nickname + "님이 회원님을 팔로우하기 시작했습니다.";
+                        String body = loginUser.getNickname() + "님이 회원님을 팔로우하기 시작했습니다.";
                         String click_action = "AccountPageFragment";
                         String category = "follow";
-                        String sender = LoginActivity.account;
+                        String sender = loginUser.getAccount();
                         pushNotification(receiver, title, body, click_action, category, sender);
 
                         Toast.makeText(getContext(), nickname + "님을 팔로우 하셨습니다!", Toast.LENGTH_SHORT).show();

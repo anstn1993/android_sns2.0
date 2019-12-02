@@ -22,41 +22,43 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-import static com.example.sns.LoginActivity.account;
-
 public class AddChatParticipantActivity extends AppCompatActivity implements SelectedUserAdapter.SelectedUserRecyclerViewListener, UserAdapter.UserRecyclerViewListener, HttpRequest.OnHttpResponseListener {
     private String TAG = "AddChatParticipantActivity";
-    EditText et_search;
-    ImageButton ib_back;
-    TextView tv_apply;
+    private EditText et_search;
+    private ImageButton ib_back;
+    private TextView tv_apply;
 
     //상단에 선택된 사용자 리사이클러뷰
-    RecyclerView rv_selectedUser;
-    LinearLayoutManager linearLayoutManager_selectedUser;
-    SelectedUserAdapter selectedUserAdapter;
-    ArrayList<SelectedUserItem> selectedUserItemArrayList;
+    private RecyclerView rv_selectedUser;
+    private LinearLayoutManager linearLayoutManager_selectedUser;
+    private SelectedUserAdapter selectedUserAdapter;
+    private ArrayList<SelectedUserItem> selectedUserItemArrayList;
 
     //전체 사용자 리스트를 보여줄 리사이클러뷰
-    RecyclerView rv_user;
-    LinearLayoutManager linearLayoutManager_user;
-    UserAdapter userAdapter;
-    ArrayList<UserItem> userItemArrayList;
+    private RecyclerView rv_user;
+    private LinearLayoutManager linearLayoutManager_user;
+    private UserAdapter userAdapter;
+    private ArrayList<UserItem> userItemArrayList;
 
     //이미 참여하고 있는 사용자의 계정을 담을 어레이리스트
-    ArrayList<String> currentParticipantArrayList;
+    private ArrayList<String> currentParticipantArrayList;
 
     //현재 로드된 아이템의 마지막 index
-    int currentLastId;
+    private int currentLastId;
 
     //검색어
-    String searchText;
+    private String searchText;
 
-    boolean loadPossible = true;
+    private boolean loadPossible = true;
+
+    private LoginUser loginUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_chat_participant);
+
+        loginUser = LoginUser.getInstance();
 
         et_search = findViewById(R.id.edittext_search);
         ib_back = findViewById(R.id.imagebutton_back);
@@ -69,7 +71,7 @@ public class AddChatParticipantActivity extends AppCompatActivity implements Sel
                 String[] participantList = participantString.split("/");
                 //자기 자신을 제외한 참여자들의 계정을 어레이 리스트에 넣어준다.
                 for (int i = 0; i < participantList.length; i++) {
-                    if (!participantList[i].equals(LoginActivity.account)) {
+                    if (!participantList[i].equals(loginUser.getAccount())) {
                         currentParticipantArrayList.add(participantList[i]);
                     }
                 }
@@ -95,12 +97,12 @@ public class AddChatParticipantActivity extends AppCompatActivity implements Sel
                 searchText = et_search.getText().toString();
                 //검색어가 존재하지 않는 경우
                 if (searchText.length() == 0) {
-                    getUser(LoginActivity.account, searchText, 0, false);
+                    getUser(loginUser.getAccount(), searchText, 0, false);
                     searchText = null;
                 }
                 //검색어가 존재하는 경우
                 else {
-                    getUser(LoginActivity.account, searchText, 0, true);
+                    getUser(loginUser.getAccount(), searchText, 0, true);
                 }
             }
         });
@@ -202,7 +204,7 @@ public class AddChatParticipantActivity extends AppCompatActivity implements Sel
         });
 
         //여기에 팔로잉 전체 데이터를 가져와서 셋해주는 코딩
-        getUser(LoginActivity.account, searchText, 0, false);
+        getUser(loginUser.getAccount(), searchText, 0, false);
     }
 
     private void setRecyclerView() {
@@ -266,7 +268,7 @@ public class AddChatParticipantActivity extends AppCompatActivity implements Sel
                 try {
                     JSONObject requestBody = new JSONObject();
                     requestBody.put("requestType", "loadNextChatUser");
-                    requestBody.put("account", account);
+                    requestBody.put("account", loginUser.getAccount());
                     requestBody.put("searchText", searchText);
                     requestBody.put("lastId", userItemArrayList.get(userItemArrayList.size() - 2).id);
                     if (searchText == null) {
@@ -305,7 +307,7 @@ public class AddChatParticipantActivity extends AppCompatActivity implements Sel
                             String account = data.getString("account");
                             //넘어온 계정이 자기 자신인 경우에는 리스트에 추가되면 안 되기 때문에 반복문 구문의 최하단으로 이동시켜
                             //다음 반복문이 실행되게 한다.
-                            if (account.equals(LoginActivity.account)) {
+                            if (account.equals(loginUser.getAccount())) {
                                 continue;
                             }
                             String profile = data.getString("profile");
@@ -364,7 +366,7 @@ public class AddChatParticipantActivity extends AppCompatActivity implements Sel
                             //서버로부터 넘어온 데이터를 변수에 정의
                             int id = data.getInt("id");
                             String account = data.getString("account");
-                            if (account.equals(LoginActivity.account)) {
+                            if (account.equals(loginUser.getAccount())) {
                                 continue;
                             }
                             String profile = data.getString("profile");

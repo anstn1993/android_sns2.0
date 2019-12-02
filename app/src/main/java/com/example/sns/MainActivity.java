@@ -248,12 +248,14 @@ public class MainActivity extends ActivityGroup {
             String action = getIntent().getAction();
             Log.d(TAG,"action- "+action);
             if (action.equals(INTENT_FILTER_ACTION)) {
-
-                //shared에 저장된 세션 쿠키값을 불러온다.
-                SharedPreferences sharedPreferences = getSharedPreferences("sessionCookie", MODE_PRIVATE);
-                LoginActivity.account = sharedPreferences.getString("userAccount", null);
-                LoginActivity.nickname = sharedPreferences.getString("userNickname", null);
-                LoginActivity.profile = sharedPreferences.getString("userProfile", null);
+                //shared에 저장된 사용자 정보 호출
+                SharedPreferences sharedPreferences = getSharedPreferences("loginUser", MODE_PRIVATE);
+                String account = sharedPreferences.getString("account", null);
+                String nickname = sharedPreferences.getString("nickname", null);
+                String profile = sharedPreferences.getString("profile", null);
+                if(LoginUser.getInstance() == null) {
+                    LoginUser.initInstance(account, nickname, profile);//global 사용자 정보 초기화
+                }
                 getIntent().setAction(INTENT_FILTER_ACTION);
                 broadcastNotification(getIntent());
             }

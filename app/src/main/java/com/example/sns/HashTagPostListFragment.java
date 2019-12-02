@@ -1,18 +1,8 @@
 package com.example.sns;
 
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,18 +16,15 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 
-import static com.example.sns.JoinActivity.IP_ADDRESS;
-import static com.example.sns.LoginActivity.account;
-import static com.example.sns.LoginActivity.httpURLConnection;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 public class HashTagPostListFragment extends Fragment implements GridPostAdapter.GridPostRecyclerViewListener, HttpRequest.OnHttpResponseListener {
     private final String TAG = HashTagPostListFragment.class.getSimpleName();
@@ -61,12 +48,14 @@ public class HashTagPostListFragment extends Fragment implements GridPostAdapter
     private GridLayoutManager gridLayoutManager;
     private ArrayList<PostItem> postItemArrayList;
 
+    private LoginUser loginUser;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
         View rootView = inflater.inflate(R.layout.fragment_hashtagpostlist, container, false);
-
+        loginUser = LoginUser.getInstance();
         //상단의 해시태그 타이틀
         tv_hashtag = rootView.findViewById(R.id.textview_hashtag);
         //뒤로가기 버튼
@@ -84,7 +73,7 @@ public class HashTagPostListFragment extends Fragment implements GridPostAdapter
             public void onRefresh() {
 //                GetHashTagPost getHashTagPost = new GetHashTagPost();
 //                getHashTagPost.execute(String.valueOf(0), account, hashTag, String.valueOf(15));
-                getHashTagPost(account, hashTag, 0, 15);
+                getHashTagPost(loginUser.getAccount(), hashTag, 0, 15);
                 swipeRefreshLayout.setRefreshing(false);
                 listSize = 15;
             }
@@ -265,7 +254,7 @@ public class HashTagPostListFragment extends Fragment implements GridPostAdapter
                 try {
                     JSONObject requestBody = new JSONObject();
                     requestBody.put("requestType", "loadNextPage");
-                    requestBody.put("account", account);
+                    requestBody.put("account", loginUser.getAccount());
                     requestBody.put("hashTag", hashTag);
                     requestBody.put("lastId", currentCount);
                     requestBody.put("listSize", 15);
@@ -427,6 +416,6 @@ public class HashTagPostListFragment extends Fragment implements GridPostAdapter
     public void onResume() {
         super.onResume();
         Log.d("해시태그 리스트 onResume", "호출");
-        getHashTagPost(account, hashTag, 0, listSize);
+        getHashTagPost(loginUser.getAccount(), hashTag, 0, listSize);
     }
 }
