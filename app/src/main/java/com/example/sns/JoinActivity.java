@@ -508,9 +508,9 @@ public class JoinActivity extends AppCompatActivity {
         //메일을 전송하는 호스트(네이버)
         String host = "smtp.naver.com";
         //메일을 전송하는 수신자 아이디
-        final String sender = "rlarpdlcm@naver.com";
+        final String sender = "your email address";
         //메일을 전송하는 수신자의 비밀번호
-        final String password = "rla933466r";
+        final String password = "your email password";
 
 
         //smtp서버 설정
