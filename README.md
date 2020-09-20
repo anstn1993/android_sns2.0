@@ -1,5 +1,5 @@
 # android_sns2.0
-My second android sns application. This application is progressed version compared with android sns 1.0 application. 
+My second android sns application. This application is progressed version compared with [android sns 1.0 application](https://github.com/anstn1993/android_sns1.0). 
 
 [어플 시연 영상](https://www.youtube.com/watch?v=ZNHzLkDCLZI&t=5s)
 
