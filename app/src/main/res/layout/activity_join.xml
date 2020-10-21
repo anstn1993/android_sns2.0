@@ -13,7 +13,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".JoinActivity">
+    tools:context=".join.activity.JoinActivity">
 
     <TextView
         android:id="@+id/textView_title"

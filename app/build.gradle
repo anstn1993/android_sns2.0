@@ -63,7 +63,6 @@ dependencies {
     implementation project(':additionnal')
     implementation project(':activation')
     implementation project(':mail')
-    implementation project(':openCVLibrary')
 
 
     implementation 'com.google.android.gms:play-services-maps:16.1.0'
@@ -86,7 +85,6 @@ dependencies {
     implementation 'com.google.firebase:firebase-messaging:17.6.0'
     implementation 'com.google.firebase:firebase-core:16.0.8'
     //스와이프 메뉴 레이아웃
-//    implementation 'com.daimajia.swipelayout:library:1.2.0@aar'
     implementation 'com.chauthai.swipereveallayout:swipe-reveal-layout:1.4.1'
 
     //webRTC 라이브러리
