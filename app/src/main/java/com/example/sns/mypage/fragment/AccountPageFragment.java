@@ -413,62 +413,27 @@ public class AccountPageFragment extends Fragment implements HttpRequest.OnHttpR
             @Override
             public void onClick(View v) {
 
+                FollowingListFragment followingListFragment = new FollowingListFragment();
+
+                //서버에서 데이터를 조회해서 가져오기 위해 필요한 로그인한 사용자 계정을 프래그먼트로 넘겨준다.
+                Bundle bundle = new Bundle();
+                bundle.putString("account", hostAccount);
+                bundle.putString("parentActivity", parentActivity);
+                followingListFragment.setArguments(bundle);
+
                 if (parentActivity.equals("PostActivity")) {
-                    FollowingListFragment followingListFragment = new FollowingListFragment();
-
-                    Fragment fragment = PostActivity.fragmentManager.findFragmentById(R.id.frame_parent_container);
-
-
-                    //서버에서 데이터를 조회해서 가져오기 위해 필요한 로그인한 사용자 계정을 프래그먼트로 넘겨준다.
-                    Bundle bundle = new Bundle();
-                    bundle.putString("account", hostAccount);
-                    bundle.putString("parentActivity", parentActivity);
-                    followingListFragment.setArguments(bundle);
-
                     //프래그먼트를 프래임 레이아웃에 붙여준다.
                     PostActivity.fragmentManager.beginTransaction().add(R.id.frame_parent_container, followingListFragment).addToBackStack(null).commit();
                     PostActivity.fragmentManager.beginTransaction().show(followingListFragment).commit();
                 } else if (parentActivity.equals("SearchActivity")) {
-                    FollowingListFragment followingListFragment = new FollowingListFragment();
-
-                    Fragment fragment = SearchActivity.fragmentManager.findFragmentById(R.id.frame_parent_container);
-
-
-                    //서버에서 데이터를 조회해서 가져오기 위해 필요한 로그인한 사용자 계정을 프래그먼트로 넘겨준다.
-                    Bundle bundle = new Bundle();
-                    bundle.putString("account", hostAccount);
-                    bundle.putString("parentActivity", parentActivity);
-                    followingListFragment.setArguments(bundle);
-
                     //프래그먼트를 프래임 레이아웃에 붙여준다.
                     SearchActivity.fragmentManager.beginTransaction().add(R.id.frame_parent_container, followingListFragment).addToBackStack(null).commit();
                     SearchActivity.fragmentManager.beginTransaction().show(followingListFragment).commit();
                 } else if (parentActivity.equals("NotificationActivity")) {
-                    FollowingListFragment followingListFragment = new FollowingListFragment();
-
-                    Fragment fragment = NotificationActivity.fragmentManager.findFragmentById(R.id.frame_parent_container);
-
-                    //서버에서 데이터를 조회해서 가져오기 위해 필요한 로그인한 사용자 계정을 프래그먼트로 넘겨준다.
-                    Bundle bundle = new Bundle();
-                    bundle.putString("account", hostAccount);
-                    bundle.putString("parentActivity", parentActivity);
-                    followingListFragment.setArguments(bundle);
-
                     //프래그먼트를 프래임 레이아웃에 붙여준다.
                     NotificationActivity.fragmentManager.beginTransaction().add(R.id.frame_parent_container, followingListFragment).addToBackStack(null).commit();
                     NotificationActivity.fragmentManager.beginTransaction().show(followingListFragment).commit();
                 } else {
-                    FollowingListFragment followingListFragment = new FollowingListFragment();
-
-                    Fragment fragment = MypageActivity.fragmentManager.findFragmentById(R.id.frame_parent_container);
-
-
-                    //서버에서 데이터를 조회해서 가져오기 위해 필요한 로그인한 사용자 계정을 프래그먼트로 넘겨준다.
-                    Bundle bundle = new Bundle();
-                    bundle.putString("account", hostAccount);
-                    bundle.putString("parentActivity", parentActivity);
-                    followingListFragment.setArguments(bundle);
-
                     //프래그먼트를 프래임 레이아웃에 붙여준다.
                     MypageActivity.fragmentManager.beginTransaction().add(R.id.frame_parent_container, followingListFragment).addToBackStack(null).commit();
                     MypageActivity.fragmentManager.beginTransaction().show(followingListFragment).commit();
@@ -480,63 +445,26 @@ public class AccountPageFragment extends Fragment implements HttpRequest.OnHttpR
         follower.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                FollowerListFragment followerListFragment = new FollowerListFragment();
+
+                //서버에서 데이터를 조회해서 가져오기 위해 필요한 로그인한 사용자 계정을 프래그먼트로 넘겨준다.
+                Bundle bundle = new Bundle();
+                bundle.putString("account", hostAccount);
+                bundle.putString("parentActivity", parentActivity);
+                followerListFragment.setArguments(bundle);
                 if (parentActivity.equals("PostActivity")) {
-                    FollowerListFragment followerListFragment = new FollowerListFragment();
-
-                    Fragment fragment = PostActivity.fragmentManager.findFragmentById(R.id.frame_parent_container);
-
-
-                    //서버에서 데이터를 조회해서 가져오기 위해 필요한 로그인한 사용자 계정을 프래그먼트로 넘겨준다.
-                    Bundle bundle = new Bundle();
-                    bundle.putString("account", hostAccount);
-                    bundle.putString("parentActivity", parentActivity);
-                    followerListFragment.setArguments(bundle);
-
                     //프래그먼트를 프래임 레이아웃에 붙여준다.
                     PostActivity.fragmentManager.beginTransaction().add(R.id.frame_parent_container, followerListFragment).addToBackStack(null).commit();
                     PostActivity.fragmentManager.beginTransaction().show(followerListFragment).commit();
                 } else if (parentActivity.equals("SearchActivity")) {
-                    FollowerListFragment followerListFragment = new FollowerListFragment();
-
-                    Fragment fragment = SearchActivity.fragmentManager.findFragmentById(R.id.frame_parent_container);
-
-
-                    //서버에서 데이터를 조회해서 가져오기 위해 필요한 로그인한 사용자 계정을 프래그먼트로 넘겨준다.
-                    Bundle bundle = new Bundle();
-                    bundle.putString("account", hostAccount);
-                    bundle.putString("parentActivity", parentActivity);
-                    followerListFragment.setArguments(bundle);
-
                     //프래그먼트를 프래임 레이아웃에 붙여준다.
                     SearchActivity.fragmentManager.beginTransaction().add(R.id.frame_parent_container, followerListFragment).addToBackStack(null).commit();
                     SearchActivity.fragmentManager.beginTransaction().show(followerListFragment).commit();
                 } else if (parentActivity.equals("NotificationActivity")) {
-                    FollowerListFragment followerListFragment = new FollowerListFragment();
-
-                    Fragment fragment = NotificationActivity.fragmentManager.findFragmentById(R.id.frame_parent_container);
-
-
-                    //서버에서 데이터를 조회해서 가져오기 위해 필요한 로그인한 사용자 계정을 프래그먼트로 넘겨준다.
-                    Bundle bundle = new Bundle();
-                    bundle.putString("account", hostAccount);
-                    bundle.putString("parentActivity", parentActivity);
-                    followerListFragment.setArguments(bundle);
-
                     //프래그먼트를 프래임 레이아웃에 붙여준다.
                     NotificationActivity.fragmentManager.beginTransaction().add(R.id.frame_parent_container, followerListFragment).addToBackStack(null).commit();
                     NotificationActivity.fragmentManager.beginTransaction().show(followerListFragment).commit();
                 } else {
-                    FollowerListFragment followerListFragment = new FollowerListFragment();
-
-                    Fragment fragment = MypageActivity.fragmentManager.findFragmentById(R.id.frame_parent_container);
-
-
-                    //서버에서 데이터를 조회해서 가져오기 위해 필요한 로그인한 사용자 계정을 프래그먼트로 넘겨준다.
-                    Bundle bundle = new Bundle();
-                    bundle.putString("account", hostAccount);
-                    bundle.putString("parentActivity", parentActivity);
-                    followerListFragment.setArguments(bundle);
-
                     //프래그먼트를 프래임 레이아웃에 붙여준다.
                     MypageActivity.fragmentManager.beginTransaction().add(R.id.frame_parent_container, followerListFragment).addToBackStack(null).commit();
                     MypageActivity.fragmentManager.beginTransaction().show(followerListFragment).commit();
@@ -618,7 +546,7 @@ public class AccountPageFragment extends Fragment implements HttpRequest.OnHttpR
                 .build();
 
         RetrofitService retrofitService = retrofit.create(RetrofitService.class);
-        Call<ProfileResponse> call = retrofitService.getProfileResponse(userAccount, myAccount);
+        Call<ProfileResponse> call = retrofitService.getProfileData(userAccount, myAccount);
         call.enqueue(new Callback<ProfileResponse>() {
             @Override
             public void onResponse(Call<ProfileResponse> call, Response<ProfileResponse> response) {

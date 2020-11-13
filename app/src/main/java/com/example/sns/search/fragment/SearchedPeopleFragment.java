@@ -290,12 +290,8 @@ public class SearchedPeopleFragment extends Fragment implements SearchedPeopleAd
             //나의 게시물을 false
             bundle.putBoolean("isMyPost", false);
         }
-
-
         SearchActivity.accountPageFragment.setArguments(bundle);
-
         SearchActivity.fragmentManager.beginTransaction().setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_right, R.anim.enter_from_right, R.anim.exit_to_right).add(R.id.frame_parent_container, SearchActivity.accountPageFragment).show(SearchActivity.accountPageFragment).addToBackStack(null).commit();
-
         //키보드 종료
         SearchActivity.softKeyboard.closeSoftKeyboard();
     }

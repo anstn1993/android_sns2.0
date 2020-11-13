@@ -132,7 +132,6 @@ public class MainActivity extends ActivityGroup {
                                         btn_video = dialog.findViewById(R.id.button_video);
 
                                         Log.d(TAG, "onPermissionGranted");
-                                        Intent intent = new Intent(getApplicationContext(), UploadActivity.class);
                                         //사진 버튼 클릭 리스너
                                         btn_photo.setOnClickListener(new View.OnClickListener() {
                                             @Override
@@ -166,8 +165,6 @@ public class MainActivity extends ActivityGroup {
                                             @Override
                                             public void onClick(View v) {
                                                 dialog.dismiss();//다이얼로그 지우고
-//                                                intent.putExtra("content", "video");
-//                                                startActivity(intent);//업로드 액티비티로 인텐트
                                                 TedImagePicker.with(MainActivity.this)
                                                         .zoomIndicator(false)
                                                         .title("동영상 선택")

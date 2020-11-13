@@ -52,6 +52,16 @@ public class ChatActivity extends AppCompatActivity implements ChatRoomAdapter.C
 
     private LoginUser loginUser;
 
+    //패킷의 타입
+    private final int TEXT_MESSAGE = 1111;//텍스트 메시지
+    private final int IMAGE_MESSAGE = 2222;//이미지 메시지
+    private final int VIDEO_MESSAGE = 8888;//비디오 메시지
+    private final int CHECK_MESSAGE = 3333;//다른 사용자가 메세지를 확인했을 때 받게 되는 메시지
+    private final int ENTRANCE_MESSAGE = 4444;//다른 사용자가 입장했을 때 전달 받는 메시지
+    private final int EXIT_MESSAGE = 5555;//다른 사용자가 나갔을 때 전달 받는 메시지
+    private final int INVITE_MESSAGE = 6666;//다른 사용자를 초대했을 때 전달 받는 메시지
+    private final int FACECALL_REQUEST_RECEIVED = 7777;//상대방이 영상 통화 요청을 잘 받았음을 알려주는 메시지
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -87,48 +97,8 @@ public class ChatActivity extends AppCompatActivity implements ChatRoomAdapter.C
             @Override
             public void handleMessage(Message msg) {
                 super.handleMessage(msg);
-                //메세지가 문자인 경우
-                if (msg.what == 1111) {
-                    String messageData = msg.obj.toString();
-                    try {
-                        JSONObject jsonObject = new JSONObject(messageData);
-
-                        int roomNum = jsonObject.getInt("roomNum");
-                        //넘어온 메세지가 기존에 존재하는 채팅방의 메세지인 경우인지 아닌지를 파악하기 위한 불린 변수
-                        boolean isRoomExist = false;
-                        //채팅방 리사이클러뷰에서 메세지를 수신한 채팅방의 index를 알아내기 위한 변수
-                        int position = 0;
-                        //새롭게 채팅방을 만든 사람이 최초로 보낸 메세지
-                        String message = jsonObject.getString("message");
-                        //메세지 타입
-                        String type = jsonObject.getString("type");
-                        //메세지를 보낸 시간
-                        String time = jsonObject.getString("time");
-                        //반복문을 통해서 메세지가 기존에 존재하는 채팅방인지 파악
-                        for (int i = 0; i < chatRoomItemArrayList.size(); i++) {
-                            if (chatRoomItemArrayList.get(i).getRoomNum() == roomNum) {
-                                //기존에 존재하는 방이면 true로 변환 후 반복문 탈출
-                                isRoomExist = true;
-                                position = i;
-                                break;
-                            }
-                        }
-                        //메세지가 기존에 존재하는 채팅방의 메세지인 경우
-                        if (isRoomExist) {
-                            //기존 채팅방 아이템 리스트를 수정해준다.
-                            updateChatRoom(position, message, type, time);
-                        }
-                        //새로운 채팅방의 메세지인 경우
-                        else {
-                            //새로운 채팅방 생성
-                            createNewChatRoom(loginUser.getAccount(), roomNum, message, time);
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-                //메세지가 이미지인 경우
-                else if (msg.what == 2222) {
+                //메세지가 문자, 이미지, 동영상인 경우
+                if (msg.what == TEXT_MESSAGE || msg.what == IMAGE_MESSAGE || msg.what == VIDEO_MESSAGE) {
                     String messageData = msg.obj.toString();
                     try {
                         JSONObject jsonObject = new JSONObject(messageData);
@@ -156,7 +126,6 @@ public class ChatActivity extends AppCompatActivity implements ChatRoomAdapter.C
                         if (isRoomExist) {
                             //기존 채팅방 아이템 리스트를 수정해준다.
                             updateChatRoom(position, message, type, time);
-
                         }
                         //새로운 채팅방의 메세지인 경우
                         else {
@@ -168,7 +137,7 @@ public class ChatActivity extends AppCompatActivity implements ChatRoomAdapter.C
                     }
                 }
                 //특정 사용자가 채팅방을 나갔다는 메세지인 경우
-                else if (msg.what == 5555) {
+                else if (msg.what == EXIT_MESSAGE) {
                     String messageData = msg.obj.toString();
                     try {
                         JSONObject jsonObject = new JSONObject(messageData);
@@ -197,7 +166,7 @@ public class ChatActivity extends AppCompatActivity implements ChatRoomAdapter.C
                     }
                 }
                 //특정 사용자를 채팅방에 초대했다는 메세지인 경우
-                else if (msg.what == 6666) {
+                else if (msg.what == INVITE_MESSAGE) {
                     String messageData = msg.obj.toString();
                     try {
                         JSONObject jsonObject = new JSONObject(messageData);
@@ -218,54 +187,12 @@ public class ChatActivity extends AppCompatActivity implements ChatRoomAdapter.C
                                 break;
                             }
                         }
-
                         //기존 채팅방 아이템 리스트를 수정해준다.
                         updateChatRoom(position, message, type, time, addedParticipantList);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
                 }
-                //메세지가 동영상인 경우
-                else if (msg.what == 8888) {
-                    String messageData = msg.obj.toString();
-                    try {
-                        JSONObject jsonObject = new JSONObject(messageData);
-                        int roomNum = jsonObject.getInt("roomNum");
-                        //넘어온 메세지가 기존에 존재하는 채팅방의 메세지인 경우인지 아닌지를 파악하기 위한 불린 변수
-                        boolean isRoomExist = false;
-                        //채팅방 리사이클러뷰에서 메세지를 수신한 채팅방의 index를 알아내기 위한 변수
-                        int position = 0;
-                        //새롭게 채팅방을 만든 사람이 최초로 보낸 메세지
-                        String message = jsonObject.getString("message");
-                        //메세지 타입
-                        String type = jsonObject.getString("type");
-                        //메세지를 보낸 시간
-                        String time = jsonObject.getString("time");
-                        //반복문을 통해서 메세지가 기존에 존재하는 채팅방인지 파악
-                        for (int i = 0; i < chatRoomItemArrayList.size(); i++) {
-                            if (chatRoomItemArrayList.get(i).getRoomNum() == roomNum) {
-                                //기존에 존재하는 방이면 true로 변환 후 반복문 탈출
-                                isRoomExist = true;
-                                position = i;
-                                break;
-                            }
-                        }
-                        //메세지가 기존에 존재하는 채팅방의 메세지인 경우
-                        if (isRoomExist) {
-                            //기존 채팅방 아이템 리스트를 수정해준다.
-                            updateChatRoom(position, message, type, time);
-
-                        }
-                        //새로운 채팅방의 메세지인 경우
-                        else {
-                            //새로운 채팅방 생성
-                            createNewChatRoom(loginUser.getAccount(), roomNum, message, time);
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-
             }
         };
     }

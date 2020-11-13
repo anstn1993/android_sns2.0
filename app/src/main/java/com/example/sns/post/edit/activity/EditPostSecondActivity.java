@@ -262,7 +262,7 @@ public class EditPostSecondActivity extends AppCompatActivity {
 
         //레트로핏 인터페이스 설정
         RetrofitService retrofitService = retrofit.create(RetrofitService.class);
-        Call<UploadResponse> call = retrofitService.editResponse(postNumPart, accountPart, articlePart, imageMultipartBodyList.get(0), imageMultipartBodyList.get(1), imageMultipartBodyList.get(2), imageMultipartBodyList.get(3), imageMultipartBodyList.get(4), imageMultipartBodyList.get(5), addressPart, latitudePart, longitudePart);
+        Call<UploadResponse> call = retrofitService.editPost(postNumPart, accountPart, articlePart, imageMultipartBodyList.get(0), imageMultipartBodyList.get(1), imageMultipartBodyList.get(2), imageMultipartBodyList.get(3), imageMultipartBodyList.get(4), imageMultipartBodyList.get(5), addressPart, latitudePart, longitudePart);
 
         call.enqueue(new Callback<UploadResponse>() {
             @Override

@@ -326,7 +326,7 @@ public class UploadVideoSecondActivity extends AppCompatActivity {
 
 
         retrofitService = retrofit.create(RetrofitService.class);
-        call = retrofitService.uploadVideoResponse(postNumPart, accountPart, articlePart, body, addressPart, latitudePart, longitudePart);
+        call = retrofitService.uploadVideoPost(postNumPart, accountPart, articlePart, body, addressPart, latitudePart, longitudePart);
         call.enqueue(new Callback<UploadVideoResponse>() {
             @Override
             public void onResponse(Call<UploadVideoResponse> call, Response<UploadVideoResponse> response) {

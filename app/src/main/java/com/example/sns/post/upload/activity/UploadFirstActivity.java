@@ -340,9 +340,7 @@ public class UploadFirstActivity extends AppCompatActivity implements UploadImag
     //드래그가 시작되면 호출되는 메소드
     @Override
     public void onStartDrag(RecyclerView.ViewHolder viewHolder, int toPosition) {
-
         mItemTouchHelper.startDrag(viewHolder);
-
     }
 
     //뒤로가기 버튼을 눌렀을 때 콜백

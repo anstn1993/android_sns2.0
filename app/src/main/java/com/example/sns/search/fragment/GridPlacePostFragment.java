@@ -296,78 +296,29 @@ public class GridPlacePostFragment extends Fragment implements GridPostAdapter.G
     @Override
     public void onGridPictureClicked(int position) {
 
+        //그리드 이미지를 누르면 보여줄 프레그먼트 선언
+        PostDetailFragment postDetailFragment = new PostDetailFragment();
+        //서버에서 데이터를 조회해서 가져오기 위해 필요한 게시물 번호를 번들에 담아서 넘겨준다.
+        Bundle bundle = new Bundle();
+        bundle.putInt("postNum", postItemArrayList.get(position).getPostNum());
+        bundle.putString("parentActivity", parentActivity);
+        postDetailFragment.setArguments(bundle);
         if (parentActivity.equals("PostActivity")) {
-            //그리드 이미지를 누르면 보여줄 프레그먼트 선언
-            PostDetailFragment postDetailFragment = new PostDetailFragment();
-
-            Fragment fragment = PostActivity.fragmentManager.findFragmentById(R.id.frame_parent_container);
-
-
-            //서버에서 데이터를 조회해서 가져오기 위해 필요한 게시물 번호를 번들에 담아서 넘겨준다.
-            Bundle bundle = new Bundle();
-            bundle.putInt("postNum", postItemArrayList.get(position).getPostNum());
-            bundle.putString("parentActivity", parentActivity);
-            postDetailFragment.setArguments(bundle);
-
-
             //프래그먼트를 프래임 레이아웃에 붙여준다.
             PostActivity.fragmentManager.beginTransaction().setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_right, R.anim.enter_from_right, R.anim.exit_to_right).add(R.id.frame_parent_container, postDetailFragment).addToBackStack(null).commit();
             PostActivity.fragmentManager.beginTransaction().show(postDetailFragment).commit();
         } else if (parentActivity.equals("SearchActivity")) {
-            //그리드 이미지를 누르면 보여줄 프레그먼트 선언
-            PostDetailFragment postDetailFragment = new PostDetailFragment();
-
-            Fragment fragment = SearchActivity.fragmentManager.findFragmentById(R.id.frame_parent_container);
-
-
-            //서버에서 데이터를 조회해서 가져오기 위해 필요한 게시물 번호를 번들에 담아서 넘겨준다.
-            Bundle bundle = new Bundle();
-            bundle.putInt("postNum", postItemArrayList.get(position).getPostNum());
-            bundle.putString("parentActivity", parentActivity);
-            postDetailFragment.setArguments(bundle);
-//
-
             //프래그먼트를 프래임 레이아웃에 붙여준다.
             SearchActivity.fragmentManager.beginTransaction().setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_right, R.anim.enter_from_right, R.anim.exit_to_right).add(R.id.frame_parent_container, postDetailFragment).addToBackStack(null).commit();
             SearchActivity.fragmentManager.beginTransaction().show(postDetailFragment).commit();
         } else if (parentActivity.equals("MyPageActivity")) {
-            //그리드 이미지를 누르면 보여줄 프레그먼트 선언
-            PostDetailFragment postDetailFragment = new PostDetailFragment();
-
-            Fragment fragment = MypageActivity.fragmentManager.findFragmentById(R.id.frame_parent_container);
-
-
-            //서버에서 데이터를 조회해서 가져오기 위해 필요한 게시물 번호를 번들에 담아서 넘겨준다.
-            Bundle bundle = new Bundle();
-            bundle.putInt("postNum", postItemArrayList.get(position).getPostNum());
-            bundle.putString("parentActivity", parentActivity);
-            postDetailFragment.setArguments(bundle);
-//
-
             //프래그먼트를 프래임 레이아웃에 붙여준다.
             MypageActivity.fragmentManager.beginTransaction().setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_right, R.anim.enter_from_right, R.anim.exit_to_right).add(R.id.frame_parent_container, postDetailFragment).addToBackStack(null).commit();
             MypageActivity.fragmentManager.beginTransaction().show(postDetailFragment).commit();
         } else {
-            //그리드 이미지를 누르면 보여줄 프레그먼트 선언
-            PostDetailFragment postDetailFragment = new PostDetailFragment();
-
-            Fragment fragment = NotificationActivity.fragmentManager.findFragmentById(R.id.frame_parent_container);
-
-
-            //서버에서 데이터를 조회해서 가져오기 위해 필요한 게시물 번호를 번들에 담아서 넘겨준다.
-            Bundle bundle = new Bundle();
-            bundle.putInt("postNum", postItemArrayList.get(position).getPostNum());
-            bundle.putString("parentActivity", parentActivity);
-            postDetailFragment.setArguments(bundle);
-//
-
             //프래그먼트를 프래임 레이아웃에 붙여준다.
             NotificationActivity.fragmentManager.beginTransaction().setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_right, R.anim.enter_from_right, R.anim.exit_to_right).add(R.id.frame_parent_container, postDetailFragment).addToBackStack(null).commit();
             NotificationActivity.fragmentManager.beginTransaction().show(postDetailFragment).commit();
         }
-
-
     }
-
-
 }

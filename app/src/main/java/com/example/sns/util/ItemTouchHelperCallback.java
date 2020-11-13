@@ -9,7 +9,6 @@ public class ItemTouchHelperCallback extends ItemTouchHelper.Callback {
     public interface OnItemMoveListener{
         Boolean onItemMove(int fromPosition, int toPosition);
         void onItemMoved(int position);
-
     }
 
     private final OnItemMoveListener mItemMoveListener;
@@ -21,8 +20,6 @@ public class ItemTouchHelperCallback extends ItemTouchHelper.Callback {
     @Override
     public int getMovementFlags(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
         int dragFlags = ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT;
-
-
         //스와이프 동작은 수행하지 않을 것이기 때문에 0을 넣어준다.
         return makeMovementFlags(dragFlags, 0);
     }

@@ -11,7 +11,7 @@ import java.util.ArrayList;
 
 public class UploadImageViewPagerAdapter extends FragmentPagerAdapter {
 
-    ArrayList<String> imageArrayList;
+    private ArrayList<String> imageArrayList;
 
 
     //뷰 페이저 어댑터의 생성자

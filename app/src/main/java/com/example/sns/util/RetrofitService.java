@@ -18,7 +18,7 @@ public interface RetrofitService {
     //프로필 수정
     @Multipart
     @POST("editprofile.php")
-    Call<ProfileResponse> getEditProfileResponse(
+    Call<ProfileResponse> editProfile (
             @Part("account") RequestBody account,
             @Part("name") RequestBody name,
             @Part("nickname") RequestBody nickname,
@@ -30,7 +30,7 @@ public interface RetrofitService {
     //게시물 업로드
     @Multipart
     @POST("upload.php")
-    Call<UploadResponse> uploadResponse(
+    Call<UploadResponse> uploadPost (
         @Part("postNum") RequestBody postNum,
         @Part("account") RequestBody account,
         @Part("article") RequestBody article,
@@ -48,7 +48,7 @@ public interface RetrofitService {
     //게시물 수정
     @Multipart
     @POST("editpost.php")
-    Call<UploadResponse> editResponse(
+    Call<UploadResponse> editPost (
             @Part("postNum") RequestBody postNum,
             @Part("account") RequestBody account,
             @Part("article") RequestBody article,
@@ -66,7 +66,7 @@ public interface RetrofitService {
     //동영상 게시물 업로드
     @Multipart
     @POST("uploadvideo.php")
-    Call<UploadVideoResponse> uploadVideoResponse(
+    Call<UploadVideoResponse> uploadVideoPost (
             @Part("postNum") RequestBody postNum,
             @Part("account") RequestBody account,
             @Part("article") RequestBody article,
@@ -79,7 +79,7 @@ public interface RetrofitService {
     //동영상 게시물 수정
     @Multipart
     @POST("editvideopost.php")
-    Call<UploadVideoResponse> editVideoResponse(
+    Call<UploadVideoResponse> editVideoPost (
             @Part("postNum") RequestBody postNum,
             @Part("account") RequestBody account,
             @Part("article") RequestBody article,
@@ -92,7 +92,7 @@ public interface RetrofitService {
     //채팅 전송
     @Multipart
     @POST("addchat.php")
-    Call<AddChatResponse> addChatResponse(
+    Call<AddChatResponse> addChat (
             @Part("roomNum") RequestBody roomNum,
             @Part("sender") RequestBody sender,
             @Part("receiver") RequestBody receiver,
@@ -112,7 +112,7 @@ public interface RetrofitService {
 
     //마이페이지 데이터 가져오기
     @GET("mypage.php")
-    Call<ProfileResponse> getProfileResponse(
+    Call<ProfileResponse> getProfileData (
             @Query("userAccount") String userAccount,
             @Query("myAccount") String myAccount
     );

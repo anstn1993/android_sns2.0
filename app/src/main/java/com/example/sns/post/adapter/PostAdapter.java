@@ -698,15 +698,11 @@ public class PostAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
             }
 
-
             //동영상 게시물의 비디오 리소스 release
             if (TextUtils.equals(payload, "releaseVideo")) {
-                //썸네일 visible
-//                ((videoPostViewHolder) holder).iv_thumbnail.setVisibility(View.VISIBLE);
                 Log.d(PostActivity.class.getSimpleName(), position + "번 비디오 released");
                 releasevideo();
             }
-
 
             //동영상 오디오 컨트롤
             if (TextUtils.equals(payload, "muteControl")) {
@@ -751,11 +747,7 @@ public class PostAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 imageViewPager.notifyDataSetChanged();
             }
 
-        } else {
-
         }
-
-
     }
 
     //이미지 게시물 아이템 뷰 홀더 클래스
@@ -838,8 +830,6 @@ public class PostAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         //리사이클러뷰의 index
         int index;
         RecyclerView.ViewHolder holder;
-
-
         //생성자
         public ImageViewPager(FragmentManager fm, int index, RecyclerView.ViewHolder holder) {
             super(fm);
@@ -857,8 +847,6 @@ public class PostAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         //현재 뷰페이저에 있는 아이템을 가져온다.
         @Override
         public Fragment getItem(int position) {
-
-
             Log.d("getItem: ", "호출");
             Log.d("뷰페이저 사진 개수", String.valueOf(postItemArrayList.get(holder.getAdapterPosition()).getImageList().size()));
             Log.d("뷰페이저 사진" + String.valueOf(position) + "uri", postItemArrayList.get(holder.getAdapterPosition()).getImageList().get(position));
@@ -869,23 +857,11 @@ public class PostAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         @Override
         public int getCount() {
             if (holder.getAdapterPosition() != -1) {
-//                if(isRemoved){
-//                    Log.d("게시물 index: ", String.valueOf(0));
-//                    Log.d("getCount: ", "호출");
-//                    Log.d(postItemArrayList.get(0).getPostNum()+" 뷰페이저 아이템 수: ", String.valueOf(postItemArrayList.get(0).imageArraylist.size()));
-//                    Log.d("아이템의 경로: ", String.valueOf(postItemArrayList.get(0).imageArraylist));
-//                    isRemoved = false;
-//                    return postItemArrayList.get(0).imageArraylist.size();
-
-
-//                }else {
                 Log.d("게시물 index: ", String.valueOf(holder.getAdapterPosition()));
                 Log.d("getCount: ", "호출");
                 Log.d(postItemArrayList.get(holder.getAdapterPosition()).getPostNum() + " 뷰페이저 아이템 수: ", String.valueOf(postItemArrayList.get(holder.getAdapterPosition()).getImageList().size()));
                 Log.d("아이템의 경로: ", String.valueOf(postItemArrayList.get(holder.getAdapterPosition()).getImageList()));
                 return postItemArrayList.get(holder.getAdapterPosition()).getImageList().size();
-//                }
-
             }
             return 0;
 
@@ -938,7 +914,6 @@ public class PostAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private MediaSource buildMediaSource(Uri uri) {
         DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(context, Util.getUserAgent(context, "SNS"));
-
         return new ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(uri);
     }
 

@@ -1166,8 +1166,6 @@ public class PostActivity extends AppCompatActivity implements PostAdapter.PostR
             //프래그먼트가 onResume을 타게 하기 위해서 호출되자마자 종료되는 액티비티로 인텐트롤 해준다.
             Intent intent = new Intent(getApplicationContext(), EmptyActivity.class);
             startActivity(intent);
-
-
         }
         //스택에 프래그먼트가 존재하지 않는 경우
         else {

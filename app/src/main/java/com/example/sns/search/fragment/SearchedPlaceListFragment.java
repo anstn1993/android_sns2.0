@@ -149,59 +149,41 @@ public class SearchedPlaceListFragment extends Fragment implements OnMapReadyCal
                     if(PostActivity.fragmentManager.getBackStackEntryCount()==0){
                         PostActivity.fragmentManager.beginTransaction().remove(PostActivity.searchedPlaceListFragment).commit();
                         PostActivity.fragmentManager.popBackStack();
-                        Intent intent = new Intent(getContext(), EmptyActivity.class);
-                        startActivity(intent);
                     }else {
                         //스택의 최상단에 있는 프래그먼트를 화면에 붙인다.
                         PostActivity.fragmentManager.popBackStack();
-                        //프래그먼트가 onResume을 타게 하기 위해서 호출되자마자 종료되는 액티비티로 인텐트롤 해준다.
-                        Intent intent = new Intent(getActivity(), EmptyActivity.class);
-                        startActivity(intent);
                     }
                 }
                 else if(parentActivity.equals("SearchActivity")){
                     if(SearchActivity.fragmentManager.getBackStackEntryCount()==0){
                         SearchActivity.fragmentManager.beginTransaction().remove(SearchActivity.searchedPlaceListFragment).commit();
                         SearchActivity.fragmentManager.popBackStack();
-                        Intent intent = new Intent(getContext(), EmptyActivity.class);
-                        startActivity(intent);
                     }else {
                         //스택의 최상단에 있는 프래그먼트를 화면에 붙인다.
                         SearchActivity.fragmentManager.popBackStack();
-                        //프래그먼트가 onResume을 타게 하기 위해서 호출되자마자 종료되는 액티비티로 인텐트롤 해준다.
-                        Intent intent = new Intent(getActivity(), EmptyActivity.class);
-                        startActivity(intent);
                     }
                 }
                 else if(parentActivity.equals("MyPageActivity")){
                     if(MypageActivity.fragmentManager.getBackStackEntryCount()==0){
                         MypageActivity.fragmentManager.beginTransaction().remove(MypageActivity.searchedPlaceListFragment).commit();
                         MypageActivity.fragmentManager.popBackStack();
-                        Intent intent = new Intent(getContext(), EmptyActivity.class);
-                        startActivity(intent);
                     }else {
                         //스택의 최상단에 있는 프래그먼트를 화면에 붙인다.
                         MypageActivity.fragmentManager.popBackStack();
-                        //프래그먼트가 onResume을 타게 하기 위해서 호출되자마자 종료되는 액티비티로 인텐트롤 해준다.
-                        Intent intent = new Intent(getActivity(), EmptyActivity.class);
-                        startActivity(intent);
                     }
                 }
                 else {
                     if(NotificationActivity.fragmentManager.getBackStackEntryCount()==0){
                         NotificationActivity.fragmentManager.beginTransaction().remove(NotificationActivity.searchedPlaceListFragment).commit();
                         NotificationActivity.fragmentManager.popBackStack();
-                        Intent intent = new Intent(getContext(), EmptyActivity.class);
-                        startActivity(intent);
                     }else {
                         //스택의 최상단에 있는 프래그먼트를 화면에 붙인다.
                         NotificationActivity.fragmentManager.popBackStack();
-                        //프래그먼트가 onResume을 타게 하기 위해서 호출되자마자 종료되는 액티비티로 인텐트롤 해준다.
-                        Intent intent = new Intent(getActivity(), EmptyActivity.class);
-                        startActivity(intent);
                     }
                 }
-
+                //프래그먼트가 onResume을 타게 하기 위해서 호출되자마자 종료되는 액티비티로 인텐트롤 해준다.
+                Intent intent = new Intent(getActivity(), EmptyActivity.class);
+                startActivity(intent);
             }
         });
 

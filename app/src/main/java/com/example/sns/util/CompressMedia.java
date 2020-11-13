@@ -197,14 +197,20 @@ public class CompressMedia {
         mOutputFile = sb.toString();
     }
 
+    //디먹싱
     private MediaExtractor mVideoExtractor = null;
     private MediaExtractor mAudioExtractor = null;
+
     private InputSurface mInputSurface = null;
     private OutputSurface mOutputSurface = null;
+
+    //디코딩
     private MediaCodec mVideoDecoder = null;
     private MediaCodec mAudioDecoder = null;
+    //인코딩
     private MediaCodec mVideoEncoder = null;
     private MediaCodec mAudioEncoder = null;
+    //먹싱
     private MediaMuxer mMuxer = null;
 
     /**

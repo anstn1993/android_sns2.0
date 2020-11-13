@@ -174,7 +174,7 @@ public class CommentActivity extends AppCompatActivity implements CommentAdapter
                 uploadedCommentNum.clear();
                 //내가 업로드한 대댓글의 id를 담는 arraylist를 초기화
                 for (int i = 0; i < commentItemArrayList.size(); i++) {
-                    commentItemArrayList.get(i).uploadedChildCommentChildNum.clear();
+                    commentItemArrayList.get(i).getUploadedChildCommentChildNum().clear();
                 }
                 //댓글 데이터를 가져오는 스레드
                 getComment();
@@ -233,7 +233,7 @@ public class CommentActivity extends AppCompatActivity implements CommentAdapter
                         //댓글 수정이 완료됐기 때문에 다시 false
                         isEditting = false;
                         String comment = et_comment.getText().toString();
-                        int commentNum = commentItemArrayList.get(edittedPosition).id;
+                        int commentNum = commentItemArrayList.get(edittedPosition).getId();
                         editComment(comment, commentNum);//수정된 댓글 데이터를 서버로 보내는 스레드
                     }
                 }
@@ -278,7 +278,7 @@ public class CommentActivity extends AppCompatActivity implements CommentAdapter
                         isChildCommentEditting = false;
 
                         //서버로 넘겨줄 데이터 셋
-                        int childCommentNum = commentItemArrayList.get(edittedPosition).childCommentList.get(edittedChildCommentPosition).getChildCommentNum();
+                        int childCommentNum = commentItemArrayList.get(edittedPosition).getChildCommentList().get(edittedChildCommentPosition).getChildCommentNum();
                         String edittedChildComment = et_comment.getText().toString();
                         editChildComment(childCommentNum, edittedChildComment);//대댓글 수정 메소드
                     }
@@ -444,7 +444,7 @@ public class CommentActivity extends AppCompatActivity implements CommentAdapter
                         if (totalCommentCount >= 10) {//전체 댓글 개수가 10개 이상일 때만 페이징
                             Log.d("페이징 조건", "부합");
                             //param:현재 가장 마지막 댓글의 id
-                            int lastCommentId = commentItemArrayList.get(commentItemArrayList.size() - 1).id;
+                            int lastCommentId = commentItemArrayList.get(commentItemArrayList.size() - 1).getId();
                             loadNextPage(lastCommentId);
                         }
                     }
@@ -705,7 +705,7 @@ public class CommentActivity extends AppCompatActivity implements CommentAdapter
                     if (!postAccount.equals(loginUser.getAccount())) {
                         String receiver = postAccount;
                         String title = "SNS";
-                        String body = loginUser.getNickname() + "님이 회원님의 게시물에 댓글을 남겼습니다:" + "\"" + commentItemArrayList.get(commentItemArrayList.size() - 1).comment + "\"";
+                        String body = loginUser.getNickname() + "님이 회원님의 게시물에 댓글을 남겼습니다:" + "\"" + commentItemArrayList.get(commentItemArrayList.size() - 1).getComment() + "\"";
                         String click_action = "CommentActivity";
                         String category = "comment";
                         String sender = loginUser.getAccount();
@@ -733,7 +733,7 @@ public class CommentActivity extends AppCompatActivity implements CommentAdapter
                         commentItemArrayList.add(commentItem);
 
                         if (commentItem.getChildCommentCount() > 3) {//전체 대댓글의 수가 3개를 초과하면 더 보기 버튼을 추가하여 페이징이 가능하게 해준다.
-                            commentItemArrayList.get(i).childCommentList.add(null);
+                            commentItemArrayList.get(i).getChildCommentList().add(null);
                         }
                         //현재 로드된 댓글 수 +1
                         currentCommentCount += 1;
@@ -782,7 +782,7 @@ public class CommentActivity extends AppCompatActivity implements CommentAdapter
                                     commentItemArrayList.add(commentItem);
 
                                     if (commentItem.getChildCommentCount() > 3) {//전체 대댓글의 수가 3개를 초과하면 더 보기 버튼을 추가하여 페이징이 가능하게 해준다.
-                                        commentItemArrayList.get(i).childCommentList.add(null);
+                                        commentItemArrayList.get(i).getChildCommentList().add(null);
                                     }
                                     commentAdapter.notifyItemInserted(commentItemArrayList.size());
 
@@ -856,9 +856,9 @@ public class CommentActivity extends AppCompatActivity implements CommentAdapter
                     ChildCommentItem childCommentItem = new Gson().fromJson(commentData.toString(), ChildCommentItem.class);
 
                     //대댓글이 전부 다 로드된 경우
-                    if (commentItemArrayList.get(addedChildCommentPosition).getChildCommentCount() == commentItemArrayList.get(addedChildCommentPosition).childCommentList.size()) {
+                    if (commentItemArrayList.get(addedChildCommentPosition).getChildCommentCount() == commentItemArrayList.get(addedChildCommentPosition).getChildCommentList().size()) {
                         //대댓글 아이템을 제일 하단에 추가한 후
-                        commentItemArrayList.get(addedChildCommentPosition).childCommentList.add(childCommentItem);
+                        commentItemArrayList.get(addedChildCommentPosition).getChildCommentList().add(childCommentItem);
                         //대댓글 수를 +1해준다.
                         commentItemArrayList.get(addedChildCommentPosition).setChildCommentCount(commentItemArrayList.get(addedChildCommentPosition).getChildCommentCount() + 1);
                         //어댑터에 notify
@@ -867,7 +867,7 @@ public class CommentActivity extends AppCompatActivity implements CommentAdapter
                         //댓글이 달린 사용자 단말에 push알림을 보내준다.
                         String receiver = loginUser.getAccount();
                         String title = "SNS";
-                        String body = loginUser.getNickname() + "님이 회원님의 댓글에 답글을 남겼습니다:" + "\"" + commentItemArrayList.get(addedChildCommentPosition).childCommentList.get(commentItemArrayList.get(addedChildCommentPosition).childCommentList.size() - 1).getComment() + "\"";
+                        String body = loginUser.getNickname() + "님이 회원님의 댓글에 답글을 남겼습니다:" + "\"" + commentItemArrayList.get(addedChildCommentPosition).getChildCommentList().get(commentItemArrayList.get(addedChildCommentPosition).getChildCommentList().size() - 1).getComment() + "\"";
                         String click_action = "CommentActivity";
                         String category = "childcomment";
                         String sender = loginUser.getAccount();
@@ -877,12 +877,12 @@ public class CommentActivity extends AppCompatActivity implements CommentAdapter
                     //대댓글이 아직 다 로드되지 않은 경우
                     else {
                         //대댓글 아이템을 최상단에 추가한 후
-                        commentItemArrayList.get(addedChildCommentPosition).childCommentList.add(0, childCommentItem);
+                        commentItemArrayList.get(addedChildCommentPosition).getChildCommentList().add(0, childCommentItem);
                         //대댓글 수를 +1해준다.
                         commentItemArrayList.get(addedChildCommentPosition).setChildCommentCount(commentItemArrayList.get(addedChildCommentPosition).getChildCommentCount() + 1);
                         //추가한 대댓글의 id를 저장한다.
-                        commentItemArrayList.get(addedChildCommentPosition).uploadedChildCommentChildNum.add(0, childCommentItem.getChildCommentNum());
-                        Log.d("업로드한 대댓글의 개수", String.valueOf(commentItemArrayList.get(addedChildCommentPosition).uploadedChildCommentChildNum.size()));
+                        commentItemArrayList.get(addedChildCommentPosition).getUploadedChildCommentChildNum().add(0, childCommentItem.getChildCommentNum());
+                        Log.d("업로드한 대댓글의 개수", String.valueOf(commentItemArrayList.get(addedChildCommentPosition).getUploadedChildCommentChildNum().size()));
 
                         //어댑터에 notify
                         commentAdapter.notifyItemChanged(addedChildCommentPosition + 1);
@@ -891,14 +891,14 @@ public class CommentActivity extends AppCompatActivity implements CommentAdapter
                         StringBuilder stringBuilder = new StringBuilder();
 
                         //다른 사람의 댓글에 대댓글을 다는 경우
-                        if (!commentItemArrayList.get(addedChildCommentPosition).account.equals(loginUser.getAccount())) {
-                            stringBuilder.append(commentItemArrayList.get(addedChildCommentPosition).account + "/");
+                        if (!commentItemArrayList.get(addedChildCommentPosition).getAccount().equals(loginUser.getAccount())) {
+                            stringBuilder.append(commentItemArrayList.get(addedChildCommentPosition).getAccount() + "/");
                         }
 
                         //댓글이 달린 사용자 단말에 push알림을 보내준다.
                         String receiver = loginUser.getAccount();
                         String title = "SNS";
-                        String body = loginUser.getNickname() + "님이 회원님의 댓글에 답글을 남겼습니다:" + "\"" + commentItemArrayList.get(addedChildCommentPosition).childCommentList.get(0).getComment() + "\"";
+                        String body = loginUser.getNickname() + "님이 회원님의 댓글에 답글을 남겼습니다:" + "\"" + commentItemArrayList.get(addedChildCommentPosition).getChildCommentList().get(0).getComment() + "\"";
                         String click_action = "CommentActivity";
                         String category = "childcomment";
                         String sender = loginUser.getAccount();
@@ -913,7 +913,7 @@ public class CommentActivity extends AppCompatActivity implements CommentAdapter
                     //댓글 수정이 완료됐기 때문에 수정완료 상태를 true로 전환
                     isChildCommentEditted = true;
                     String childComment = responseBody.getString("childComment");
-                    commentItemArrayList.get(edittedPosition).childCommentList.get(edittedChildCommentPosition).setComment(childComment);
+                    commentItemArrayList.get(edittedPosition).getChildCommentList().get(edittedChildCommentPosition).setComment(childComment);
                     commentAdapter.notifyItemChanged(edittedPosition + 1);
 
                     softKeyboard.closeSoftKeyboard();
@@ -921,14 +921,14 @@ public class CommentActivity extends AppCompatActivity implements CommentAdapter
                     int commentPosition = responseBody.getInt("commentPosition");//삭제된 대댓글의 부모 댓글의 인덱스
                     int childCommentPosition = responseBody.getInt("childCommentPosition");//삭제된 대댓글의 인덱스
                     //이 페이지에서 내가 단 답글(대댓글)을 다시 지우는 경우 업로드한 댓댓글의 id arraylist도 함께 반영을 해준다.
-                    for (int i = 0; i < commentItemArrayList.get(commentPosition).uploadedChildCommentChildNum.size(); i++) {
-                        if (commentItemArrayList.get(commentPosition).uploadedChildCommentChildNum.get(i) == commentItemArrayList.get(commentPosition).childCommentList.get(childCommentPosition).getChildCommentNum()) {
-                            commentItemArrayList.get(commentPosition).uploadedChildCommentChildNum.remove(i);
+                    for (int i = 0; i < commentItemArrayList.get(commentPosition).getUploadedChildCommentChildNum().size(); i++) {
+                        if (commentItemArrayList.get(commentPosition).getUploadedChildCommentChildNum().get(i) == commentItemArrayList.get(commentPosition).getChildCommentList().get(childCommentPosition).getChildCommentNum()) {
+                            commentItemArrayList.get(commentPosition).getUploadedChildCommentChildNum().remove(i);
                         }
                     }
 
                     //답글 arraylist에서 답글을 지우고
-                    commentItemArrayList.get(commentPosition).childCommentList.remove(childCommentPosition);
+                    commentItemArrayList.get(commentPosition).getChildCommentList().remove(childCommentPosition);
                     //대댓글 수를 -1해준다.
                     commentItemArrayList.get(commentPosition).setChildCommentCount(commentItemArrayList.get(commentPosition).getChildCommentCount() - 1);
 
@@ -949,31 +949,31 @@ public class CommentActivity extends AppCompatActivity implements CommentAdapter
                         //대댓글 더 보기 버튼을 새로 불러온 댓글로 대체하기 위해서 분기한 것
                         if (isSubstituted) {
                             //대댓글 더 보기 버튼을 새로 불러온 첫번째 댓글로 교체
-                            commentItemArrayList.get(parentPosition - 1).childCommentList.set(commentItemArrayList.get(parentPosition - 1).childCommentList.size() - 1, childCommentItem);
+                            commentItemArrayList.get(parentPosition - 1).getChildCommentList().set(commentItemArrayList.get(parentPosition - 1).getChildCommentList().size() - 1, childCommentItem);
                             isSubstituted = false;
 
                             //현재 추가된 댓글들 중에 내가 단 댓글과 일치하는 id가 있는 경우 처음의 댓글은 지워준다.
-                            for (int j = 0; j < commentItemArrayList.get(parentPosition - 1).uploadedChildCommentChildNum.size(); j++) {
-                                Log.d("업로드된 대댓글 개수", String.valueOf(commentItemArrayList.get(parentPosition - 1).uploadedChildCommentChildNum.size()));
+                            for (int j = 0; j < commentItemArrayList.get(parentPosition - 1).getUploadedChildCommentChildNum().size(); j++) {
+                                Log.d("업로드된 대댓글 개수", String.valueOf(commentItemArrayList.get(parentPosition - 1).getUploadedChildCommentChildNum().size()));
 
-                                if (commentItemArrayList.get(parentPosition - 1).uploadedChildCommentChildNum.get(j) == childCommentItem.getChildCommentNum()) {
-                                    Log.d("삭제된 대댓글 id", String.valueOf(commentItemArrayList.get(parentPosition - 1).uploadedChildCommentChildNum.get(j)));
-                                    commentItemArrayList.get(parentPosition - 1).childCommentList.remove(commentItemArrayList.get(parentPosition - 1).uploadedChildCommentChildNum.indexOf(commentItemArrayList.get(parentPosition - 1).uploadedChildCommentChildNum.get(j)));
-                                    commentItemArrayList.get(parentPosition - 1).uploadedChildCommentChildNum.remove(commentItemArrayList.get(parentPosition - 1).uploadedChildCommentChildNum.indexOf(commentItemArrayList.get(parentPosition - 1).uploadedChildCommentChildNum.get(j)));
+                                if (commentItemArrayList.get(parentPosition - 1).getUploadedChildCommentChildNum().get(j) == childCommentItem.getChildCommentNum()) {
+                                    Log.d("삭제된 대댓글 id", String.valueOf(commentItemArrayList.get(parentPosition - 1).getUploadedChildCommentChildNum().get(j)));
+                                    commentItemArrayList.get(parentPosition - 1).getChildCommentList().remove(commentItemArrayList.get(parentPosition - 1).getUploadedChildCommentChildNum().indexOf(commentItemArrayList.get(parentPosition - 1).getUploadedChildCommentChildNum().get(j)));
+                                    commentItemArrayList.get(parentPosition - 1).getUploadedChildCommentChildNum().remove(commentItemArrayList.get(parentPosition - 1).getUploadedChildCommentChildNum().indexOf(commentItemArrayList.get(parentPosition - 1).getUploadedChildCommentChildNum().get(j)));
                                 }
                             }
                         } else {
                             //그 이후의 댓글들은 자연스럽게 추가
-                            commentItemArrayList.get(parentPosition - 1).childCommentList.add(childCommentItem);
+                            commentItemArrayList.get(parentPosition - 1).getChildCommentList().add(childCommentItem);
 
                             //현재 추가된 댓글들 중에 내가 단 댓글과 일치하는 id가 있는 경우 처음의 댓글은 지워준다.
-                            for (int j = 0; j < commentItemArrayList.get(parentPosition - 1).uploadedChildCommentChildNum.size(); j++) {
-                                Log.d("업로드된 대댓글 개수", String.valueOf(commentItemArrayList.get(parentPosition - 1).uploadedChildCommentChildNum.size()));
+                            for (int j = 0; j < commentItemArrayList.get(parentPosition - 1).getUploadedChildCommentChildNum().size(); j++) {
+                                Log.d("업로드된 대댓글 개수", String.valueOf(commentItemArrayList.get(parentPosition - 1).getUploadedChildCommentChildNum().size()));
 
-                                if (commentItemArrayList.get(parentPosition - 1).uploadedChildCommentChildNum.get(j) == childCommentItem.getChildCommentNum()) {
-                                    Log.d("삭제된 대댓글 id", String.valueOf(commentItemArrayList.get(parentPosition - 1).uploadedChildCommentChildNum.get(j)));
-                                    commentItemArrayList.get(parentPosition - 1).childCommentList.remove(commentItemArrayList.get(parentPosition - 1).uploadedChildCommentChildNum.indexOf(commentItemArrayList.get(parentPosition - 1).uploadedChildCommentChildNum.get(j)));
-                                    commentItemArrayList.get(parentPosition - 1).uploadedChildCommentChildNum.remove(commentItemArrayList.get(parentPosition - 1).uploadedChildCommentChildNum.indexOf(commentItemArrayList.get(parentPosition - 1).uploadedChildCommentChildNum.get(j)));
+                                if (commentItemArrayList.get(parentPosition - 1).getUploadedChildCommentChildNum().get(j) == childCommentItem.getChildCommentNum()) {
+                                    Log.d("삭제된 대댓글 id", String.valueOf(commentItemArrayList.get(parentPosition - 1).getUploadedChildCommentChildNum().get(j)));
+                                    commentItemArrayList.get(parentPosition - 1).getChildCommentList().remove(commentItemArrayList.get(parentPosition - 1).getUploadedChildCommentChildNum().indexOf(commentItemArrayList.get(parentPosition - 1).getUploadedChildCommentChildNum().get(j)));
+                                    commentItemArrayList.get(parentPosition - 1).getUploadedChildCommentChildNum().remove(commentItemArrayList.get(parentPosition - 1).getUploadedChildCommentChildNum().indexOf(commentItemArrayList.get(parentPosition - 1).getUploadedChildCommentChildNum().get(j)));
                                 }
                             }
                         }
@@ -982,16 +982,16 @@ public class CommentActivity extends AppCompatActivity implements CommentAdapter
                     }
 
                     //전체 대댓글 개수가 현재 대댓글 개수와 다를 때만 더 보기 버튼 넣어주기
-                    if (commentItemArrayList.get(parentPosition - 1).getChildCommentCount() != commentItemArrayList.get(parentPosition-1).childCommentList.size()) {
+                    if (commentItemArrayList.get(parentPosition - 1).getChildCommentCount() != commentItemArrayList.get(parentPosition-1).getChildCommentList().size()) {
 
                         Log.d("더 보기 버튼", "추가");
-                        commentItemArrayList.get(parentPosition - 1).childCommentList.add(null);
+                        commentItemArrayList.get(parentPosition - 1).getChildCommentList().add(null);
                     }
                     //전체 대댓글 개수가 현재 대댓글 개수와 같은 경우
                     else {
-                        if (commentItemArrayList.get(parentPosition - 1).uploadedChildCommentChildNum.size() != 0) {
+                        if (commentItemArrayList.get(parentPosition - 1).getUploadedChildCommentChildNum().size() != 0) {
                             Log.d("더 보기 버튼", "추가");
-                            commentItemArrayList.get(parentPosition - 1).childCommentList.add(null);
+                            commentItemArrayList.get(parentPosition - 1).getChildCommentList().add(null);
                         }
                     }
                     //댓글 어댑터에 데이터 변화 notify
@@ -1057,7 +1057,7 @@ public class CommentActivity extends AppCompatActivity implements CommentAdapter
         et_comment.setHint("댓글 수정...");
 
         //edittext입력 창에 기존 댓글을 넣어준다.
-        et_comment.setText(commentItemArrayList.get(position - 1).comment);
+        et_comment.setText(commentItemArrayList.get(position - 1).getComment());
 
         //댓글 입력창에 포커스를 준다
         et_comment.requestFocus();
@@ -1087,7 +1087,7 @@ public class CommentActivity extends AppCompatActivity implements CommentAdapter
             @Override
             public void onClick(View v) {
                 //삭제하려는 댓글의 번호
-                int commentNum = commentItemArrayList.get(position - 1).id;
+                int commentNum = commentItemArrayList.get(position - 1).getId();
 
                 deleteComment(commentNum, position - 1);
                 deleteDialog.dismiss();
@@ -1161,7 +1161,7 @@ public class CommentActivity extends AppCompatActivity implements CommentAdapter
         et_comment.setHint("답글 수정...");
 
         //edittext입력 창에 기존 답글 댓글을 넣어준다.
-        et_comment.setText(commentItemArrayList.get(parentPosition - 1).childCommentList.get(position).getComment());
+        et_comment.setText(commentItemArrayList.get(parentPosition - 1).getChildCommentList().get(position).getComment());
 
         //댓글 입력창에 포커스를 준다
         et_comment.requestFocus();
@@ -1199,7 +1199,7 @@ public class CommentActivity extends AppCompatActivity implements CommentAdapter
                 dialog.dismiss();
 
                 //삭제하려는 대댓글의 테이블 번호
-                int childCommentNum = commentItemArrayList.get(parentPosition - 1).childCommentList.get(position).getChildCommentNum();
+                int childCommentNum = commentItemArrayList.get(parentPosition - 1).getChildCommentList().get(position).getChildCommentNum();
 
                 //삭제하려는 대댓글의 인덱스
                 int childCommentPosition = position;
@@ -1226,8 +1226,8 @@ public class CommentActivity extends AppCompatActivity implements CommentAdapter
         Log.d("대댓글 더 보기 버튼", "클릭");
         Log.d("부모 댓글의 index", String.valueOf(parentPosition));
         //현재 로드되어있는 대댓글 수를 가져온다.
-        int lastChildCommentId = commentItemArrayList.get(parentPosition - 1).childCommentList.get(commentItemArrayList.get(parentPosition - 1).childCommentList.size() - 2).getId();
-        int postNum = commentItemArrayList.get(parentPosition - 1).postNum;
+        int lastChildCommentId = commentItemArrayList.get(parentPosition - 1).getChildCommentList().get(commentItemArrayList.get(parentPosition - 1).getChildCommentList().size() - 2).getId();
+        int postNum = commentItemArrayList.get(parentPosition - 1).getPostNum();
         Log.d("게시물 번호", String.valueOf(postNum));
         int commentNum = commentItemArrayList.get(parentPosition - 1).getId();
         Log.d("댓글 번호", String.valueOf(commentNum));

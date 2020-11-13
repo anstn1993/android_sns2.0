@@ -120,7 +120,6 @@ public class AddChatParticipantActivity extends AppCompatActivity implements Sel
                         JSONArray addedParticipantList = new JSONArray();
 
                         for (int i = 0; i < selectedUserItemArrayList.size(); i++) {
-
                             String account = selectedUserItemArrayList.get(i).getAccount();
                             String nickname = selectedUserItemArrayList.get(i).getNickname();
                             String profile = selectedUserItemArrayList.get(i).getProfile();
@@ -129,8 +128,6 @@ public class AddChatParticipantActivity extends AppCompatActivity implements Sel
                             participantData.put("nickname", nickname);
                             participantData.put("profile", profile);
                             addedParticipantList.put(participantData);
-
-
                         }
                         JSONObject addedParticipantData = new JSONObject();
                         addedParticipantData.put("participantList", addedParticipantList);
@@ -340,7 +337,7 @@ public class AddChatParticipantActivity extends AppCompatActivity implements Sel
                                     break;
                                 }
                             }
-                            userItem.setCurrentParticipant(isCurrentParticipant);
+                            userItem.setIsCurrentParticipant(isCurrentParticipant);
                             userItem.setName(name);
 
                             userItemArrayList.add(userItem);
@@ -393,7 +390,7 @@ public class AddChatParticipantActivity extends AppCompatActivity implements Sel
                                     break;
                                 }
                             }
-                            userItem.setCurrentParticipant(isCurrentParticipant);
+                            userItem.setIsCurrentParticipant(isCurrentParticipant);
                             userItem.setName(name);
 
 

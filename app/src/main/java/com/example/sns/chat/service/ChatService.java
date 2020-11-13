@@ -108,7 +108,7 @@ public class ChatService extends Service implements HttpRequest.OnHttpResponseLi
                     String account = sharedPreferences.getString("account", null);
                     String nickname = sharedPreferences.getString("nickname", null);
                     String profile = sharedPreferences.getString("profile", null);
-                    if(LoginUser.getInstance() == null) {
+                    if (LoginUser.getInstance() == null) {
                         LoginUser.initInstance(account, nickname, profile);
                     }
                     loginUser = LoginUser.getInstance();
@@ -337,11 +337,8 @@ public class ChatService extends Service implements HttpRequest.OnHttpResponseLi
                         else if (".ChatActivity".equals(currentActivity)) {
                             JSONObject messageData = new JSONObject(jsonString);
                             String type = messageData.getString("type");
-                            if ("join".equals(type)) {
-
-                            }
                             //채팅내용이 문자인 경우
-                            else if ("message".equals(type)) {
+                            if ("message".equals(type)) {
                                 Message message = ChatActivity.handler.obtainMessage();
                                 message.what = TEXT_MESSAGE;
                                 message.obj = jsonString;
@@ -355,7 +352,7 @@ public class ChatService extends Service implements HttpRequest.OnHttpResponseLi
                                 ChatActivity.handler.sendMessage(message);
                             }
                             //채팅 내용이 동영상인 경우
-                            else if("video".equals(type)) {
+                            else if ("video".equals(type)) {
                                 Message message = ChatActivity.handler.obtainMessage();
                                 message.what = VIDEO_MESSAGE;
                                 message.obj = jsonString;
@@ -390,11 +387,8 @@ public class ChatService extends Service implements HttpRequest.OnHttpResponseLi
                         else if (".ChatRoomActivity".equals(currentActivity)) {
                             JSONObject messageData = new JSONObject(jsonString);
                             String type = messageData.getString("type");
-                            if ("join".equals(type)) {
-
-                            }
                             //채팅내용이 문자인 경우
-                            else if ("message".equals(type)) {
+                            if ("message".equals(type)) {
                                 Message message = ChatRoomActivity.handler.obtainMessage();
                                 message.what = TEXT_MESSAGE;
                                 message.obj = jsonString;
@@ -416,7 +410,6 @@ public class ChatService extends Service implements HttpRequest.OnHttpResponseLi
                                     //서버에 채팅 내용을 확인했기때문에 chat 테이블의 unchecked_participant에 계정을 삭제해줘야 한다.
                                     updateCheckMessage(id, myAccount, checkData);
                                 }
-
                             }
                             //채팅내용이 이미지인 경우
                             else if ("image".equals(type)) {
@@ -442,7 +435,7 @@ public class ChatService extends Service implements HttpRequest.OnHttpResponseLi
                                 }
                             }
                             //채팅내용이 동영상인 경우
-                            else if("video".equals(type)) {
+                            else if ("video".equals(type)) {
                                 Message message = ChatRoomActivity.handler.obtainMessage();
                                 message.what = VIDEO_MESSAGE;
                                 message.obj = jsonString;
@@ -671,6 +664,7 @@ public class ChatService extends Service implements HttpRequest.OnHttpResponseLi
             //다른 애플리케이션에서 이 앱을 열 수 있도록, 즉 앱간의 이동이 가능하게 해주는 intent
             //세번째 인자로 들어간 intent는 외부 앱에서 이 앱을 열었을 때 이동할 액티비티로 이동이 되게끔 해준다. 위에서 MainActivity로 설정되어있으니
             //MainActivity로 이동이 가능해지는 것.
+            //FLAG_UPDATE_CURRENT는 이미 펜딩 인텐트로 해당 액티비티에 진입한 상태라면 그 상태를 유지하되 extra data만 갱신
             PendingIntent pendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
             String channelId = "chat";
 

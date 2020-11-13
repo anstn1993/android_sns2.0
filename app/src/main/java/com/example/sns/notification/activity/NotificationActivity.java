@@ -585,34 +585,12 @@ public class NotificationActivity extends AppCompatActivity implements Notificat
         //해당 알림을 확인한 것으로 처리하기 위해 서버의 notification 테이블의 is_checked 필드의 값을 1(true)로 update해준다.
         updateCheckNotification(notificationItemArrayList.get(position).getId());
 
-        //좋아요 알림인 경우
-        if (notificationItemArrayList.get(position).getCategory().equals("like")) {
-            //아직 알림을 확인하지 않은 경우
-            if (notificationItemArrayList.get(position).getIsChecked() == false) {
-                //해당 알림을 확인했기 때문에 알림리스트의 배경 색이 흰색으로 바뀌게 한다.
-                notificationItemArrayList.get(position).setIsChecked(true);
-                notificationAdapter.notifyItemChanged(position, "checked");
-            }
+        //아직 알림을 확인하지 않은 경우
+        if (notificationItemArrayList.get(position).getIsChecked() == false) {
+            //해당 알림을 확인했기 때문에 알림리스트의 배경 색이 흰색으로 바뀌게 한다.
+            notificationItemArrayList.get(position).setIsChecked(true);
+            notificationAdapter.notifyItemChanged(position, "checked");
         }
-        //팔로우 알림인 경우
-        else if (notificationItemArrayList.get(position).getCategory().equals("follow")) {
-            //아직 알림을 확인하지 않은 경우
-            if (notificationItemArrayList.get(position).getIsChecked() == false) {
-                //해당 알림을 확인했기 때문에 알림리스트의 배경 색이 흰색으로 바뀌게 한다.
-                notificationItemArrayList.get(position).setIsChecked(true);
-                notificationAdapter.notifyItemChanged(position, "checked");
-            }
-        }
-        //댓글 알림인 경우
-        else {
-            //아직 알림을 확인하지 않은 경우
-            if (notificationItemArrayList.get(position).getIsChecked() == false) {
-                //해당 알림을 확인했기 때문에 알림리스트의 배경 색이 흰색으로 바뀌게 한다.
-                notificationItemArrayList.get(position).setIsChecked(true);
-                notificationAdapter.notifyItemChanged(position, "checked");
-            }
-        }
-
 
         //그리드 이미지를 누르면 보여줄 프레그먼트 선언
         PostDetailFragment postDetailFragment = new PostDetailFragment();

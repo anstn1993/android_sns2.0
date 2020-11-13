@@ -38,14 +38,12 @@ public class ChatContentDetailFragment extends Fragment implements PlayerControl
     private String type;//컨텐츠 타입
 
     public static ChatContentDetailFragment newInstance(String... param) {
-
         Bundle args = new Bundle();
         args.putString("type", param[0]);//컨텐츠 타입
         args.putString("contentUri", param[1]);//컨텐츠 경로
         ChatContentDetailFragment fragment = new ChatContentDetailFragment();
         fragment.setArguments(args);
         return fragment;
-
     }
 
     @Nullable

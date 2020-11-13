@@ -313,7 +313,7 @@ public class CreateChatRoomActivity extends AppCompatActivity implements Selecte
                             userItem.setProfile(profile);
                             userItem.setId(id);
                             userItem.setIsSelected(isSelected);
-                            userItem.setCurrentParticipant(false);
+                            userItem.setIsCurrentParticipant(false);
                             userItem.setName(name);
 
                             userItemArrayList.add(userItem);
@@ -362,7 +362,7 @@ public class CreateChatRoomActivity extends AppCompatActivity implements Selecte
                             userItem.setProfile(profile);
                             userItem.setId(id);
                             userItem.setIsSelected(isSelected);
-                            userItem.setCurrentParticipant(false);
+                            userItem.setIsCurrentParticipant(false);
                             userItem.setName(name);
 
 

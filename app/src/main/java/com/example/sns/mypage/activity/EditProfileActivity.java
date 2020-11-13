@@ -503,7 +503,7 @@ public class EditProfileActivity extends AppCompatActivity {
                 .build();
 
         RetrofitService retrofitService = retrofit.create(RetrofitService.class);
-        Call<ProfileResponse> call = retrofitService.getProfileResponse(account, account);
+        Call<ProfileResponse> call = retrofitService.getProfileData(account, account);
         call.enqueue(new Callback<ProfileResponse>() {
             @Override
             public void onResponse(Call<ProfileResponse> call, Response<ProfileResponse> response) {
@@ -722,7 +722,7 @@ public class EditProfileActivity extends AppCompatActivity {
 
             MultipartBody.Part body = MultipartBody.Part.createFormData("image", imageFileName, imageFile);
             RetrofitService retrofitService = retrofit.create(RetrofitService.class);
-            Call<ProfileResponse> call = retrofitService.getEditProfileResponse(accountPart, namePart, nicknamePart, introducePart, isselectedPart, body);
+            Call<ProfileResponse> call = retrofitService.editProfile(accountPart, namePart, nicknamePart, introducePart, isselectedPart, body);
             call.enqueue(new Callback<ProfileResponse>() {
                 //통신에 성공한 경우
                 @Override
@@ -768,7 +768,7 @@ public class EditProfileActivity extends AppCompatActivity {
         //설정하지 않았을 때
         else {
             RetrofitService retrofitService = retrofit.create(RetrofitService.class);
-            Call<ProfileResponse> call = retrofitService.getEditProfileResponse(accountPart, namePart, nicknamePart, introducePart, isselectedPart, null);
+            Call<ProfileResponse> call = retrofitService.editProfile(accountPart, namePart, nicknamePart, introducePart, isselectedPart, null);
             call.enqueue(new Callback<ProfileResponse>() {
                 @Override
                 public void onResponse(Call<ProfileResponse> call, Response<ProfileResponse> response) {

@@ -283,14 +283,9 @@ public class CommentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             ((CommentItemHolder)holder).rv_childcomment.setLayoutManager(linearLayoutManager);
 
             //대댓글 어댑터 설정
-            childCommentAdapter = new ChildCommentAdapter(context, commentItemArrayList.get(i-1).childCommentList, i);
+            childCommentAdapter = new ChildCommentAdapter(context, commentItemArrayList.get(i-1).getChildCommentList(), i);
             childCommentAdapter.setOnClickListener(activity);
             ((CommentItemHolder)holder).rv_childcomment.setAdapter(childCommentAdapter);
-
-        }
-        //뷰 홀더가 프로그래스 바인 경우
-        else {
-
         }
     }
 
@@ -329,8 +324,6 @@ public class CommentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 });
 
             }
-
-
         }
 
     }

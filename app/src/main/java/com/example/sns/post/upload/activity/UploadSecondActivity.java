@@ -107,7 +107,6 @@ public class UploadSecondActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), AddLocationActivity.class);
                 startActivityForResult(intent, 0);
-
             }
         });
 
@@ -118,9 +117,7 @@ public class UploadSecondActivity extends AppCompatActivity {
         btn_upload.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 article = et_article.getText().toString();
-
                 upload(article, imageArrayList, address, latitude, longitude);
 
             }
@@ -198,16 +195,12 @@ public class UploadSecondActivity extends AppCompatActivity {
         //레트로핏 인터페이스 설정
         RetrofitService retrofitService = retrofit.create(RetrofitService.class);
         //인터페이스의 uploadResponse 메소드 실행
-        Call<UploadResponse> call = retrofitService.uploadResponse(postNumPart, accountPart, articlePart, imageMultipartBodyList.get(0), imageMultipartBodyList.get(1), imageMultipartBodyList.get(2), imageMultipartBodyList.get(3), imageMultipartBodyList.get(4), imageMultipartBodyList.get(5), addressPart, latitudePart, longitudePart);
+        Call<UploadResponse> call = retrofitService.uploadPost(postNumPart, accountPart, articlePart, imageMultipartBodyList.get(0), imageMultipartBodyList.get(1), imageMultipartBodyList.get(2), imageMultipartBodyList.get(3), imageMultipartBodyList.get(4), imageMultipartBodyList.get(5), addressPart, latitudePart, longitudePart);
 
 
         call.enqueue(new Callback<UploadResponse>() {
             @Override
             public void onResponse(Call<UploadResponse> call, Response<UploadResponse> response) {
-
-                UploadResponse uploadResponse = response.body();
-
-
                 imageArrayList.clear();
                 Glide.get(getApplicationContext()).clearMemory();
 
@@ -217,15 +210,12 @@ public class UploadSecondActivity extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(), "업로드 완료", Toast.LENGTH_SHORT).show();
                 isUploaded = true;
 
-
                 Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                 UploadFirstActivity uploadFirstActivity = (UploadFirstActivity) UploadFirstActivity.uploadFirstActivity;
                 uploadFirstActivity.finish();
                 startActivity(intent);
                 finish();
-
-
             }
 
             @Override

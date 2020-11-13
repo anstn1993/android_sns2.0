@@ -48,8 +48,7 @@ public class EditPostFirstActivity extends AppCompatActivity implements UploadIm
     private List<Uri> selectedUriList;
 
     //어떤 이미지가 선택되어있는 상태인지 확인하기 위한 인덱스 변수
-    public String selectedImage=null;
-
+    public String selectedImage = null;
 
 
     public static Activity editPostFirstActivity;
@@ -88,7 +87,7 @@ public class EditPostFirstActivity extends AppCompatActivity implements UploadIm
         tedPermission();
 
         Intent intent = getIntent();
-        postNum = intent.getIntExtra("postNum",0);
+        postNum = intent.getIntExtra("postNum", 0);
         Log.d("게시물 번호", String.valueOf(postNum));
 
         //다음 버튼 클릭 리스너
@@ -103,18 +102,18 @@ public class EditPostFirstActivity extends AppCompatActivity implements UploadIm
                 intent.putExtra("postNum", postNum);
 
                 //사진이 한 장 이상일 때
-                if(uploadImageItemArrayList.size()!=0){
+                if (uploadImageItemArrayList.size() != 0) {
 
                     imageArrayList = uploadImageItemArrayList;
                     Log.d(TAG, "imageArrayList size: " + imageArrayList.size());
 
                     //게시글이 존재하는 경우 다시 게시글을 넘겨준다.
-                    if(article != null){
+                    if (article != null) {
                         intent.putExtra("article", article);
                     }
 
                     //주소가 존재하는 경우 다시 주소를 넘겨준다.
-                    if(address != null){
+                    if (address != null) {
                         intent.putExtra("address", address);
                         intent.putExtra("latitude", latitude);
                         intent.putExtra("longitude", longitude);
@@ -129,8 +128,6 @@ public class EditPostFirstActivity extends AppCompatActivity implements UploadIm
         });
 
 
-
-
         btn_cancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -142,10 +139,10 @@ public class EditPostFirstActivity extends AppCompatActivity implements UploadIm
     }
 
     //tedPermission라이브러리는 권한요청을 편리하게 할 수 있는 api
-    private void tedPermission(){
+    private void tedPermission() {
 
         //권한요청이 일어나는 순간을 캐치하는 리스터 객체
-        PermissionListener permissionListener=new PermissionListener() {
+        PermissionListener permissionListener = new PermissionListener() {
             //권한이 허용됐을 때 실행될 함수
             @Override
             public void onPermissionGranted() {
@@ -171,10 +168,10 @@ public class EditPostFirstActivity extends AppCompatActivity implements UploadIm
 
     }
 
-    private void setRecyclerView(){
+    private void setRecyclerView() {
 
         //리사이클러뷰 연결
-        rv_image=findViewById(R.id.recyclerview);
+        rv_image = findViewById(R.id.recyclerview);
         rv_image.setHasFixedSize(true);
 
         //그리드 레이아웃 메니저로 초기화, 한 row에 최대 6개 아이템 삽입
@@ -183,7 +180,6 @@ public class EditPostFirstActivity extends AppCompatActivity implements UploadIm
         layoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
         //리사이클러뷰에 레이아웃 매니저를 설정
         rv_image.setLayoutManager(layoutManager);
-
 
 
         //어탭터를 현재의 arraylist를 담은 상태로 초기화
@@ -205,11 +201,11 @@ public class EditPostFirstActivity extends AppCompatActivity implements UploadIm
 
         //선택한 사진의 uri를 인텐트에서 받아와서 아이템 객체에 넣고 그 객체를 arraylist에 추가
         Intent intent = getIntent();
-        int imageCount = intent.getIntExtra("imageCount",0);
-        for(int i=0; i<imageCount; i++){
-            Log.d("넘어온 uri", intent.getStringExtra("image"+(i+1)));
+        int imageCount = intent.getIntExtra("imageCount", 0);
+        for (int i = 0; i < imageCount; i++) {
+            Log.d("넘어온 uri", intent.getStringExtra("image" + (i + 1)));
             uploadImageItemArrayList.add(new UploadImageItem(
-                    intent.getStringExtra("image"+(i+1)), R.drawable.delete,"url"
+                    intent.getStringExtra("image" + (i + 1)), R.drawable.delete, "url"
             ));
 
         }
@@ -217,7 +213,7 @@ public class EditPostFirstActivity extends AppCompatActivity implements UploadIm
         //어댑터에 arraylist가 들어왔음을 알려줘서 결과를 반영하게 함
         uploadImageAdapter.notifyDataSetChanged();
 
-        for(int i = 0; i < uploadImageItemArrayList.size(); i++){
+        for (int i = 0; i < uploadImageItemArrayList.size(); i++) {
             Log.d("바뀌기 전 arraylist", uploadImageItemArrayList.get(i).imageSource);
         }
 
@@ -229,21 +225,18 @@ public class EditPostFirstActivity extends AppCompatActivity implements UploadIm
 
         //선택된 이미지는 가장 첫번째 이미지(default)
         selectedImage = uploadImageItemArrayList.get(0).imageSource;
-
-
-
     }
 
-    private void setArticleAddress(){
+    private void setArticleAddress() {
         Intent intent = getIntent();
         //게시글이 존재한다면 변수에 담아준다.
-        if(intent.getStringExtra("article")!=null){
+        if (intent.getStringExtra("article") != null) {
             article = intent.getStringExtra("article");
             Log.d("게시글 내용: ", article);
         }
 
         //주소가 존재한다면 변수에 담아준다.
-        if(intent.getStringExtra("address")!=null){
+        if (intent.getStringExtra("address") != null) {
             address = intent.getStringExtra("address");
             Log.d("주소 내용: ", address);
             latitude = intent.getStringExtra("latitude");
@@ -256,8 +249,6 @@ public class EditPostFirstActivity extends AppCompatActivity implements UploadIm
     //이미지를 클릭할 시 호출되는 메소드
     @Override
     public void onImageClicked(int position) {
-
-//        Glide.get(this).clearMemory();
         Glide.with(this)
                 .load(Uri.parse(uploadImageItemArrayList.get(position).imageSource))
                 .apply(new RequestOptions().centerCrop())
@@ -271,21 +262,18 @@ public class EditPostFirstActivity extends AppCompatActivity implements UploadIm
     @Override
     public void onRemoveButtonClicked(int position) {
         Log.d("지우려는 사진 index", String.valueOf(position));
-
         //현재 선택되어있는 사진을 지우려는 경우
-        if(uploadImageItemArrayList.get(position).imageSource== selectedImage){
+        if (uploadImageItemArrayList.get(position).imageSource == selectedImage) {
             //근데 그 사진이 첫번째 사진인 경우
-            if(position == 0){
+            if (position == 0) {
                 //사진이 2장 이상 남아있는 경우
-                if(uploadImageItemArrayList.size()>1){
+                if (uploadImageItemArrayList.size() > 1) {
                     //첫번째 사진 다음 사진을 보여준다.
                     Glide.with(this)
-                            .load(Uri.parse(uploadImageItemArrayList.get(position+1).imageSource))
+                            .load(Uri.parse(uploadImageItemArrayList.get(position + 1).imageSource))
                             .apply(new RequestOptions().centerCrop())
                             .into(iv_detail);
-                    selectedImage = uploadImageItemArrayList.get(position+1).imageSource;
-
-
+                    selectedImage = uploadImageItemArrayList.get(position + 1).imageSource;
                 }
                 //사진이 한장만 남았다면
                 else {
@@ -295,25 +283,17 @@ public class EditPostFirstActivity extends AppCompatActivity implements UploadIm
                 }
             }
             //사진이 첫번째 이후의 사진인 경우
-            else{
+            else {
                 //그 사진 이전의 사진을 보여준다.
                 Glide.with(this)
-                        .load(Uri.parse(uploadImageItemArrayList.get(position-1).imageSource))
+                        .load(Uri.parse(uploadImageItemArrayList.get(position - 1).imageSource))
                         .apply(new RequestOptions().centerCrop())
                         .into(iv_detail);
                 //선택된 사진의 인덱스를 반영해준다.
-                selectedImage = uploadImageItemArrayList.get(position-1).imageSource;
+                selectedImage = uploadImageItemArrayList.get(position - 1).imageSource;
             }
 
         }
-        //현재 선택되어있지 않은 사진을 지우려는 경우
-        else {
-            //예외적인 경우인데 1번 사진을 선택하고 0번 사진을 지우면 이후에 0번 사진을 지울 때 selectedImage=1이고
-            //지우는 사진의 index는 0이기 때문에 위의 position=selectedImage가 true인 조건문을 타지 못한다.
-            //그래서 이 경우 selectedImage=0으로 설정해서 위의 조건문을 탈 수 있게 해준다.
-//            selectedImage = uploadImageItemArrayList.get(0).imageUri;
-        }
-
 
         Log.d("삭제버튼 클릭", "yes");
         //arraylist에서 해당 인덱스의 아이템 객체를 지워주고
@@ -333,7 +313,7 @@ public class EditPostFirstActivity extends AppCompatActivity implements UploadIm
         int oldPosition = position;
 
         //사진이 6장 선택된 경우
-        if(uploadImageItemArrayList.size()==6){
+        if (uploadImageItemArrayList.size() == 6) {
             Toast.makeText(getApplicationContext(), "더 이상 사진을 선택할 수 없습니다.", Toast.LENGTH_SHORT).show();
         }
         //사진이 6장이 안 되는 경우
@@ -347,7 +327,7 @@ public class EditPostFirstActivity extends AppCompatActivity implements UploadIm
                     .setEmptySelectionText("이미지 없음")
                     .setSelectedUriList(selectedUriList)
                     .setPreviewMaxCount(1000)
-                    .setSelectMaxCount(6-uploadImageItemArrayList.size())
+                    .setSelectMaxCount(6 - uploadImageItemArrayList.size())
                     .setSelectMinCount(1)
                     .setEmptySelectionText("이미지를 선택해주세요.")
                     .showMultiImage(new TedBottomSheetDialogFragment.OnMultiImageSelectedListener() {
@@ -355,7 +335,7 @@ public class EditPostFirstActivity extends AppCompatActivity implements UploadIm
                         public void onImagesSelected(List<Uri> uriList) {
                             // here is selected image uri list
                             //선택한 이미지 수만큼 arraylist에 넣어준다.
-                            for(int i=0; i<uriList.size(); i++){
+                            for (int i = 0; i < uriList.size(); i++) {
                                 uploadImageItemArrayList.add(new UploadImageItem(
                                         uriList.get(i).toString(), R.drawable.delete, "uri"
                                 ));
@@ -364,7 +344,7 @@ public class EditPostFirstActivity extends AppCompatActivity implements UploadIm
                             uploadImageAdapter.notifyDataSetChanged();
 
                             //사진이 0장에서 추가됐을 때의 동작을 캐치하기 위해서 다음의 조건문을 작성한다.
-                            if(oldPosition==0 && uploadImageItemArrayList.size()!=0){
+                            if (oldPosition == 0 && uploadImageItemArrayList.size() != 0) {
                                 //이미지 선택 경고 메세지를 지워주고
                                 tv_alert.setVisibility(View.INVISIBLE);
                                 //첫번째 사진을 보여준다.
@@ -378,11 +358,6 @@ public class EditPostFirstActivity extends AppCompatActivity implements UploadIm
                         }
                     });
         }
-
-
-
-
-
     }
 
     //드래그가 시작되면 호출되는 메소드

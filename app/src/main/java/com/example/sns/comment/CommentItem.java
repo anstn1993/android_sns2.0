@@ -94,7 +94,23 @@ public class CommentItem {
         return childCommentCount;
     }
 
-//    public int getCurrentChildCommentCount(){
+    public ArrayList<ChildCommentItem> getChildCommentList() {
+        return childCommentList;
+    }
+
+    public void setChildCommentList(ArrayList<ChildCommentItem> childCommentList) {
+        this.childCommentList = childCommentList;
+    }
+
+    public ArrayList<Integer> getUploadedChildCommentChildNum() {
+        return uploadedChildCommentChildNum;
+    }
+
+    public void setUploadedChildCommentChildNum(ArrayList<Integer> uploadedChildCommentChildNum) {
+        this.uploadedChildCommentChildNum = uploadedChildCommentChildNum;
+    }
+
+    //    public int getCurrentChildCommentCount(){
 //        return currentChildCommentCount;
 //    }
 

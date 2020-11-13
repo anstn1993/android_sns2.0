@@ -407,13 +407,13 @@ public class FollowerListFragment extends Fragment implements FollowAdapter.Foll
     public void onFollowClicked(int position) {
 
         //해당 position의 사용자 account
-        String followedAccount = followListItemArrayList.get(position).account;
+        String followedAccount = followListItemArrayList.get(position).getAccount();
 
         //해당 position의 사용자 followedNickname
-        String followedNickname = followListItemArrayList.get(position).nickname;
+        String followedNickname = followListItemArrayList.get(position).getNickname();
 
         //팔로우를 하지 않은 상태에서 팔로우를 하려는 경우
-        if (followListItemArrayList.get(position).isFollowing == false) {
+        if (followListItemArrayList.get(position).getIsFollowing() == false) {
 
             //팔로잉 상태로 전환
             processFollow(true, followedAccount, followedNickname, loginUser.getAccount(), position);
@@ -441,7 +441,7 @@ public class FollowerListFragment extends Fragment implements FollowAdapter.Foll
             tv_unfollow = dialog.findViewById(R.id.textview_unfollow);
 
             //프로필 이미지
-            String image = followListItemArrayList.get(position).profile;
+            String image = followListItemArrayList.get(position).getProfile();
 
 
             //프로필 사진 설정
@@ -499,7 +499,7 @@ public class FollowerListFragment extends Fragment implements FollowAdapter.Foll
 
                     followAdapter.notifyDataSetChanged();
                     if (followListItemArrayList.size() != 0) {
-                        currentLastId = followListItemArrayList.get(followListItemArrayList.size() - 1).id;
+                        currentLastId = followListItemArrayList.get(followListItemArrayList.size() - 1).getId();
                     }
                 }
                 else if(requestType.equals("processFollow")) {
@@ -509,7 +509,7 @@ public class FollowerListFragment extends Fragment implements FollowAdapter.Foll
                     //팔로우를 한 경우
                     if (isFollowing) {
                         //팔로우 상태를 true로 만들고
-                        followListItemArrayList.get(position).setFollowing(true);
+                        followListItemArrayList.get(position).setIsFollowing(true);
                         //어댑터에 notify
                         followAdapter.notifyItemChanged(position, "true");
 
@@ -517,7 +517,7 @@ public class FollowerListFragment extends Fragment implements FollowAdapter.Foll
 
 
                         //팔로우를 당한 사용자 단말에 push알림을 보내준다.
-                        String receiver = followListItemArrayList.get(position).account;
+                        String receiver = followListItemArrayList.get(position).getAccount();
                         String title = "SNS";
                         String body = loginUser.getNickname() + "님이 회원님을 팔로우하기 시작했습니다.";
                         String click_action = "AccountPageFragment";
@@ -529,7 +529,7 @@ public class FollowerListFragment extends Fragment implements FollowAdapter.Foll
                     //팔로우를 취소한 경우
                     else {
                         //팔로우 상태를 false로 만들고
-                        followListItemArrayList.get(position).setFollowing(false);
+                        followListItemArrayList.get(position).setIsFollowing(false);
                         //어댑터에 notify
                         followAdapter.notifyItemChanged(position, "false");
 

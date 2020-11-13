@@ -179,8 +179,6 @@ public class UploadImageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             if (toPosition <= uploadImageItemArrayList.size() - 1) {
                 if (fromPosition < toPosition) {
                     for (int i = fromPosition; i < toPosition; i++) {
-                        //이게 드래그앤 드롭을 실질적으로 동작시키는 코드
-                        //arraylist의 항목을 스와핑 해주는 코드
                         Collections.swap(uploadImageItemArrayList, i, i + 1);
                     }
                 } else {

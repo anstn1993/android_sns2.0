@@ -41,16 +41,16 @@ import java.util.Locale;
 
 public class AddLocationActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnMapClickListener {
 
-    Button btn_apply, btn_cancel;
-    TextView tv_location;
+    private Button btn_apply, btn_cancel;
+    private TextView tv_location;
 
-    String address;
-    String markerTitle;
-    String markerSnippet;
+    private String address;
+    private String markerTitle;
+    private String markerSnippet;
     private double latitude, longitude;
 
-    GoogleMap mGoogleMap = null;
-    Marker currentMarker = null;
+    private GoogleMap mGoogleMap = null;
+    private Marker currentMarker = null;
 
     private static final String TAG = "googlemap_example";
     private static final int GPS_ENABLE_REQUEST_CODE = 2001;
@@ -61,11 +61,9 @@ public class AddLocationActivity extends AppCompatActivity implements OnMapReady
 
 
     // 앱을 실행하기 위해 필요한 퍼미션을 정의
-    String[] REQUIRED_PERMISSIONS = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};  // 외부 저장소
+    private String[] REQUIRED_PERMISSIONS = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};  // 외부 저장소
 
-
-    Location mCurrentLocatiion;
-    LatLng currentPosition;
+    private LatLng currentPosition;
 
 
     private FusedLocationProviderClient mFusedLocationClient;
@@ -73,8 +71,7 @@ public class AddLocationActivity extends AppCompatActivity implements OnMapReady
     private Location location;
 
 
-    //스낵바를 사용하기 위해서는 스낵바가 실행될 현재 view를 가져와야 한다.\
-    //(Toast에서는 Context가 필요했듯이)
+    //스낵바를 사용하기 위해서는 스낵바가 실행될 현재 view를 가져와야 한다.
     private View mLayout;
 
     @Override
@@ -86,14 +83,10 @@ public class AddLocationActivity extends AppCompatActivity implements OnMapReady
             Places.initialize(getApplicationContext(), "AIzaSyD7t_2m-6ZE8blxYMdkTdBm_BU5VgULe7k");
         }
 
-
         mLayout = findViewById(R.id.ConstraintLayout_map);
-
         tv_location = findViewById(R.id.tv_location);
-
         btn_apply = findViewById(R.id.btn_apply);
         btn_cancel = findViewById(R.id.btn_cancel);
-
         //현재의 위치를 요청할 때 설정을 하는 객체로 여러 설정을 통해서 현재 위치를 가져올 수 있다.
         locationRequest = new LocationRequest()
                 //위치를 요청할 때는 4가지 방식으로 요청할 수 있는데 지금은 배터리소모는 고려하지 않고 최대한 정확한 위치를 가져오라는 것
@@ -122,14 +115,12 @@ public class AddLocationActivity extends AppCompatActivity implements OnMapReady
         btn_apply.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 Intent intent = new Intent();
                 intent.putExtra("address", address);
                 intent.putExtra("latitude", latitude);
                 intent.putExtra("longitude", longitude);
                 setResult(RESULT_OK, intent);
                 finish();
-
                 try {
                     Log.d("주소", address);
                     Log.d("위도", String.valueOf(latitude));
@@ -144,7 +135,6 @@ public class AddLocationActivity extends AppCompatActivity implements OnMapReady
         // Initialize the AutocompleteSupportFragment.
         AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
                 getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
-
 
         // Specify the types of place data to return.
         autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME));
@@ -178,9 +168,6 @@ public class AddLocationActivity extends AppCompatActivity implements OnMapReady
                     markerOptions.title(address);
                     //마커 찍힐 장소
                     markerOptions.position(location);
-                    //검색된 위치의 위도 경도를 담는 객체 선언
-                    //LatLng location = new LatLng(latitude, longitude);
-
                     //구글맵에 마커로 추가
                     mGoogleMap.addMarker(markerOptions);
                     //검색된 장소로 지도 이동
@@ -190,8 +177,6 @@ public class AddLocationActivity extends AppCompatActivity implements OnMapReady
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-
-
             }
 
             //기능이 정상 작동하지 않는 경우 호출되는 메소드. 오류의 내용을 여기서 확인하면 됨.
@@ -231,9 +216,6 @@ public class AddLocationActivity extends AppCompatActivity implements OnMapReady
 
                 //현재 위치에 마커 생성하고 이동
                 setCurrentLocation(location, markerTitle, markerSnippet);
-
-
-                mCurrentLocatiion = location;
             }
 
 

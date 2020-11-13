@@ -320,7 +320,7 @@ public class MypageActivity extends AppCompatActivity implements HttpRequest.OnH
                 .build();
 
         RetrofitService retrofitService = retrofit.create(RetrofitService.class);
-        Call<ProfileResponse> call = retrofitService.getProfileResponse(account, account);
+        Call<ProfileResponse> call = retrofitService.getProfileData(account, account);
         call.enqueue(new Callback<ProfileResponse>() {
             @Override
             public void onResponse(Call<ProfileResponse> call, Response<ProfileResponse> response) {
